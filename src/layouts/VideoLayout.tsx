@@ -7,7 +7,9 @@ export default function VideoLayout({
     <div className="flex flex-col min-h-screen w-screen">
       <div className=" min-h-[50vh] h-[50vh] w-full bg-black flex justify-center items-center text-white">
         <iframe
-          src="/BB_51cc79f9-ca03-45a2-9fa5-3a28e0479bf3_preview.mp4"
+          src={`${
+            import.meta.env.VITE_BUCKET_URL
+          }/test_video_sensor_terminal.mp4`}
           allow="autoplay"
           id="video"
           className=" hidden"
@@ -20,7 +22,9 @@ export default function VideoLayout({
           loop
         >
           <source
-            src="/BB_51cc79f9-ca03-45a2-9fa5-3a28e0479bf3_preview.mp4"
+            src={`${
+              import.meta.env.VITE_BUCKET_URL
+            }/test_video_sensor_terminal.mp4`}
             type="video/mp4"
           />
           Your browser does not support the video tag.
