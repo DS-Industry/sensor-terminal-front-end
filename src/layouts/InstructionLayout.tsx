@@ -1,0 +1,96 @@
+import { useState } from "react";
+import NavigationButton from "../components/buttons/NavigationButton";
+import AttentionTag from "../components/tags/AttentionTag";
+import InfoTag from "../components/tags/InfoTag";
+import Car from "./../assets/car-instruction.svg";
+import WhiteBack from "./../assets/exit_to_app_white.svg";
+import Logo from "./../assets/Logo-white.svg";
+
+export default function InstructionLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [isLoading, setIsloading] = useState<number>(0);
+  return (
+    <main className=" w-screen min-h-screen">
+      <div className=" flex flex-col justify-center items-center min-h-[500px] w-full bg-primary ">
+        <div className=" w-full flex justify-between py-8 px-8">
+          <div
+            className={`min-w-[173px] min-h-[71px] rounded-xl bg-secondary animate-pulse ${
+              isLoading < 3 ? "block" : "hidden"
+            } `}
+          ></div>
+          <img
+            src={Logo}
+            alt="Logo"
+            className={`${isLoading < 3 ? " hidden" : "block"} `}
+            onLoad={() =>
+              setIsloading((prevLoading) => {
+                prevLoading += 1;
+                return prevLoading;
+              })
+            }
+          />
+
+          <NavigationButton
+            label={
+              <>
+                <img
+                  src={WhiteBack}
+                  alt="Back"
+                  className={`${isLoading < 3 ? " hidden" : "block"} `}
+                  onLoad={() =>
+                    setIsloading((prevLoading) => {
+                      prevLoading += 1;
+                      return prevLoading;
+                    })
+                  }
+                />
+                <div
+                  className={` min-w-[69px] min-h-[68px] bg-secondary animate-pulse rounded-xl ${
+                    isLoading < 3 ? "block" : "hidden"
+                  } `}
+                ></div>
+              </>
+            }
+          />
+        </div>
+        <p className=" font-inter-semibold text-white-500 text-5xl mb-20">
+          Габариты авто
+        </p>
+        <div className=" w-1/3 flex flex-row justify-evenly gap-5 mb-20">
+          <InfoTag label="Высота" value="до 2 м" />
+          <InfoTag label="Длина" value="до 6.25 м" />
+          <InfoTag label="Ширина" value="до 2.6 м" />
+        </div>
+        <div className=" min-h-[387px] max-h-[387px] mb-5">
+          <img
+            src={Car}
+            alt="car"
+            onLoad={() =>
+              setIsloading((prevLoading) => {
+                prevLoading += 1;
+                return prevLoading;
+              })
+            }
+            className={` ${isLoading < 3 ? " hidden" : "block"} min-h-[387px]`}
+          />
+          <div
+            className={`min-h-[400px] min-w-[770px] mb-5 bg-secondary opacity-70 animate-pulse rounded-3xl ${
+              isLoading < 3 ? "block" : "hidden"
+            }`}
+          ></div>
+        </div>
+
+        <div className=" w-full flex justify-end mb-6 pr-8">
+          <AttentionTag
+            label="Не рекомендуется мыть автомобили с панорамной крышей!"
+            additionalStyles=" text-red-400 px-2 min-w-[20rem]"
+          />
+        </div>
+      </div>
+      <div>{children}</div>
+    </main>
+  );
+}

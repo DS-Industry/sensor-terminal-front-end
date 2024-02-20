@@ -4,6 +4,9 @@
   margin: 0 auto;
   text-align: center;
 }
+body {
+  overflow-y: hidden;
+}
 
 .logo {
   height: 6em;
@@ -18,20 +21,22 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+.font-inter-light {
+  font-family: "Inter Light";
+}
+
 .font-inter-medium {
   font-family: "Inter Medium";
 }
 .font-inter-bold {
   font-family: "Inter Bold";
 }
+.font-inter-semibold {
+  font-family: "Inter Semibold";
+}
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.font-montserrat-regular {
+  font-family: "Montserrat Regular";
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -42,8 +47,4 @@
 
 .card {
   padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }

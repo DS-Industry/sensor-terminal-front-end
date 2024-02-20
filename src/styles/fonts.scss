@@ -4,6 +4,11 @@
 }
 
 @font-face {
+  font-family: "Inter Light";
+  src: url("../fonts/Inter-Light.ttf") format("truetype");
+}
+
+@font-face {
   font-family: "Inter Bold";
   src: url("../fonts/Inter-Bold.ttf") format("truetype");
 }
@@ -19,6 +24,11 @@
 }
 
 @font-face {
+  font-family: "Inter Semibold";
+  src: url("../fonts/Inter-SemiBold.ttf") format("truetype");
+}
+
+@font-face {
   font-family: "Source Sans Pro Light";
   src: url("../fonts/SourceSansPro-Light.ttf") format("truetype");
 }
@@ -26,4 +36,9 @@
 @font-face {
   font-family: "Inter Medium";
   src: url("../fonts/Inter-Medium.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Montserrat Regular";
+  src: url("../fonts/Montserrat-Regular.ttf") format("truetype");
 }
