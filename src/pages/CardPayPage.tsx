@@ -6,10 +6,12 @@ import { FaApplePay, FaGooglePay } from "react-icons/fa6";
 import { RiMastercardLine, RiVisaLine } from "react-icons/ri";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function CardPayPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!state || (state && (!state.programName || !state.price))) {
@@ -24,10 +26,10 @@ export default function CardPayPage() {
       <div className="flex flex-row mt-10 px-20 justify-between">
         <div className=" max-w-[400px]">
           <h1 className=" text-5xl text-left font-inter-semibold text-gray-600 mb-14">
-            Оплата картой
+            {t("Оплата картой")}
           </h1>
           <h2 className="text-left font-inter-semibold text-3xl mb-20">
-            Приложите банковскую карту для оплаты
+            {t("Приложите банковскую карту для оплаты")}
           </h2>
           <img src={Wifi} alt="wifi" className=" size-[280px]" />
           <img
@@ -46,17 +48,17 @@ export default function CardPayPage() {
           </div>
           <div>
             <div className=" flex flex-row gap-3 text-white-500 font-inter-light text-base opacity-80 text-left mb-7">
-              <p>Программа:</p>
-              <p className=" font-inter-bold">{state.programName}</p>
+              <p>{t("Программа")}:</p>
+              <p className=" font-inter-bold">{t(`${state.programName}`)}</p>
             </div>
             <div>
               <p className=" font-inter-bold text-2xl text-white-500 text-left mb-5">
-                К оплате:
+                {t("К оплате")}:
               </p>
               <p
                 className={` text-5xl text-white-500 font-inter-semibold bg-gradient-to-t py-5 rounded-3xl mb-3 from-primary to-secondary `}
               >
-                {state.price} р.
+                {state.price} {t("р.")}
               </p>
             </div>
           </div>

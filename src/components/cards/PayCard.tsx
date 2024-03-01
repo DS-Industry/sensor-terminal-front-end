@@ -2,6 +2,7 @@ import { RiMastercardLine, RiVisaLine } from "react-icons/ri";
 import { FaApplePay, FaGooglePay } from "react-icons/fa6";
 import Lightning from "./../../assets/lightning.svg";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface IPayCard {
   payType: "bankCard" | "cash" | "app";
@@ -23,8 +24,7 @@ export default function PayCard({
   programUrl,
 }: IPayCard) {
   const navigate = useNavigate();
-
-  console.log(programName, price);
+  const { t } = useTranslation();
 
   return (
     <div
@@ -44,7 +44,9 @@ export default function PayCard({
         alt="logo pay way"
         className=" h-[70px] w-fit object-cover"
       />
-      <p className=" font-inter-semibold text-xl text-left pl-2">{label}</p>
+      <p className=" font-inter-semibold text-xl text-left pl-2">
+        {t(`${label}`)}
+      </p>
       {payType === "bankCard" && (
         <div className=" flex flex-row justify-evenly w-full">
           <RiMastercardLine className=" fill-white-500 text-3xl" />
@@ -55,14 +57,16 @@ export default function PayCard({
       )}
       {payType === "cash" && (
         <div>
-          <p className=" font-inter-light text-xs text-left">Купюры</p>
+          <p className=" font-inter-light text-xs text-left">{t("Купюры")}</p>
           <p className=" font-inter-semibold">50, 100, 200</p>
         </div>
       )}
       {payType === "app" && (
         <div className=" flex justify-between w-full">
           <div>
-            <p className=" font-inter-light text-xs text-left">Ваш cashBack</p>
+            <p className=" font-inter-light text-xs text-left">
+              {t("Ваш СashBack")}
+            </p>
             <p className=" font-inter-semibold text-left">+10%</p>
           </div>
           <img src={Lightning} alt="lightning" className=" size-[40px]" />

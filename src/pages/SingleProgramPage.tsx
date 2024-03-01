@@ -4,10 +4,12 @@ import { PAYS, PROGRAMS } from "../fake-data";
 import { useEffect } from "react";
 import { WiTime4 } from "react-icons/wi";
 import PayCard from "../components/cards/PayCard";
+import { useTranslation } from "react-i18next";
 
 export default function SingleProgramPage() {
   const { program } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!program) navigate("/");
@@ -18,19 +20,19 @@ export default function SingleProgramPage() {
       {program && (
         <div className=" flex flex-col items-center">
           <h1 className=" font-inter-bold text-5xl mb-14">
-            {PROGRAMS[program].title}
+            {t(`${PROGRAMS[program].title}`)}
           </h1>
           <h2 className=" font-montserrat-regular mb-10">
-            {PROGRAMS[program].description}
+            {t(`${PROGRAMS[program].description}`)}
           </h2>
           <div className=" flex items-center mb-16 ">
             <WiTime4 className=" text-5xl" />
             <p className=" font-inter-bold text-2xl ">
-              {PROGRAMS[program].time} мин.
+              {PROGRAMS[program].time} {t("мин.")}
             </p>
           </div>
           <h2 className=" text-5xl font-inter-bold mb-16">
-            Выберите способ оплаты
+            {t("Выберите способ оплаты")}
           </h2>
           <div className=" flex flex-row justify-evenly w-full">
             {PAYS.map((pay, index) => (

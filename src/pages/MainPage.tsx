@@ -5,6 +5,7 @@ import Stop from "../assets/block.svg";
 import { useEffect, useState } from "react";
 import { secondsToTime } from "../util";
 import ProgramCard from "../components/cards/ProgramCard";
+import { Trans, useTranslation } from "react-i18next";
 
 export default function MainPage() {
   const divider = 4;
@@ -12,6 +13,7 @@ export default function MainPage() {
   const programs = Object.entries(PROGRAMS);
   const [time, setTime] = useState(initTime);
   const [percentage, setPercentage] = useState(0);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timeInterval = setInterval(() => {
@@ -25,12 +27,6 @@ export default function MainPage() {
       );
     }, 1000 / divider);
 
-    // Simulate a delay in completing loading (you can replace this with your actual loading logic)
-    /*     setTimeout(() => {
-      clearInterval(interval);
-    }, 5000); */
-
-    // Cleanup the interval on component unmount
     return () => {
       clearInterval(percentageInterval);
       clearInterval(timeInterval);
@@ -40,7 +36,7 @@ export default function MainPage() {
   return (
     <VideoLayout isFisrtPage>
       <h1 className=" text-black font-inter-bold text-5xl mb-16">
-        Выберите программу
+        {t("Выберите программу")}
       </h1>
       <div
         className={`w-full pb-10  ${
@@ -71,8 +67,16 @@ export default function MainPage() {
           <img src={Stop} alt="stop" className=" size-[50px]" />
           <div className=" text-left w-full min-h-[50px]">
             <p>
-              Бокс осводится через
-              <span className=" text-red-500">{secondsToTime(time)}</span>
+              <Trans
+                i18nKey="Бокс осводится через"
+                values={{ time: secondsToTime(time) }}
+              >
+                Бокс осводится через
+                <span
+                  className="text-red-500 min-w-fit w-10 max-w-[150px]"
+                  data-i18n="time"
+                />
+              </Trans>
             </p>
             <div className=" min-h-3 w-full bg-gray-500 rounded-lg">
               <div className="relative h-full">

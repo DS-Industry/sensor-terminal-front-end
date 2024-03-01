@@ -7,3 +7,9 @@ export const VIDEO_TYPES = [
   ".wmv",
   ".avchd",
 ];
+
+export const LANGUAGES = {
+  en: { nativeName: "English", label: "English" },
+  ru: { nativeName: "Russian", label: "Русский" },
+  uz: { nativeName: "Uzbek", label: "o'zbek" },
+};

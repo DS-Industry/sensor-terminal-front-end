@@ -2,8 +2,17 @@ import { useLocation } from "react-router-dom";
 import NavigationButton from "../components/buttons/NavigationButton";
 import Logo from "./../assets/Logo.svg";
 import Back from "./../assets/exit_to_app.svg";
+import { IoLanguageSharp } from "react-icons/io5";
 import { useEffect, useState } from "react";
-import { VIDEO_TYPES } from "../components/hard-data";
+import { LANGUAGES, VIDEO_TYPES } from "../components/hard-data";
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarTrigger,
+} from "../components/ui/menubar";
+import { useTranslation } from "react-i18next";
 
 export default function VideoLayout({
   children,
@@ -15,6 +24,7 @@ export default function VideoLayout({
   programUrl?: string;
 }) {
   const { pathname } = useLocation();
+  const { t, i18n } = useTranslation();
 
   const [attachemntUrl, setAttachmentUrl] = useState<{
     baseUrl: string;
@@ -91,11 +101,33 @@ export default function VideoLayout({
         )}
       </div>
       <div className="px-7 z-10">
-        <div className=" w-full flex justify-between py-5">
+        <div className=" w-full flex justify-between items-center py-5">
           <img src={Logo} alt="Logo" />
-          <NavigationButton
-            label={isFisrtPage ? "Инструкция" : <img src={Back} alt="Back" />}
-          />
+          <div className=" flex items-center gap-10">
+            <Menubar className=" border-0">
+              <MenubarMenu>
+                <MenubarTrigger className="text-lg bg-gradient-to-t from-primary to-blue-650 px-5 py-2 rounded-3xl text-white-500 font-inter-semibold shadow-[0px_10px_20px_5px_rgba(0,0,0,0.3)] h-fit ">
+                  <IoLanguageSharp className=" text-3xl" />
+                </MenubarTrigger>
+                <MenubarContent className=" bg-gradient-to-tr from-blue-500 to-blue-100 border-0 max-w-[150px] min-w-[150px] p-1 rounded-2xl">
+                  {Object.entries(LANGUAGES).map(([key, lng]) => (
+                    <MenubarItem
+                      key={key}
+                      className=" bg-primary text-white-500 w-full  text-xl my-1 rounded-3xl first:mt-0 last:mb-0"
+                      onClick={() => i18n.changeLanguage(key)}
+                    >
+                      <p className=" w-full text-center"> {lng.label}</p>
+                    </MenubarItem>
+                  ))}
+                </MenubarContent>
+              </MenubarMenu>
+            </Menubar>
+            <NavigationButton
+              label={
+                isFisrtPage ? t("Инструкция") : <img src={Back} alt="Back" />
+              }
+            />
+          </div>
         </div>
         {children}
       </div>

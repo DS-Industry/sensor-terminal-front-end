@@ -3,8 +3,10 @@ import Logo from "../assets/Logo-white.svg";
 import WhiteBack from "../assets/exit_to_app_white.svg";
 import Emoji from "../assets/emoji-sad.svg";
 import Sally from "../assets/Saly-2.svg";
+import { useTranslation } from "react-i18next";
 
 export default function ErrorPaymentPage() {
+  const { t } = useTranslation();
   return (
     <section className=" bg-primary h-screen w-screen">
       <div className=" w-full flex justify-between py-8 px-8">
@@ -27,13 +29,13 @@ export default function ErrorPaymentPage() {
       <div className={` flex flex-col items-center`}>
         <img src={Emoji} className=" mt-10" />
         <p className=" font-inter-bold text-white-500 text-[6rem] px-[7rem] mt-20">
-          Недостаточно
+          {t("Недостаточно")}
         </p>
         <p className=" font-inter-bold text-white-500 text-[6rem] px-[7rem]">
-          баллов
+          {t("баллов")}
         </p>
         <p className=" font-inter-bold text-white-500 text-[6rem] px-[7rem]">
-          для оплаты
+          {t("для оплаты")}
         </p>
         <img
           src={Sally}
@@ -43,7 +45,7 @@ export default function ErrorPaymentPage() {
       </div>
       <div>
         <button className=" font-inter-medium text-[1.5rem] px-10 py-2 bg-gradient-to-t from-blue-100 to-white-500 rounded-3xl shadow-[0px_10px_20px_0px_rgba(0,0,0,0.3)]">
-          Понятно
+          {t("Понятно")}
         </button>
       </div>
     </section>
