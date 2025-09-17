@@ -113,7 +113,7 @@ export default function AppPayPage() {
           {/* Title Section */}
           <div className="text-center py-8 bg-white shadow-sm">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Icon data={Smartphone} size={32} className="text-purple-600" />
+              <Icon data={Smartphone} size={32} className="text-blue-600" />
               <div className="text-gray-900 font-bold text-4xl">
                 {t("Оплата через приложение")}
               </div>
@@ -126,11 +126,11 @@ export default function AppPayPage() {
           {/* Payment Interface - Full Height */}
           <div className="flex-1 flex">
             {/* Left Side - Instructions */}
-            <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-purple-100">
+            <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
               <div className="max-w-2xl mx-auto px-8">
                 {/* Step 1 */}
                 <div className="flex items-start gap-6 mb-12">
-                  <div className="flex-shrink-0 w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl">
+                  <div className="flex-shrink-0 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xl">
                     1
                   </div>
                   <div className="flex-1">
@@ -145,7 +145,7 @@ export default function AppPayPage() {
 
                 {/* Step 2 */}
                 <div className="flex items-start gap-6">
-                  <div className="flex-shrink-0 w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl">
+                  <div className="flex-shrink-0 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xl">
                     2
                   </div>
                   <div className="flex-1">
@@ -161,7 +161,7 @@ export default function AppPayPage() {
             </div>
 
             {/* Right Side - App Details */}
-            <div className="w-96 bg-gradient-to-br from-purple-500 to-purple-600 text-white flex flex-col">
+            <div className="w-96 bg-gradient-to-br from-blue-500 to-blue-600 text-white flex flex-col">
               <div className="p-8 h-full flex flex-col justify-between">
                 {/* App Download Section */}
                 <div className="flex flex-col items-center mb-8">
