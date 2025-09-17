@@ -1,75 +1,92 @@
-import { WiTime4 } from "react-icons/wi";
-import { MdOutlineCheck } from "react-icons/md";
-import Lightning from "./../../assets/lightning.svg";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Card, Button, Icon, Text } from "@gravity-ui/uikit";
+import { ArrowRight } from "@gravity-ui/icons";
+import { Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface ICard {
   time: number;
   title: string;
-  value: string;
   services: string[];
   price: number;
-  bgColor?: string;
+  value: string;
 }
 
 export default function ProgramCard({
-  bgColor,
   time,
   title,
   services,
   price,
   value,
+
 }: ICard) {
-  const navigate = useNavigate();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
   return (
-    <div
-      onClick={() => navigate(`/programs/${value}`)}
-      className={`flex flex-col snap-start justify-between min-w-[210px] min-h-[600px] rounded-3xl text-white-500 shadow-[0px_20px_40px_15px_rgba(0,0,0,0.3)] px-6 ${
-        bgColor ? bgColor : "bg-primary "
-      }`}
-    >
-      <div className=" ">
-        <div className=" flex items-center justify-start gap-3 pt-5">
-          <WiTime4 className={`${bgColor ? bgColor : "bg-primary"} text-6xl`} />
-          <p className=" font-inter-semibold text-2xl">
-            {time} {t("мин.")}
-          </p>
+    <Card  type="action" className="w-80 bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col border-0" onClick={() => navigate(`/programs/${value}`)}>
+      <div className="flex-shrink-0 h-96 p-6 relative flex flex-col bg-gradient-to-br from-blue-500 to-blue-600">
+        {/* Duration Badge */}
+        <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-6 self-start bg-white/20 backdrop-blur-sm border border-white/10">
+          <Clock className="w-4 h-4 text-white" />
+          <span className="text-sm font-medium text-white">{time} мин.</span>
         </div>
-        <p className=" font-inter-semibold text-2xl mt-8">{t(`${title}`)}</p>
-        <ul className=" mt-4 font-inter-regular">
-          {services.map((service, index) => (
-            <li key={index} className="flex items-center gap-3">
-              <MdOutlineCheck />
-              <p className=" pb-1">{t(`${service}`)}</p>
-            </li>
-          ))}
-        </ul>
+
+        {/* Title */}
+        <h2 className="text-3xl font-bold mb-6 text-balance leading-tight text-white">{t(`${title}`)}</h2>
+
+        {/* Service List - No scroll needed with bigger header */}
+        <div className="flex-1">
+          <ul className="space-y-3">
+            {services.map((service, index) => (
+              <li key={index} className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full flex-shrink-0 bg-white" />
+                <span className="text-sm font-medium text-white">{t(`${service}`)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Decorative dots */}
+        <div className="absolute top-6 right-6 flex gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-white/60" />
+          <div className="w-1.5 h-1.5 rounded-full bg-white/60" />
+        </div>
       </div>
-      <div className=" flex flex-col justify-center items-center">
-        <div className="flex flex-row items-center justify-between min-w-[180px] min-h-[80px] bg-white-500 w-full mb-6 rounded-3xl py-3">
-          <div className=" flex flex-col justify-between h-full pl-4">
-            <p className=" text-black text-[12px] font-inter-medium">
-              {t("Ваш СashBack")}
-            </p>
-            <p className="text-left text-black text-[20px] font-inter-semibold">
-              10%
-            </p>
-            <p className=" text-black text-[10px] font-inter-light ">
-              {t("От вашей мойки")}
-            </p>
+
+      <div className="flex-shrink-0 p-6 bg-white">
+        {/* Cashback Section */}
+        <div className="flex items-center justify-between mb-6 p-4 bg-orange-50/80 rounded-2xl border border-orange-100/50">
+          <div className="flex-1">
+            <p className="text-sm text-gray-600 mb-1 font-medium">{t("Ваш CashBack")}</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-bold text-gray-900">10%</span>
+            </div>
+            <p className="text-xs text-gray-500">{t("От вашей мойки")}</p>
           </div>
-          <img src={Lightning} alt="lightning" className=" size-[75px]" />
+
+          {/* Orange Circle Graphic */}
+          <div className="relative flex-shrink-0">
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 rounded-full shadow-lg opacity-90" />
+            <div className="absolute -top-1 -right-1 w-8 h-8 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-400 rounded-full shadow-md" />
+            <div className="absolute top-2 left-2 w-3 h-3 bg-white/30 rounded-full" />
+          </div>
         </div>
-        <p
-          className={`min-w-[180px] text-5xl font-inter-semibold bg-gradient-to-t py-5 rounded-3xl mb-3 ${
-            bgColor ? " from-black to-gray-500" : "from-primary to-secondary"
-          }  `}
-        >
-          {price} {t("р.")}
-        </p>
+
+        <div className="mb-6 text-left">
+          <span className="text-6xl font-bold text-gray-900 tracking-tight">{price}</span>
+          <span className="text-2xl text-gray-500 ml-1">{t("р.")}</span>
+        </div>
+
+        {/* Action Button */}
+        <div className="flex items-center justify-between p-3 cursor-pointer animate-pulse">
+          <Text className="text-black-800">{t("Выбрать программу")}</Text>
+          <Icon data={ArrowRight} size={18} className="text-gray-600" />
+        </div>
+          
+
       </div>
-    </div>
-  );
+    </Card>
+  )
+
 }

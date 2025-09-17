@@ -2,8 +2,10 @@ import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import MainPage from "./pages/MainPage.tsx";
 import "./index.css";
+import "./styles/styles.css";
 import "./i18n/index.ts";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { ThemeProvider } from "@gravity-ui/uikit";
 import SingleProgramPage from "./pages/SingleProgramPage.tsx";
 import InstructionPage from "./pages/InstructionPage.tsx";
 import CardPayPage from "./pages/CardPayPage.tsx";
@@ -54,8 +56,10 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <Suspense fallback="...is loading">
-      <RouterProvider router={router} />
-    </Suspense>
+    <ThemeProvider theme="light">
+      <Suspense fallback="...is loading">
+        <RouterProvider router={router} />
+      </Suspense>
+    </ThemeProvider>
   </React.StrictMode>
 );

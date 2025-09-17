@@ -1,11 +1,15 @@
 import "./../App.css";
-import VideoLayout from "../layouts/VideoLayout";
 import { PROGRAMS } from "../fake-data";
 import Stop from "../assets/block.svg";
 import { useEffect, useState } from "react";
 import { secondsToTime } from "../util";
 import ProgramCard from "../components/cards/ProgramCard";
 import { Trans, useTranslation } from "react-i18next";
+import { Text, Button, Card, Icon, DropdownMenu } from '@gravity-ui/uikit';
+import { Globe } from "@gravity-ui/icons";
+import Logo from "../assets/Logo.svg";
+import { LANGUAGES, VIDEO_TYPES } from "../components/hard-data";
+import { useNavigate } from "react-router-dom";
 
 export default function MainPage() {
   const divider = 4;
@@ -13,82 +17,111 @@ export default function MainPage() {
   const programs = Object.entries(PROGRAMS);
   const [time, setTime] = useState(initTime);
   const [percentage, setPercentage] = useState(0);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
-  useEffect(() => {
-    const timeInterval = setInterval(() => {
-      setTime((prevTime) => (prevTime > 0 ? prevTime - 1 : 0));
-    }, 1000);
+  const navigate = useNavigate();
+  const [attachemntUrl] = useState<{
+    baseUrl: string;
+    programUrl: string;
+  }>({
+    baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
+    programUrl: ``,
+  });
 
-    const percentageInterval = setInterval(() => {
-      const onePercentDivideTwo = 100 / (initTime * divider);
-      setPercentage((prevPersentage) =>
-        prevPersentage < 100 ? prevPersentage + onePercentDivideTwo : 100
-      );
-    }, 1000 / divider);
-
-    return () => {
-      clearInterval(percentageInterval);
-      clearInterval(timeInterval);
-    };
-  }, []);
 
   return (
-    <VideoLayout isFisrtPage>
-      <h1 className=" text-black font-inter-bold text-5xl mb-16">
-        {t("Выберите программу")}
-      </h1>
-      <div
-        className={`w-full pb-10  ${
-          programs.length > 4 && " snap-x overflow-x-scroll scroll-p-40"
-        }`}
-      >
-        <div
-          className={`flex flex-row justify-center gap-5 ${
-            programs.length > 4 ? "min-w-fit" : " w-full"
-          } `}
-        >
-          {programs.map(([key, program], index) => (
-            <ProgramCard
-              key={index}
-              time={program.time}
-              title={program.title}
-              services={program.services}
-              price={program.price}
-              value={key}
-              bgColor={index + 1 === programs.length ? "bg-black" : ""}
-            />
-          ))}
-        </div>
+    <div className="flex flex-col min-h-screen w-screen bg-gray-200">
+      {/* Video Section - 40% of screen height */}
+      <div className="h-[40vh] w-full flex justify-center items-center relative overflow-hidden">
+        <iframe
+          src={`/test_video_sensor_terminal.mp4`}
+          allow="autoplay"
+          id="video"
+          className="hidden"
+        />
+        {VIDEO_TYPES.some((ext: string) =>
+          attachemntUrl.baseUrl.endsWith(ext)
+        ) ? (
+          <video
+            className="w-full h-full object-cover"
+            width="320"
+            height="240"
+            autoPlay
+            loop
+            muted
+          >
+            <source src={attachemntUrl.baseUrl} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        ) : (
+          <img
+            src={`${attachemntUrl.baseUrl}`}
+            alt="Promotion img"
+            className="w-full h-full object-cover"
+          />
+        )}
       </div>
 
-      {time > 0 && (
-        <div className=" mt-5 flex w-full items-center">
-          <img src={Stop} alt="stop" className=" size-[50px]" />
-          <div className=" text-left w-full min-h-[50px]">
-            <p>
-              <Trans
-                i18nKey="Бокс осводится через"
-                values={{ time: secondsToTime(time) }}
+      {/* Content Section - 60% of screen height */}
+      <div className="flex-1 flex flex-col">
+        {/* Header with Logo and Controls */}
+        <Card className="mx-7 my-5 p-4 shadow-lg border-0">
+          <div className="flex justify-between items-center">
+            <img src={Logo} alt="Logo" className="h-12" />
+            <div className="flex items-center gap-4">
+              {/* Language Dropdown */}
+             
+
+              {/* Navigation Button */}
+              <button
+                className="px-8 py-4 rounded-3xl text-white font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg" onClick={() => navigate("/instruction")}
+                style={{ backgroundColor: "#0B68E1" }}
+          >
+            Инструкция
+          </button>
+            </div>
+          </div>
+        </Card>
+
+        {/* Main Content Area */}
+        <div className="flex-1 px-7 pb-7">
+          <div className="flex flex-col h-full">
+            
+            {/* Title Section */}
+            <div className="mb-8">
+              <div className="text-gray-900 font-bold text-4xl text-center">
+                {t("Выберите программу")}
+              </div>
+            </div>
+
+            {/* Program Cards Section */}
+            <div className="flex-1 flex flex-col justify-center">
+              <div
+                className={`w-full ${
+                  programs.length > 4 && "snap-x overflow-x-scroll scroll-p-40"
+                }`}
               >
-                Бокс осводится через
-                <span
-                  className="text-red-500 min-w-fit w-10 max-w-[150px]"
-                  data-i18n="time"
-                />
-              </Trans>
-            </p>
-            <div className=" min-h-3 w-full bg-gray-500 rounded-lg">
-              <div className="relative h-full">
                 <div
-                  className={`absolute top-0 left-0 rounded-lg  min-h-3 bg-blue-500 animate-pulse`}
-                  style={{ width: `${percentage}%` }}
-                ></div>
+                  className={`flex flex-row justify-center gap-6 ${
+                    programs.length > 4 ? "min-w-fit" : "w-full"
+                  }`}
+                >
+                  {programs.map(([key, program], index) => (
+                    <ProgramCard
+                      key={index}
+                      time={program.time}
+                      title={program.title}
+                      services={program.services}
+                      price={program.price}
+                      value={key}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      )}
-    </VideoLayout>
+      </div>
+    </div>
   );
 }

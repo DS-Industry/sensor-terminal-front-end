@@ -1,14 +1,27 @@
 import Cash from "./../assets/cash.svg";
-import VideoLayout from "../layouts/VideoLayout";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import AttentionTag from "../components/tags/AttentionTag";
 import { useTranslation } from "react-i18next";
+import { Button, Card as UICard, Icon, DropdownMenu } from '@gravity-ui/uikit';
+import { ArrowLeft, Globe, CreditCard } from "@gravity-ui/icons";
+import Logo from "../assets/Logo.svg";
+import { LANGUAGES, VIDEO_TYPES } from "../components/hard-data";
 
 export default function CashPayPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+
+  const [attachemntUrl] = useState<{
+    baseUrl: string;
+    programUrl: string;
+  }>({
+    baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
+    programUrl: state?.promoUrl || '',
+  });
+
+  const [insertedAmount] = useState(110); // Mock inserted amount
 
   useEffect(() => {
     if (!state || (state && (!state.programName || !state.price))) {
@@ -16,80 +29,190 @@ export default function CashPayPage() {
     }
 
     console.log(state);
-  }, []);
+  }, [state, navigate]);
 
   return (
-    <VideoLayout programUrl={state.promoUrl}>
-      <div className="flex flex-row mt-10 px-20 justify-between">
-        <div className=" max-w-[300px]">
-          <h1 className=" text-5xl text-left font-inter-semibold text-gray-600 mb-14">
-            {t("Оплата Наличными")}
-          </h1>
-          <h2 className="text-left font-inter-semibold text-3xl mb-5">
-            {t("Внесите купюры в купюроприемник")}
-          </h2>
-          <p className=" text-left w-fit">
-            {t("Принимаются купюры номиналом:")}
-          </p>
-          <p className=" text-left w-fit px-16 py-3 bg-green-400 font-inter-bold text-white-500 text-xl mt-3 rounded-2xl">
-            50 / 100 / 200
-          </p>
-          <div className=" absolute mt-10 min-h-[160px] min-w-[270px] bg-primary rounded-t-2xl z-20 flex justify-center items-end">
-            <div className=" min-h-[30px] min-w-[220px] bg-gray-500 z-30"></div>
-          </div>
-          <div className="  mt-[200px] min-h-[75px] min-w-[270px] max-w-[270px] bg-primary rounded-b-2xl z-20 flex justify-center items-start">
-            <div className=" min-h-[30px] min-w-[220px] bg-gray-500 z-10"></div>
-          </div>
+    <div className="flex flex-col min-h-screen w-screen bg-gray-100">
+      {/* Video Section - 40% of screen height */}
+      <div className="h-[40vh] w-full flex justify-center items-center relative overflow-hidden">
+        <iframe
+          src={`/test_video_sensor_terminal.mp4`}
+          allow="autoplay"
+          id="video"
+          className="hidden"
+        />
+        {attachemntUrl.programUrl && VIDEO_TYPES.some((ext: string) =>
+          attachemntUrl.programUrl.endsWith(ext)
+        ) ? (
+          <video
+            className="w-full h-full object-cover"
+            width="320"
+            height="240"
+            autoPlay
+            loop
+            muted
+          >
+            <source src={attachemntUrl.programUrl} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        ) : attachemntUrl.programUrl ? (
           <img
-            src={Cash}
-            alt="card"
-            className=" absolute bottom-[2rem] left-[5.6rem] size-[350px] p-0 m-0 object-fit -rotate-90 z-10"
+            src={attachemntUrl.programUrl}
+            alt="Program Image"
+            className="w-full h-full object-cover"
           />
-        </div>
-        <div className=" bg-primary min-w-[350px] min-h-[700px] rounded-3xl px-5 flex flex-col justify-between shadow-[0px_20px_40px_15px_rgba(0,0,0,0.3)]">
-          <div className="">
-            <div className=" mt-10 flex flex-row gap-3 text-white-500 font-inter-light text-base opacity-80 text-left mb-7">
-              <p>{t("Программа")}:</p>
-              <p className=" font-inter-bold">{t(`${state.programName}`)}</p>
-            </div>
-            <div className=" h-full flex flex-col justify-between gap-10 mt-10">
-              <div>
-                <p className=" font-inter-bold text-2xl text-white-500 text-left mb-5">
-                  {t("К оплате")}:
-                </p>
-                <p
-                  className={` text-5xl text-white-500 font-inter-semibold bg-gradient-to-t py-5 rounded-3xl mb-3 from-primary to-secondary `}
+        ) : (
+          <img
+            src={`${attachemntUrl.baseUrl}`}
+            alt="Promotion img"
+            className="w-full h-full object-cover"
+          />
+        )}
+      </div>
+
+      {/* Content Section - 60% of screen height */}
+      <div className="flex-1 flex flex-col">
+        {/* Header with Logo and Controls */}
+        <UICard className="mx-7 my-5 p-4 shadow-lg border-0">
+          <div className="flex justify-between items-center">
+            <img src={Logo} alt="Logo" className="h-12" />
+            <div className="flex items-center gap-4">
+              {/* Language Dropdown */}
+              <DropdownMenu
+                items={Object.entries(LANGUAGES).map(([key, lng]) => ({
+                  action: () => i18n.changeLanguage(key),
+                  text: (lng as { label: string }).label,
+                }))}
+              >
+                <Button
+                  view="action"
+                  size="l"
+                  className="px-4 py-3 rounded-2xl transition-all duration-300 hover:scale-105"
                 >
-                  {state.price} {t("р.")}
-                </p>
-              </div>
-              <div>
-                <p className=" font-inter-bold text-2xl text-white-500 text-left mb-5">
-                  {t("Внесено")}:
-                </p>
-                <p
-                  className={` text-5xl text-white-500 font-inter-semibold bg-gradient-to-t py-5 rounded-3xl mb-3 from-primary to-secondary `}
-                >
-                  110 {t("р.")}
-                </p>
-              </div>
+                  <Icon data={Globe} size={20} />
+                </Button>
+              </DropdownMenu>
+
+              {/* Back Button */}
+              <button
+                className="px-8 py-4 rounded-3xl text-white font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg"
+                onClick={() => navigate("/")}
+                style={{ backgroundColor: "#0B68E1" }}
+              >
+                <div className="flex items-center gap-2">
+                  <Icon data={ArrowLeft} size={20} />
+                  {t("Назад")}
+                </div>
+              </button>
             </div>
           </div>
-          <div>
-            <button className=" font-inter-medium px-8 py-2 mb-7 bg-gradient-to-t from-blue-100 to-white-500 rounded-3xl shadow-[0px_10px_20px_0px_rgba(0,0,0,0.3)]">
-              {t("Оплатить")}
-            </button>
+        </UICard>
+
+        {/* Main Content Area - Full Screen */}
+        <div className="flex-1 flex flex-col">
+          {/* Title Section */}
+          <div className="text-center py-8 bg-white shadow-sm">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Icon data={CreditCard} size={32} className="text-green-600" />
+              <div className="text-gray-900 font-bold text-4xl">
+                {t("Оплата Наличными")}
+              </div>
+            </div>
+            <div className="text-gray-600 text-lg">
+              {t("Внесите купюры в купюроприемник")}
+            </div>
           </div>
-          <div className=" absolute bottom-[21rem] right-[4rem]">
-            <AttentionTag
-              label={t("Терминал сдачу не выдает!")}
-              additionalStyles={`${
-                i18n.language === "en" ? "max-w-[250px]" : "max-w-[200px]"
-              } text-red-400`}
-            />
+
+          {/* Payment Interface - Full Height */}
+          <div className="flex-1 flex">
+            {/* Left Side - Instructions and Graphics */}
+            <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+              <div className="relative mb-12">
+                {/* Cash Machine Visual */}
+                <div className="relative">
+                  <div className="w-80 h-48 bg-gradient-to-b from-gray-600 to-gray-700 rounded-t-2xl shadow-lg flex justify-center items-end pb-4">
+                    <div className="w-64 h-8 bg-gray-500 rounded"></div>
+                  </div>
+                  <div className="w-80 h-20 bg-gradient-to-b from-gray-600 to-gray-700 rounded-b-2xl shadow-lg flex justify-center items-start pt-4">
+                    <div className="w-64 h-8 bg-gray-500 rounded"></div>
+                  </div>
+                  <img
+                    src={Cash}
+                    alt="cash"
+                    className="absolute -bottom-8 -right-8 w-80 h-48 object-contain -rotate-90"
+                  />
+                </div>
+              </div>
+              
+              <div className="text-center max-w-md">
+                <div className="text-gray-800 text-2xl font-semibold mb-4">
+                  {t("Внесите купюры в купюроприемник")}
+                </div>
+                <div className="text-gray-600 text-lg mb-6">
+                  {t("Принимаются купюры номиналом:")}
+                </div>
+                <div className="inline-flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-2xl font-bold text-xl">
+                  50 / 100 / 200
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side - Payment Details */}
+            <div className="w-96 bg-gradient-to-br from-green-500 to-green-600 text-white flex flex-col">
+              <div className="p-8 h-full flex flex-col justify-between">
+                {/* Program Info */}
+                <div className="bg-white/10 p-4 rounded-2xl mb-6">
+                  <div className="text-white/80 text-sm mb-2">{t("Программа")}</div>
+                  <div className="text-white font-semibold text-lg">{t(`${state?.programName}`)}</div>
+                </div>
+
+                {/* Payment Details */}
+                <div className="space-y-6 flex-1">
+                  <div className="bg-white/10 p-6 rounded-2xl">
+                    <div className="text-white/80 text-sm mb-3">{t("К оплате")}</div>
+                    <div className="text-white font-bold text-5xl">
+                      {state?.price} {t("р.")}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/10 p-6 rounded-2xl">
+                    <div className="text-white/80 text-sm mb-3">{t("Внесено")}</div>
+                    <div className="text-white font-bold text-5xl">
+                      {insertedAmount} {t("р.")}
+                    </div>
+                  </div>
+
+                  {/* Remaining Amount */}
+                  <div className="bg-white/20 p-4 rounded-2xl">
+                    <div className="text-white/80 text-sm mb-2">{t("Осталось внести")}</div>
+                    <div className="text-white font-bold text-3xl">
+                      {Math.max(0, (state?.price || 0) - insertedAmount)} {t("р.")}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <div className="mt-8">
+                  <button 
+                    className="w-full bg-white text-green-600 font-bold text-xl py-4 px-6 rounded-2xl shadow-lg hover:bg-gray-100 transition-all duration-300"
+                    disabled={insertedAmount < (state?.price || 0)}
+                  >
+                    {insertedAmount >= (state?.price || 0) ? t("Оплатить") : t("Внесите больше средств")}
+                  </button>
+                </div>
+
+                {/* Warning */}
+                <div className="mt-6 text-center">
+                  <AttentionTag
+                    label={t("Терминал сдачу не выдает!")}
+                    additionalStyles="text-red-300 bg-red-500/20 px-4 py-2 rounded-full text-sm"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </VideoLayout>
+    </div>
   );
 }

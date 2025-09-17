@@ -1,25 +1,15 @@
 import { useLocation } from "react-router-dom";
-import NavigationButton from "../components/buttons/NavigationButton";
+import { Button, Card, Text, Icon, DropdownMenu } from "@gravity-ui/uikit";
+import { ArrowLeft, Globe } from "@gravity-ui/icons";
 import Logo from "./../assets/Logo.svg";
-import Back from "./../assets/exit_to_app.svg";
-import { IoLanguageSharp } from "react-icons/io5";
 import { useEffect, useState } from "react";
 import { LANGUAGES, VIDEO_TYPES } from "../components/hard-data";
-import {
-  Menubar,
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarTrigger,
-} from "../components/ui/menubar";
 import { useTranslation } from "react-i18next";
 
 export default function VideoLayout({
-  children,
   isFisrtPage,
   programUrl,
 }: {
-  children: React.ReactNode;
   isFisrtPage?: boolean;
   programUrl?: string;
 }) {
@@ -44,23 +34,24 @@ export default function VideoLayout({
         };
       });
     }
-  }, [pathname]);
+  }, [pathname, programUrl]);
 
   return (
-    <div className="flex flex-col min-h-screen w-screen bg-white-500">
-      <div className=" min-h-[50vh] h-[50vh] w-full flex justify-center items-center text-white">
+    <div className="flex flex-col min-h-screen w-screen bg-white">
+      {/* Video Section - 40% of screen height */}
+      <div className="h-[40vh] w-full flex justify-center items-center relative overflow-hidden">
         <iframe
           src={`/test_video_sensor_terminal.mp4`}
           allow="autoplay"
           id="video"
-          className=" hidden"
-        ></iframe>
+          className="hidden"
+        />
         {!pathname.includes("/programs") &&
         VIDEO_TYPES.some((ext: string) =>
           attachemntUrl.baseUrl.endsWith(ext)
         ) ? (
           <video
-            className="w-full h-[50vh] object-cover"
+            className="w-full h-full object-cover"
             width="320"
             height="240"
             autoPlay
@@ -75,7 +66,7 @@ export default function VideoLayout({
             attachemntUrl.programUrl.endsWith(ext)
           ) ? (
             <video
-              className="w-full h-[50vh] object-cover"
+              className="w-full h-full object-cover"
               width="320"
               height="240"
               autoPlay
@@ -89,47 +80,61 @@ export default function VideoLayout({
             <img
               src={attachemntUrl.programUrl}
               alt="Program Image"
-              className="w-full h-[50vh] object-cover"
+              className="w-full h-full object-cover"
             />
           )
         ) : (
           <img
             src={`${attachemntUrl.baseUrl}`}
             alt="Promotion img"
-            className="w-full h-[50vh] object-cover"
+            className="w-full h-full object-cover"
           />
         )}
       </div>
-      <div className="px-7 z-10">
-        <div className=" w-full flex justify-between items-center py-5">
-          <img src={Logo} alt="Logo" />
-          <div className=" flex items-center gap-10">
-            <Menubar className=" border-0">
-              <MenubarMenu>
-                <MenubarTrigger className="text-lg bg-gradient-to-t from-primary to-blue-650 px-5 py-2 rounded-3xl text-white-500 font-inter-semibold shadow-[0px_10px_20px_5px_rgba(0,0,0,0.3)] h-fit ">
-                  <IoLanguageSharp className=" text-3xl" />
-                </MenubarTrigger>
-                <MenubarContent className=" bg-gradient-to-tr from-blue-500 to-blue-100 border-0 max-w-[150px] min-w-[150px] p-1 rounded-2xl">
-                  {Object.entries(LANGUAGES).map(([key, lng]) => (
-                    <MenubarItem
-                      key={key}
-                      className=" bg-primary text-white-500 w-full  text-xl my-1 rounded-3xl first:mt-0 last:mb-0"
-                      onClick={() => i18n.changeLanguage(key)}
-                    >
-                      <p className=" w-full text-center"> {lng.label}</p>
-                    </MenubarItem>
-                  ))}
-                </MenubarContent>
-              </MenubarMenu>
-            </Menubar>
-            <NavigationButton
-              label={
-                isFisrtPage ? t("Инструкция") : <img src={Back} alt="Back" />
-              }
-            />
+
+      {/* Content Section - 60% of screen height */}
+      <div className="flex-1 flex flex-col">
+        {/* Header with Logo and Controls */}
+        <Card className="mx-7 my-5 p-4 shadow-lg border-0">
+          <div className="flex justify-between items-center">
+            <img src={Logo} alt="Logo" className="h-12" />
+            <div className="flex items-center gap-4">
+              {/* Language Dropdown */}
+              <DropdownMenu
+                items={Object.entries(LANGUAGES).map(([key, lng]) => ({
+                  action: () => i18n.changeLanguage(key),
+                  text: lng.label,
+                }))}
+              >
+                <Button
+                  view="action"
+                  size="l"
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <Icon data={Globe} size={20} />
+                </Button>
+              </DropdownMenu>
+
+              {/* Navigation Button */}
+              <Button
+                view="outlined"
+                size="l"
+                className="px-6 py-3 rounded-2xl border-2 border-blue-500 text-blue-600 hover:bg-blue-50 transition-all duration-300"
+              >
+                {isFisrtPage ? (
+                  <Text className="text-lg font-semibold">{t("Инструкция")}</Text>
+                ) : (
+                  <Icon data={ArrowLeft} size={20} />
+                )}
+              </Button>
+            </div>
           </div>
+        </Card>
+
+        {/* Main Content Area */}
+        <div className="flex-1 px-7 pb-7">
+          {/* This will be replaced with specific content based on the page */}
         </div>
-        {children}
       </div>
     </div>
   );
