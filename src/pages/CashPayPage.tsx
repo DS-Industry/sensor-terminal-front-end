@@ -7,11 +7,13 @@ import { Button, Card as UICard, Icon, DropdownMenu } from '@gravity-ui/uikit';
 import { ArrowLeft, Globe, CreditCard } from "@gravity-ui/icons";
 import Logo from "../assets/Logo.svg";
 import { LANGUAGES, VIDEO_TYPES } from "../components/hard-data";
+import useStore from "../components/state/store";
 
 export default function CashPayPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const {order} = useStore.getState();
 
   const [attachemntUrl] = useState<{
     baseUrl: string;
@@ -29,6 +31,7 @@ export default function CashPayPage() {
     }
 
     console.log(state);
+    console.log(order);
   }, [state, navigate]);
 
   return (

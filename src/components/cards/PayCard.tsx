@@ -3,7 +3,8 @@ import { FaApplePay, FaGooglePay } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, Text, Icon } from "@gravity-ui/uikit";
-import {SealPercent} from '@gravity-ui/icons';
+import { SealPercent } from '@gravity-ui/icons';
+import useStore from "../state/store";
 
 
 interface IPayCard {
@@ -27,20 +28,25 @@ export default function PayCard({
 }: IPayCard) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const {createOrder} = useStore.getState();
 
   return (
     <Card
-      type="action" 
+      type="action"
       className="w-80 h-64 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-105 border-0 overflow-hidden"
-      onClick={() =>
+      onClick={() => {
+        createOrder({
+          programId: programName,
+        }, payType);
+
         navigate(`./${endPoint}`, {
           state: {
             programName: programName,
             price: price,
             promoUrl: programUrl,
           },
-        })
-      }
+        });
+      }}
     >
       <div className="p-6 h-full flex flex-col">
         {/* Header with Title and Icon */}
