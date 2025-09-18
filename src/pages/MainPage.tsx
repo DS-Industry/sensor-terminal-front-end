@@ -1,5 +1,4 @@
 import "./../App.css";
-import { PROGRAMS } from "../fake-data";
 import Stop from "../assets/block.svg";
 import { useEffect, useState } from "react";
 import { secondsToTime } from "../util";
@@ -10,6 +9,10 @@ import { Globe } from "@gravity-ui/icons";
 import Logo from "../assets/Logo.svg";
 import { LANGUAGES, VIDEO_TYPES } from "../components/hard-data";
 import { useNavigate } from "react-router-dom";
+import { PROGRAMS } from "../fake-data";
+import useSWR from 'swr';
+import { IProgram } from "../api/types/program";
+import { getPrograms } from "../api/services/program";
 
 export default function MainPage() {
   const divider = 4;
@@ -18,8 +21,17 @@ export default function MainPage() {
   const [time, setTime] = useState(initTime);
   const [percentage, setPercentage] = useState(0);
   const { t, i18n } = useTranslation();
-
   const navigate = useNavigate();
+
+  // const { data: programs, error, isLoading } = useSWR<IProgram[]>(
+  //   'getPrograms', 
+  //   getPrograms,  
+  //   {
+  //     revalidateOnFocus: false, 
+  //     revalidateOnReconnect: true, 
+  //   }
+  // );
+
   const [attachemntUrl] = useState<{
     baseUrl: string;
     programUrl: string;
@@ -28,6 +40,13 @@ export default function MainPage() {
     programUrl: ``,
   });
 
+  // const [displayPrograms, setDisplayPrograms] = useState<IProgram[]>([]);
+
+  // useEffect(() => {
+  //   if (programs) {
+  //     setDisplayPrograms(programs);
+  //   }
+  // }, [programs]);
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-200">
