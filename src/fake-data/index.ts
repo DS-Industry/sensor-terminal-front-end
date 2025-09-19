@@ -2,26 +2,10 @@ import BankCard from "./../assets/card.svg";
 import Cash from "./../assets/cash.svg";
 import App from "./../assets/app.svg";
 import Card from "./../assets/app-card.svg";
+import { IProgram } from "../api/types/program";
+import { IPaymentMethod } from "../api/types/payment";
 
-type Program = {
-  [value: string]: {
-    time: number;
-    title: string;
-    services: string[];
-    price: number;
-    description: string;
-    promoUrl: string;
-  };
-};
-
-type Pay = {
-  label: string;
-  imgUrl: string;
-  type: "bankCard" | "cash" | "app";
-  endPoint: string;
-};
-
-export const PROGRAMS: Program = {
+export const PROGRAMS: IProgram = {
   express: {
     time: 3,
     title: "Экспресс",
@@ -77,7 +61,7 @@ export const PROGRAMS: Program = {
   },
 };
 
-export const PAYS: Pay[] = [
+export const PAYS: IPaymentMethod[] = [
   {
     label: "Банковская карта",
     imgUrl: BankCard,
