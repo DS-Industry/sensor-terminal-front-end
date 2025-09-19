@@ -3,6 +3,7 @@ import { Card, Button, Icon, Text } from "@gravity-ui/uikit";
 import { ArrowRight } from "@gravity-ui/icons";
 import { Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import useStore from "../state/store";
 
 interface ICard {
   time: number;
@@ -23,8 +24,17 @@ export default function ProgramCard({
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  const { order, setOrderProgramId } = useStore.getState();
+
   return (
-    <Card  type="action" className="w-80 bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col border-0" onClick={() => navigate(`/programs/${value}`)}>
+    <Card type="action" className="w-80 bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col border-0"
+      onClick={() => {
+        console.log("order:", order);
+        setOrderProgramId(value);
+        
+        navigate(`/programs/${value}`)
+      }}
+    >
       <div className="flex-shrink-0 h-96 p-6 relative flex flex-col bg-gradient-to-br from-blue-500 to-blue-600">
         {/* Duration Badge */}
         <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-6 self-start bg-white/20 backdrop-blur-sm border border-white/10">
@@ -83,7 +93,7 @@ export default function ProgramCard({
           <Text className="text-black-800">{t("Выбрать программу")}</Text>
           <Icon data={ArrowRight} size={18} className="text-gray-600" />
         </div>
-          
+
 
       </div>
     </Card>

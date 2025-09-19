@@ -9,6 +9,7 @@ import { Globe } from "@gravity-ui/icons";
 import Logo from "../assets/Logo.svg";
 import { LANGUAGES, VIDEO_TYPES } from "../components/hard-data";
 import { useNavigate } from "react-router-dom";
+import useStore from "../components/state/store";
 import { PROGRAMS } from "../fake-data";
 import useSWR from 'swr';
 import { IProgram } from "../api/types/program";
@@ -21,6 +22,8 @@ export default function MainPage() {
   const [time, setTime] = useState(initTime);
   const [percentage, setPercentage] = useState(0);
   const { t, i18n } = useTranslation();
+  const {setOrder} = useStore.getState();
+
   const navigate = useNavigate();
 
   // const { data: programs, error, isLoading } = useSWR<IProgram[]>(
@@ -40,6 +43,9 @@ export default function MainPage() {
     programUrl: ``,
   });
 
+  useEffect(() => {
+    setOrder({});
+  }, [])
   // const [displayPrograms, setDisplayPrograms] = useState<IProgram[]>([]);
 
   // useEffect(() => {

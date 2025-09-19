@@ -4,6 +4,7 @@ import App from "./../assets/app.svg";
 import Card from "./../assets/app-card.svg";
 import { IProgram } from "../api/types/program";
 import { IPaymentMethod } from "../api/types/payment";
+import { EPaymentMethod } from "../components/state/order/orderSlice";
 
 export const PROGRAMS: IProgram = {
   express: {
@@ -65,24 +66,24 @@ export const PAYS: IPaymentMethod[] = [
   {
     label: "Банковская карта",
     imgUrl: BankCard,
-    type: "bankCard",
+    type: EPaymentMethod.CARD,
     endPoint: "bankCard",
   },
   {
     label: "Наличный расчет",
-    type: "cash",
+    type: EPaymentMethod.CASH,
     imgUrl: Cash,
     endPoint: "cash",
   },
   {
     label: "Мобильное приложение",
-    type: "app",
+    type: EPaymentMethod.MOBILE_PAYMENT,
     imgUrl: App,
     endPoint: "app",
   },
   {
     label: "Карта лояльности",
-    type: "app",
+    type: EPaymentMethod.LOYALTY,
     imgUrl: Card,
     endPoint: "appCard",
   },

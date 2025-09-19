@@ -1,8 +1,8 @@
-type TPaymentMethod = "bankCard" | "cash" | "app";
+import { EPaymentMethod } from "../../../components/state/order/orderSlice";
 
 export interface IPaymentMethod  {
   label: string;
   imgUrl: string;
-  type: TPaymentMethod;
+  type: EPaymentMethod;
   endPoint: string;
 };
