@@ -13,6 +13,24 @@ export default function SingleProgramPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
 
+  // const { data: currentProgram, error: programError, isLoading: programLoading } = useSWR<IProgram | null>(
+  //   programId ? `/programs/${programId}` : null, 
+  //   () => programId ? getProgramById(programId) : null, 
+  //   {
+  //     revalidateOnFocus: false,
+  //     errorRetryCount: 2,
+  //   }
+  // );
+
+  // const { data: paymentMethods, error: paymentMethodsError, isLoading: paymentMethodsLoading } = useSWR<IPaymentMethod[]>(
+  //   '/payment-methods',
+  //   getPaymentMethods,
+  //   {
+  //     revalidateOnFocus: false,
+  //     errorRetryCount: 2,
+  //   }
+  // );
+
   const [attachemntUrl] = useState<{
     baseUrl: string;
     programUrl: string;
