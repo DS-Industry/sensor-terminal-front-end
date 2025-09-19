@@ -73,7 +73,7 @@ export default function ProgramCard({
           </div>
         </div>
 
-        <div className="mb-6 text-left">
+        <div className="mb-6 text-center">
           <span className="text-6xl font-bold text-gray-900 tracking-tight">{price}</span>
           <span className="text-2xl text-gray-500 ml-1">{t("р.")}</span>
         </div>
