@@ -61,7 +61,7 @@ export default function MediaCampaign(props: IMediaCampaign) {
     if (!mediaUrl) {
       return (
         <img
-          src="../../assets/spare-media.jpg"
+          src="../../assets/spare-media.webp"
           alt="Default media"
           className="w-full h-full object-cover"
         />
