@@ -49,7 +49,7 @@ export default function PayCard({
     >
       <div className="p-6 h-full flex flex-col">
         {/* Header with Title and Icon */}
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex justify-between items-start mb-4 relative">
           <Text className="text-white font-bold text-2xl">
             {t(`${label}`)}
           </Text>
@@ -94,7 +94,7 @@ export default function PayCard({
           {(payType === EPaymentMethod.LOYALTY || payType === EPaymentMethod.MOBILE_PAYMENT) && (
             <div className="bg-white/20 p-2 rounded-2xl text-center w-full h-full flex flex-col justify-center">
               <div className="text-white/80 text-sm mb-1">
-                {t("Ваш СashBack")}
+                {t("Ваш CashBack")}
               </div>
               <div className="text-white font-bold text-base h-6 flex items-center justify-center">+10%</div>
             </div>
