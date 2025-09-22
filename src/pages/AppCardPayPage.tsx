@@ -3,21 +3,20 @@ import { useEffect } from "react";
 import WifiBlue from "../assets/blue_wifi.svg";
 import PromoCard from "../assets/promo_card.svg";
 import { useTranslation } from "react-i18next";
-import { Button, Card as UICard, Icon, DropdownMenu } from '@gravity-ui/uikit';
-import { ArrowLeft, Globe, CreditCard } from "@gravity-ui/icons";
-import Logo from "../assets/Logo.svg";
-import { LANGUAGES } from "../components/hard-data";
+import { CreditCard } from "@gravity-ui/icons";
 import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import useStore from "../components/state/store";
 import { EOrderStatus } from "../components/state/order/orderSlice";
-import ClientLogo from "../components/logo/Logo";
+import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
+import PaymentTitleSection from "../components/paymentTitleSection/PaymentTitleSection";
+import { Icon } from "@gravity-ui/uikit";
 
 export default function AppCardPayPage() {
   const { state } = useLocation();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const {order, setOrderStatus} = useStore.getState();
+  const { order, setOrderStatus } = useStore.getState();
 
   const { attachemntUrl } = useMediaCampaign();
 
@@ -33,60 +32,21 @@ export default function AppCardPayPage() {
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
       {/* Video Section - 40% of screen height */}
-      <MediaCampaign attachemntUrl={attachemntUrl}/>
-  
+      <MediaCampaign attachemntUrl={attachemntUrl} />
+
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">
         {/* Header with Logo and Controls */}
-        <UICard className="mx-7 my-5 p-4 shadow-lg border-0">
-          <div className="flex justify-between items-center">
-            <ClientLogo />
-            <div className="flex items-center gap-4">
-              {/* Language Dropdown */}
-              <DropdownMenu
-                items={Object.entries(LANGUAGES).map(([key, lng]) => ({
-                  action: () => i18n.changeLanguage(key),
-                  text: (lng as { label: string }).label,
-                }))}
-              >
-                <Button
-                  view="action"
-                  size="l"
-                  className="px-4 py-3 rounded-2xl transition-all duration-300 hover:scale-105"
-                >
-                  <Icon data={Globe} size={20} />
-                </Button>
-              </DropdownMenu>
-
-              {/* Back Button */}
-              <button
-                className="px-8 py-4 rounded-3xl text-white font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg"
-                onClick={() => navigate("/")}
-                style={{ backgroundColor: "#0B68E1" }}
-              >
-                <div className="flex items-center gap-2">
-                  <Icon data={ArrowLeft} size={20} />
-                  {t("Назад")}
-                </div>
-              </button>
-            </div>
-          </div>
-        </UICard>
+        <HeaderWithLogo />
 
         {/* Main Content Area - Full Screen */}
         <div className="flex-1 flex flex-col">
           {/* Title Section */}
-          <div className="text-center py-8 bg-white shadow-sm">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Icon data={CreditCard} size={32} className="text-blue-600" />
-              <div className="text-gray-900 font-bold text-4xl">
-                {t("Оплата картой лояльности")}
-              </div>
-            </div>
-            <div className="text-gray-600 text-lg">
-              {t("Приложите карту лояльности для оплаты")}
-            </div>
-          </div>
+          <PaymentTitleSection
+            title="Оплата картой лояльности"
+            description="Приложите карту лояльности для оплаты"
+            icon={CreditCard}
+          />
 
           {/* Payment Interface - Full Height */}
           <div className="flex-1 flex">
@@ -140,7 +100,7 @@ export default function AppCardPayPage() {
                       {state?.price} {t("р.")}
                     </div>
                   </div>
-                  
+
                   <div className="bg-white/20 p-4 rounded-2xl">
                     <div className="text-white/80 text-sm mb-2">{t("Ваш баланс")}</div>
                     <div className="text-white font-bold text-3xl">

@@ -1,25 +1,22 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import Sally from "../assets/Saly-24.svg";
 import GooglePlay from "../assets/Frame.svg";
 import AppStore from "../assets/Frame_apple.svg";
-import AttentionTag from "../components/tags/AttentionTag";
 import Bell from "../assets/Bell_perspective_matte.svg";
 import { useTranslation } from "react-i18next";
-import { Button, Card as UICard, Icon, DropdownMenu } from '@gravity-ui/uikit';
-import { ArrowLeft, Globe, Smartphone, QrCode } from "@gravity-ui/icons";
-import Logo from "../assets/Logo.svg";
-import { LANGUAGES } from "../components/hard-data";
+import { Smartphone, QrCode } from "@gravity-ui/icons";
 import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import useStore from "../components/state/store";
 import { EOrderStatus } from "../components/state/order/orderSlice";
-import ClientLogo from "../components/logo/Logo";
+import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
+import PaymentTitleSection from "../components/paymentTitleSection/PaymentTitleSection";
+import { Icon } from "@gravity-ui/uikit";
 
 export default function AppPayPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const {order, setOrderStatus} = useStore.getState();
 
   const { attachemntUrl } = useMediaCampaign();
@@ -40,55 +37,16 @@ export default function AppPayPage() {
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">
         {/* Header with Logo and Controls */}
-        <UICard className="mx-7 my-5 p-4 shadow-lg border-0">
-          <div className="flex justify-between items-center">
-            <ClientLogo />
-            <div className="flex items-center gap-4">
-              {/* Language Dropdown */}
-              <DropdownMenu
-                items={Object.entries(LANGUAGES).map(([key, lng]) => ({
-                  action: () => i18n.changeLanguage(key),
-                  text: (lng as { label: string }).label,
-                }))}
-              >
-                <Button
-                  view="action"
-                  size="l"
-                  className="px-4 py-3 rounded-2xl transition-all duration-300 hover:scale-105"
-                >
-                  <Icon data={Globe} size={20} />
-                </Button>
-              </DropdownMenu>
-
-              {/* Back Button */}
-              <button
-                className="px-8 py-4 rounded-3xl text-white font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg"
-                onClick={() => navigate("/")}
-                style={{ backgroundColor: "#0B68E1" }}
-              >
-                <div className="flex items-center gap-2">
-                  <Icon data={ArrowLeft} size={20} />
-                  {t("Назад")}
-                </div>
-              </button>
-            </div>
-          </div>
-        </UICard>
+        <HeaderWithLogo />
 
         {/* Main Content Area - Full Screen */}
         <div className="flex-1 flex flex-col">
           {/* Title Section */}
-          <div className="text-center py-8 bg-white shadow-sm">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Icon data={Smartphone} size={32} className="text-blue-600" />
-              <div className="text-gray-900 font-bold text-4xl">
-                {t("Оплата через приложение")}
-              </div>
-            </div>
-            <div className="text-gray-600 text-lg">
-              {t("Используйте мобильное приложение для оплаты")}
-            </div>
-          </div>
+          <PaymentTitleSection
+            title="Оплата через приложение"
+            description="Используйте мобильное приложение для оплаты"
+            icon={Smartphone}
+          />
 
           {/* Payment Interface - Full Height */}
           <div className="flex-1 flex">
