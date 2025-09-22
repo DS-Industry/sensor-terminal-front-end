@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Sally from "../assets/Saly-24.svg";
 import GooglePlay from "../assets/Frame.svg";
 import AppStore from "../assets/Frame_apple.svg";
@@ -9,7 +9,9 @@ import { useTranslation } from "react-i18next";
 import { Button, Card as UICard, Icon, DropdownMenu } from '@gravity-ui/uikit';
 import { ArrowLeft, Globe, Smartphone, QrCode } from "@gravity-ui/icons";
 import Logo from "../assets/Logo.svg";
-import { LANGUAGES, VIDEO_TYPES } from "../components/hard-data";
+import { LANGUAGES } from "../components/hard-data";
+import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
+import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import useStore from "../components/state/store";
 import { EOrderStatus } from "../components/state/order/orderSlice";
 import ClientLogo from "../components/logo/Logo";
@@ -20,13 +22,7 @@ export default function AppPayPage() {
   const { t, i18n } = useTranslation();
   const {order, setOrderStatus} = useStore.getState();
 
-  const [attachemntUrl] = useState<{
-    baseUrl: string;
-    programUrl: string;
-  }>({
-    baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
-    programUrl: state?.promoUrl || '',
-  });
+  const { attachemntUrl } = useMediaCampaign();
 
   useEffect(() => {
     if (!state || (state && (!state.programName || !state.price))) {
@@ -39,42 +35,8 @@ export default function AppPayPage() {
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
       {/* Video Section - 40% of screen height */}
-      <div className="h-[40vh] w-full flex justify-center items-center relative overflow-hidden">
-        <iframe
-          src={`/test_video_sensor_terminal.mp4`}
-          allow="autoplay"
-          id="video"
-          className="hidden"
-        />
-        {attachemntUrl.programUrl && VIDEO_TYPES.some((ext: string) =>
-          attachemntUrl.programUrl.endsWith(ext)
-        ) ? (
-          <video
-            className="w-full h-full object-cover"
-            width="320"
-            height="240"
-            autoPlay
-            loop
-            muted
-          >
-            <source src={attachemntUrl.programUrl} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        ) : attachemntUrl.programUrl ? (
-          <img
-            src={attachemntUrl.programUrl}
-            alt="Program Image"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <img
-            src={`${attachemntUrl.baseUrl}`}
-            alt="Promotion img"
-            className="w-full h-full object-cover"
-          />
-        )}
-      </div>
-
+      <MediaCampaign attachemntUrl={attachemntUrl}/>
+      
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">
         {/* Header with Logo and Controls */}

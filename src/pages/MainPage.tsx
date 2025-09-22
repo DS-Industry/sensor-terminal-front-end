@@ -14,6 +14,8 @@ import { PROGRAMS } from "../fake-data";
 import useSWR from 'swr';
 import { IProgram } from "../api/types/program";
 import { getPrograms } from "../api/services/program";
+import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
+import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import ClientLogo from "../components/logo/Logo";
 
 export default function MainPage() {
@@ -36,13 +38,7 @@ export default function MainPage() {
   //   }
   // );
 
-  const [attachemntUrl] = useState<{
-    baseUrl: string;
-    programUrl: string;
-  }>({
-    baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
-    programUrl: ``,
-  });
+  const { attachemntUrl } = useMediaCampaign();
 
   useEffect(() => {
     setOrder({});
@@ -58,36 +54,8 @@ export default function MainPage() {
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-200">
       {/* Video Section - 40% of screen height */}
-      <div className="h-[40vh] w-full flex justify-center items-center relative overflow-hidden">
-        <iframe
-          src={`/test_video_sensor_terminal.mp4`}
-          allow="autoplay"
-          id="video"
-          className="hidden"
-        />
-        {VIDEO_TYPES.some((ext: string) =>
-          attachemntUrl.baseUrl.endsWith(ext)
-        ) ? (
-          <video
-            className="w-full h-full object-cover"
-            width="320"
-            height="240"
-            autoPlay
-            loop
-            muted
-          >
-            <source src={attachemntUrl.baseUrl} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        ) : (
-          <img
-            src={`${attachemntUrl.baseUrl}`}
-            alt="Promotion img"
-            className="w-full h-full object-cover"
-          />
-        )}
-      </div>
-
+      <MediaCampaign attachemntUrl={attachemntUrl}/>
+      
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">
         {/* Header with Logo and Controls */}

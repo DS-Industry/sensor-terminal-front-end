@@ -6,10 +6,13 @@ import Cycle from "./../assets/cycle.svg";
 import AttentionTag from "../components/tags/AttentionTag";
 import Fire from "./../assets/Fire_perspective_matte.svg";
 import { Trans, useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 export default function InstructionPage() {
   const { t, i18n } = useTranslation();
   console.log(i18n.language);
+  const navigate = useNavigate();
+  
   return (
     <InstructionLayout>
       <div className=" px-20">
@@ -99,6 +102,15 @@ export default function InstructionPage() {
               </Trans>
             </p>
           </li>
+          <button
+            className="fixed right-8 bottom-8 px-8 py-4 rounded-3xl text-white font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg z-50"
+            onClick={() => navigate("/")}
+            style={{ backgroundColor: "#0B68E1" }}
+            >
+            <div className="flex items-center justify-center gap-2">
+              {t("Далее")}
+            </div>
+          </button>
         </ul>
         <AttentionTag
           label={t("Не перемещайте автомобиль во время мойки!")}
