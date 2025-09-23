@@ -1,6 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { PAYS, PROGRAMS } from "../fake-data";
-import { useEffect } from "react";
+import { PAYS } from "../pays-data";
 import PayCard from "../components/cards/PayCard";
 import { useTranslation } from "react-i18next";
 import { Clock } from "@gravity-ui/icons";
@@ -8,20 +6,10 @@ import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import { Icon, Text } from "@gravity-ui/uikit";
+import useStore from "../components/state/store";
 
 export default function SingleProgramPage() {
-  const { program } = useParams();
-  const navigate = useNavigate();
   const { t } = useTranslation();
-
-  // const { data: currentProgram, error: programError, isLoading: programLoading } = useSWR<IProgram | null>(
-  //   programId ? `/programs/${programId}` : null, 
-  //   () => programId ? getProgramById(programId) : null, 
-  //   {
-  //     revalidateOnFocus: false,
-  //     errorRetryCount: 2,
-  //   }
-  // );
 
   // const { data: paymentMethods, error: paymentMethodsError, isLoading: paymentMethodsLoading } = useSWR<IPaymentMethod[]>(
   //   '/payment-methods',
@@ -32,11 +20,8 @@ export default function SingleProgramPage() {
   //   }
   // );
 
+  const { selectedProgram } = useStore();
   const { attachemntUrl } = useMediaCampaign();
-
-  useEffect(() => {
-    if (!program) navigate("/");
-  }, [program, navigate]);
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
@@ -50,26 +35,26 @@ export default function SingleProgramPage() {
 
         {/* Main Content Area */}
         <div className="flex-1 px-7">
-          {program && (
+          {selectedProgram && (
             <div className="flex flex-col h-full">
               {/* Program Title */}
               <div className="text-center mb-8 flex-col items-center">
                 {/* Large Program Title */}
                 <div className="text-gray-900 font-bold text-3xl mb-6">
-                  {t(`${PROGRAMS[program].title}`)}
+                  {t(`${selectedProgram.name}`)}
                 </div>
                 
                 {/* Duration Badge */}
                 <div className="inline-flex items-center gap-3 bg-blue-100 px-6 py-2 rounded-full mb-4">
                   <Icon data={Clock} size={24} className="text-blue-600" />
                   <Text className="text-blue-800 font-semibold text-xl">
-                    {PROGRAMS[program].time} {t("мин.")}
+                    {selectedProgram.duration} {t("мин.")}
                   </Text>
                 </div>
                 
                 {/* Description */}
                 <div className="text-gray-600 text-sm">
-                  {t(`${PROGRAMS[program].description}`)}
+                  {t(`${selectedProgram.description}`)}
                 </div>
               </div>
 
@@ -85,9 +70,8 @@ export default function SingleProgramPage() {
                       label={pay.label}
                       imgUrl={pay.imgUrl}
                       endPoint={pay.endPoint}
-                      programName={PROGRAMS[program].title}
-                      price={PROGRAMS[program].price}
-                      programUrl={`${program && PROGRAMS[program].promoUrl}`}
+                      programName={selectedProgram.name}
+                      price={selectedProgram.price}
                     />
                   ))}
                 </div>

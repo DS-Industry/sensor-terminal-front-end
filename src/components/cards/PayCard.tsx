@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Card, Text, Icon } from "@gravity-ui/uikit";
 import { SealPercent } from '@gravity-ui/icons';
 import useStore from "../state/store";
-import { EOrderStatus, EPaymentMethod } from "../state/order/orderSlice";
+import { EPaymentMethod } from "../state/order/orderSlice";
 
 
 interface IPayCard {
@@ -14,8 +14,7 @@ interface IPayCard {
   imgUrl: string;
   endPoint: string;
   programName: string;
-  price: number;
-  programUrl: string;
+  price: string;
 }
 
 export default function PayCard({
@@ -25,7 +24,6 @@ export default function PayCard({
   endPoint,
   programName,
   price,
-  programUrl,
 }: IPayCard) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -42,7 +40,6 @@ export default function PayCard({
           state: {
             programName: programName,
             price: price,
-            promoUrl: programUrl,
           },
         });
       }}

@@ -4,51 +4,37 @@ import { ArrowRight } from "@gravity-ui/icons";
 import { Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useStore from "../state/store";
+import { IProgram } from "../../api/types/program";
 
-interface ICard {
-  time: number;
-  title: string;
-  services: string[];
-  price: number;
-  value: string;
-}
-
-export default function ProgramCard({
-  time,
-  title,
-  services,
-  price,
-  value,
-
-}: ICard) {
+export default function ProgramCard(program: IProgram) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const { order, setOrderProgramId } = useStore.getState();
+  const { order, setOrderProgramId, setSelectedProgram } = useStore.getState();
 
   return (
     <Card type="action" className="w-80 bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col border-0"
       onClick={() => {
         console.log("order:", order);
-        setOrderProgramId(value);
-        
-        navigate(`/programs/${value}`)
+        setOrderProgramId(program.id);
+        setSelectedProgram(program);
+        navigate(`/programs/${program.id}`)
       }}
     >
       <div className="flex-shrink-0 h-96 p-6 relative flex flex-col bg-gradient-to-br from-blue-500 to-blue-600">
         {/* Duration Badge */}
         <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-6 self-start bg-white/20 backdrop-blur-sm border border-white/10">
           <Clock className="w-4 h-4 text-white" />
-          <span className="text-sm font-medium text-white">{time} мин.</span>
+          <span className="text-sm font-medium text-white">{program.duration} мин.</span>
         </div>
 
         {/* Title */}
-        <h2 className="text-3xl font-bold mb-6 text-balance leading-tight text-white">{t(`${title}`)}</h2>
+        <h2 className="text-3xl font-bold mb-6 text-balance leading-tight text-white">{t(`${program.name}`)}</h2>
 
         {/* Service List - No scroll needed with bigger header */}
         <div className="flex-1">
           <ul className="space-y-3">
-            {services.map((service, index) => (
+            {program.description.split(", ").map((service, index) => (
               <li key={index} className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full flex-shrink-0 bg-white" />
                 <span className="text-sm font-medium text-white">{t(`${service}`)}</span>
@@ -84,7 +70,7 @@ export default function ProgramCard({
         </div>
 
         <div className="mb-6 text-center">
-          <span className="text-6xl font-bold text-gray-900 tracking-tight">{price}</span>
+          <span className="text-6xl font-bold text-gray-900 tracking-tight">{Number(program.price)}</span>
           <span className="text-2xl text-gray-500 ml-1">{t("р.")}</span>
         </div>
 

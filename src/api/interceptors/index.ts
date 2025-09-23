@@ -16,6 +16,8 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
   axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => {
       console.log(`Response: ${response.status} ${response.config.url}`);
+      console.log(`${response.config.baseURL}${response.config.url}`);
+      
       return response;
     },
     (error: AxiosError) => {

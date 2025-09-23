@@ -2,9 +2,9 @@ import { StoreSlice } from "../types";
 
 export enum EPaymentMethod {
   CASH = 'cash',
-  CARD = 'card',
-  LOYALTY = 'loyalty',
-  MOBILE_PAYMENT = 'mobile_payment',
+  CARD = 'bank_card',
+  LOYALTY = 'loyalty_card',
+  MOBILE_PAYMENT = 'mobile_app',
 }
 
 export enum EOrderStatus {
@@ -19,7 +19,7 @@ export enum EOrderStatus {
 
 export interface Order {
   id: string;
-  programId?: string;
+  programId?: number;
   status: EOrderStatus;
   paymentMethod?: EPaymentMethod;
   createdAt: string;
@@ -31,7 +31,7 @@ export interface OrderSlice {
   setOrder: (orderData?: Partial<Order>) => void;
   setOrderStatus: (status: EOrderStatus) => void;
   setOrderPaymentMethod: (method: EPaymentMethod) => void;
-  setOrderProgramId: (programId: string) => void;
+  setOrderProgramId: (programId: number) => void;
   clearOrder: () => void;
 }
 
