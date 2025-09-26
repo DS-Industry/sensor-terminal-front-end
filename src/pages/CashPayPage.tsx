@@ -1,5 +1,4 @@
 import Cash from "./../assets/cash.svg";
-import { useEffect, useRef, useState } from "react";
 import AttentionTag from "../components/tags/AttentionTag";
 import { useTranslation } from "react-i18next";
 import { CreditCard } from "@gravity-ui/icons";
@@ -8,41 +7,16 @@ import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import PaymentTitleSection from "../components/paymentTitleSection/PaymentTitleSection";
 import useStore from "../components/state/store";
-import { createOrder } from "../api/services/payment";
 import { EPaymentMethod } from "../components/state/order/orderSlice";
+import { usePaymentProcessing } from "../hooks/usePaymentProcessing";
+import { LoyaltyCardModal } from "../components/modals/LoyaltyCardModal";
 
 export default function CashPayPage() {
   const { t } = useTranslation();
   const { attachemntUrl } = useMediaCampaign();
-  const [insertedAmount, setInsertedAmount] = useState(0); // Mock inserted amount
-  const {order, selectedProgram, isLoyalty, openLoyaltyCardModal} = useStore();
+  const { isLoyaltyCardModalOpen, insertedAmount } = useStore();
 
-  const orderCreatedRef = useRef(false);
-  
-  useEffect(() => {    
-    const createOrderAsync = async () => {
-      if (!selectedProgram || orderCreatedRef.current) {
-        return;
-      }
-      orderCreatedRef.current = true;
-
-      try {
-        await createOrder({
-          program_id: selectedProgram.id,
-          payment_type: EPaymentMethod.CASH, 
-        });
-
-      } catch (err) {
-        console.error('Failed to create order:', err);
-      } 
-    };
-
-    if (isLoyalty) {
-      openLoyaltyCardModal();
-    }
-
-    createOrderAsync();
-  }, [selectedProgram, order]);
+  const { selectedProgram, handleBack, handleSkipLoyalty } = usePaymentProcessing(EPaymentMethod.CASH);
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
@@ -52,7 +26,7 @@ export default function CashPayPage() {
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">
         {/* Header with Logo and Controls */}
-        <HeaderWithLogo />
+        <HeaderWithLogo backButtonClick={handleBack}/>
 
         {/* Main Content Area - Full Screen */}
         <div className="flex-1 flex flex-col">
@@ -154,6 +128,10 @@ export default function CashPayPage() {
           </div>
         </div>
       </div>
+
+      {isLoyaltyCardModalOpen && (
+        <LoyaltyCardModal onSkipLoyalty={handleSkipLoyalty} />
+      )}
     </div>
   );
 }

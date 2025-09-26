@@ -4,6 +4,7 @@ import ClientLogo from "../logo/Logo";
 import { LANGUAGES } from "../hard-data";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from 'react-router-dom';
+import useStore from '../state/store';
 
 interface IHeaderWithLogoProps {
   isMainPage?: boolean;
@@ -13,6 +14,7 @@ interface IHeaderWithLogoProps {
 export default function HeaderWithLogo(props: IHeaderWithLogoProps) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const { insertedAmount } = useStore();
 
   return (
     <Card className="mx-7 my-5 p-4 shadow-lg border-0">
@@ -46,10 +48,12 @@ export default function HeaderWithLogo(props: IHeaderWithLogoProps) {
               <button
                 className="px-8 py-4 rounded-3xl text-white font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg"
                 onClick={() => {
-                  if (props.backButtonClick) {
-                    props.backButtonClick();
-                  } else {
-                    navigate('/');
+                  if (insertedAmount === 0) {
+                    if (props.backButtonClick) {
+                      props.backButtonClick();
+                    } else {
+                      navigate('/');
+                    }
                   }
                 }}
                 style={{ backgroundColor: "#0B68E1" }}
