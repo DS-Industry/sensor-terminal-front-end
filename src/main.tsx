@@ -41,7 +41,7 @@ const router = createBrowserRouter([
   {
     path: "/programs/:program/appCard",
     element: <LoyaltyPayPage />,
-  },
+  }, 
   {
     path: "/instruction",
     element: <InstructionPage />,

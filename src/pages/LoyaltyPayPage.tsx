@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import WifiBlue from "../assets/blue_wifi.svg";
 import PromoCard from "../assets/promo_card.svg";
 import { useTranslation } from "react-i18next";
@@ -9,26 +9,104 @@ import useStore from "../components/state/store";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import PaymentTitleSection from "../components/paymentTitleSection/PaymentTitleSection";
 import { Icon } from "@gravity-ui/uikit";
-import { createOrder } from "../api/services/payment";
-import { EPaymentMethod } from "../components/state/order/orderSlice";
+import { createOrder, openLoyaltyCardReader, ucnCheck } from "../api/services/payment";
+import { EOrderStatus, EPaymentMethod } from "../components/state/order/orderSlice";
+import { useNavigate } from "react-router-dom";
+import { IUcnCheckResponse } from "../api/types/payment";
+
+const LOYALTY_INTERVAL = 1000;
+const DEPOSIT_TIME = 30000;
 
 export default function LoyaltyPayPage() {
   const { t } = useTranslation();
   const { attachemntUrl } = useMediaCampaign();
-  const {selectedProgram} = useStore();
+  const { selectedProgram } = useStore();
+  const navigate = useNavigate();
+
+  const [loyaltyCard, setLoyaltyCard] = useState<IUcnCheckResponse | null>(null)
+
+  const { order, setIsLoading } = useStore();
 
   const orderCreatedRef = useRef(false);
-  
-  useEffect(() => {    
-    if (selectedProgram && !orderCreatedRef.current) {
-      orderCreatedRef.current = true;
-      
-      createOrder({
-        program_id: selectedProgram.id,
-        payment_type: EPaymentMethod.LOYALTY, 
-      });
+
+  const checkLoyaltyIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const loyalityEmptyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearLoyaltyTimers = () => {
+    if (checkLoyaltyIntervalRef.current) {
+      clearInterval(checkLoyaltyIntervalRef.current);
+      checkLoyaltyIntervalRef.current = null;
     }
-  }, [selectedProgram]);
+    if (loyalityEmptyTimeoutRef.current) {
+      clearTimeout(loyalityEmptyTimeoutRef.current);
+      loyalityEmptyTimeoutRef.current = null;
+    }
+  };
+
+  const createOrderAsync = async () => {
+    if (!selectedProgram || orderCreatedRef.current || !loyaltyCard?.ucn) {
+      console.log(`[LoyaltyPayPage] Ошибка создания заказа`);
+      return;
+    }
+
+    orderCreatedRef.current = true;
+
+    const ucn = loyaltyCard.ucn;
+
+    try {
+      setIsLoading(true);
+      await createOrder({
+        program_id: selectedProgram.id,
+        payment_type: EPaymentMethod.CASH,
+        ucn: ucn,
+      });
+      console.log(`[LoyaltyPayPage] Создали заказ ${ucn ? 'с UCN' : 'БЕЗ UCN'}`);
+    } catch (err) {
+      console.error(`[LoyaltyPayPage] Ошибка создания заказа`, err);
+    }
+  };
+
+  const checkLoyaltyAsync = async () => {
+    try {
+      const ucnResponse = await ucnCheck();
+
+      console.log("[LoyaltyPayPage] Пингуем данные карты:", ucnResponse);
+
+      if (ucnResponse.ucn && ucnResponse.balance) {
+        setLoyaltyCard(ucnResponse);
+
+        clearLoyaltyTimers();
+
+        loyalityEmptyTimeoutRef.current = setTimeout(() => {
+          console.log(`[LoyaltyPayPage] Ожидание нажатия кнопки Оплатить истекло`);
+          clearLoyaltyTimers();
+          navigate("/");
+        }, DEPOSIT_TIME);
+      }
+    } catch (e) {
+      console.log(`[LoyaltyPayPage] Ошибка ucnCheck`, e);
+    }
+  };
+
+  useEffect(() => {
+    openLoyaltyCardReader();
+
+    checkLoyaltyIntervalRef.current = setInterval(checkLoyaltyAsync, LOYALTY_INTERVAL);
+
+    loyalityEmptyTimeoutRef.current = setTimeout(() => {
+      console.log(`[LoyaltyPayPage] Ожидание карты лояльности истекло`);
+      clearLoyaltyTimers();
+      navigate("/");
+    }, DEPOSIT_TIME);
+  }, [])
+
+  useEffect(() => {
+    if (order?.status === EOrderStatus.PAYED) {
+      clearLoyaltyTimers();
+      setIsLoading(false);
+      navigate("/success");
+    }
+  }, [order]);
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
@@ -73,13 +151,13 @@ export default function LoyaltyPayPage() {
 
             {/* Right Side - Payment Details */}
             <div className="w-96 bg-gradient-to-br from-blue-500 to-blue-600 text-white flex flex-col">
-              <div className="p-8 h-full flex flex-col justify-between">
+              <div className="p-8 h-full flex flex-col justify-start gap-6">
                 {/* Loyalty Card Info */}
-                <div className="flex flex-col items-center mb-8">
-                  <div className="text-white/80 text-sm mb-6 font-medium">
+                <div className="flex flex-col items-center">
+                  <div className="text-white/80 text-sm mb-5 font-medium">
                     {t("Карта лояльности")}
                   </div>
-                  <div className="w-48 h-32 bg-white/20 rounded-2xl flex items-center justify-center mb-6">
+                  <div className="w-48 h-32 bg-white/20 rounded-2xl flex items-center justify-center">
                     <div className="text-center">
                       <Icon data={CreditCard} size={48} className="text-white/60 mb-2" />
                       <div className="text-white/80 text-sm">Карта лояльности</div>
@@ -88,13 +166,13 @@ export default function LoyaltyPayPage() {
                 </div>
 
                 {/* Program Info */}
-                <div className="bg-white/10 p-4 rounded-2xl mb-6">
+                <div className="bg-white/10 p-4 rounded-2xl">
                   <div className="text-white/80 text-sm mb-2">{t("Программа")}</div>
                   <div className="text-white font-semibold text-lg">{t(`${selectedProgram?.name}`)}</div>
                 </div>
 
                 {/* Payment Details */}
-                <div className="space-y-6">
+                <div className="flex flex-col justify-start gap-6">
                   <div className="bg-white/10 p-6 rounded-2xl">
                     <div className="text-white/80 text-sm mb-3">{t("К оплате")}</div>
                     <div className="text-white font-bold text-5xl">
@@ -102,40 +180,59 @@ export default function LoyaltyPayPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white/20 p-4 rounded-2xl">
-                    <div className="text-white/80 text-sm mb-2">{t("Ваш баланс")}</div>
-                    <div className="text-white font-bold text-3xl">
-                      1,250 {t("баллов")}
-                    </div>
-                  </div>
+                  {(loyaltyCard && loyaltyCard.balance)
+                    ?
+                    <>
+                      <div className="bg-white/20 p-4 rounded-2xl">
+                        <div className="text-white/80 text-sm mb-2">{t("Ваш баланс")}</div>
+                        <div className="text-white font-bold text-3xl">
+                          {loyaltyCard.balance} {t("баллов")}
+                        </div>
+                      </div>
 
-                  <div className="bg-white/20 p-4 rounded-2xl">
-                    <div className="text-white/80 text-sm mb-2">{t("Спишется баллов")}</div>
-                    <div className="text-white font-bold text-3xl">
-                      {selectedProgram?.price} {t("баллов")}
+                      <div className="bg-white/20 p-4 rounded-2xl">
+                        <div className="text-white/80 text-sm mb-2">{t("Спишется баллов")}</div>
+                        <div className="text-white font-bold text-3xl">
+                          {selectedProgram?.price} {t("баллов")}
+                        </div>
+                      </div>
+
+                      <button
+                        className="right-8 bottom-8 px-8 py-4 rounded-3xl text-blue-600 font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg z-50"
+                        onClick={() => {
+                          createOrderAsync();
+                        }}
+                        style={{ backgroundColor: "white" }}
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          {t("Оплатить")}
+                        </div>
+                      </button>
+                    </>
+                    :
+                    <div className="text-center">
+                      <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+                        <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                        <div className="text-white/90 text-sm font-medium">
+                          {t("Ожидание карты лояльности...")}
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  }
                 </div>
 
                 {/* Status Indicator */}
-                <div className="mt-8 text-center">
-                  <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
-                    <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-                    <div className="text-white/90 text-sm font-medium">
-                      {t("Ожидание карты лояльности...")}
-                    </div>
-                  </div>
-                </div>
+
 
                 {/* Benefits */}
-                <div className="mt-6 text-center">
+                {/* <div className="mt-6 text-center">
                   <div className="text-white/80 text-sm mb-2">{t("Преимущества карты лояльности:")}</div>
                   <div className="space-y-2">
                     <div className="text-white/90 text-xs">• {t("Накопление баллов")}</div>
                     <div className="text-white/90 text-xs">• {t("Скидки и бонусы")}</div>
                     <div className="text-white/90 text-xs">• {t("Специальные предложения")}</div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
