@@ -1,3 +1,5 @@
+const WS_BASE_URL = import.meta.env.VITE_API_BASE_WS_URL || "";
+
 type WebSocketEvent = 'status_update' | 'mobile_payment' | 'device_status';
 
 interface WebSocketMessage {
@@ -34,7 +36,7 @@ class WebSocketManager {
 
     try {
       console.log('🌐 Attempting WebSocket connection...');
-      this.ws = new WebSocket('ws://192.168.0.97:8000/ws/orders/status/');
+      this.ws = new WebSocket(`${WS_BASE_URL}/ws/orders/status/`);
       this.isConnected = false;
 
       this.connectionTimeout = setTimeout(() => {
