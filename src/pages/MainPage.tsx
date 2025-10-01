@@ -12,11 +12,12 @@ export default function MainPage() {
   const { t } = useTranslation();
   const { programs } = usePrograms();
   const { attachemntUrl } = useMediaCampaign();
-  const { clearOrder, setInsertedAmount } = useStore();
+  const { clearOrder, setInsertedAmount, setIsLoading } = useStore();
 
   useEffect(() => {
     clearOrder();
     setInsertedAmount(0);
+    setIsLoading(false);
   }, [])
 
   return (
