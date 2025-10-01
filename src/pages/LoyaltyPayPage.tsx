@@ -98,6 +98,10 @@ export default function LoyaltyPayPage() {
       clearLoyaltyTimers();
       navigate("/");
     }, DEPOSIT_TIME);
+
+    return () => {
+      clearLoyaltyTimers();
+    };
   }, [])
 
   useEffect(() => {
