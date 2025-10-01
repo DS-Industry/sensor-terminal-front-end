@@ -2,8 +2,8 @@ import { axiosInstance } from "../../axiosConfig";
 import { ICreateOrderRequest, IGetMobileQr, IGetOrderByIdResponse, ILoyaltyCheckResponse, IUcnCheckResponse } from "../../types/payment";
 
 enum PAYMENT {
-  PAY = '/pay/',
-  LOYALTY_CHECK = '/lty-check/',
+  PAY = 'pay/',
+  LOYALTY_CHECK = 'lty-check/',
   CANCELLATION = 'cancellation',
   ORDER_DETAIL = 'order-detail',
   UCN_CHECK = 'ucn-check',
@@ -14,6 +14,9 @@ enum PAYMENT {
 export async function createOrder(
   body: ICreateOrderRequest,
 ): Promise<void> {  
+
+  console.log(body);
+  
   
   await axiosInstance.post(PAYMENT.PAY, body);
 }
