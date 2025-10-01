@@ -5,13 +5,14 @@ import { EOrderStatus } from '../state/order/orderSlice';
 import { getOrderById } from '../../api/services/payment';
 
 export function GlobalWebSocketManager() {
-  const { setOrder, order, setBankCheck } = useStore();
+  const { setOrder, order, setBankCheck, setIsLoading } = useStore();
 
   const setCheck = async(id: string) => {    
     const response = await getOrderById(id);
+    setIsLoading(false);
 
     console.log("запрос заказа", id, response);
-    
+
     if (response.qr_code) {
       console.log("получили qr: ", response.qr_code);
 

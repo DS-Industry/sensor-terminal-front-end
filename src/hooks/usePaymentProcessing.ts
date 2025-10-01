@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../components/state/store';
 import { cancelOrder, createOrder, getOrderById, openLoyaltyCardReader, ucnCheck } from '../api/services/payment';
@@ -7,26 +7,32 @@ import { EOrderStatus, EPaymentMethod } from '../components/state/order/orderSli
 const DEPOSIT_TIME = 30000;
 const PAYMENT_INTERVAL = 1000;
 const LOYALTY_INTERVAL = 1000;
+const START_ROBOT_INTERVAL = 35000;
 
 export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
   const navigate = useNavigate();
-  const { 
-    order, 
-    selectedProgram, 
-    isLoyalty, 
-    openLoyaltyCardModal, 
-    closeLoyaltyCardModal, 
+  const {
+    order,
+    selectedProgram,
+    isLoyalty,
+    openLoyaltyCardModal,
+    closeLoyaltyCardModal,
     setIsLoading,
     isLoyaltyCardModalOpen,
-    setInsertedAmount 
+    setInsertedAmount
   } = useStore();
 
-  const orderCreatedRef = useRef(false);
-  const depositTimeoutRef = useRef<ReturnType<typeof setTimeout>  | null>(null);
-  const loyalityEmptyTimeoutRef = useRef<ReturnType<typeof setTimeout>  | null>(null);
-  const checkOrderAmountSumIntervalRef = useRef<ReturnType<typeof setInterval>  | null>(null);
-  const checkLoyaltyIntervalRef = useRef<ReturnType<typeof setInterval>  | null>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [timeUntilRobotStart, setTimeUntilRobotStart] = useState(0); 
 
+  const orderCreatedRef = useRef(false);
+  const depositTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loyalityEmptyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const checkOrderAmountSumIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const checkLoyaltyIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const idleTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownInterval = useRef<ReturnType<typeof setInterval> | null>(null); 
+  
   // Очистка таймеров лояльности
   const clearLoyaltyTimers = () => {
     if (checkLoyaltyIntervalRef.current) {
@@ -55,6 +61,20 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
   const clearAllTimers = () => {
     clearLoyaltyTimers();
     clearPaymentTimers();
+    clearCountdown(); // Добавлена очистка отсчета
+  };
+
+  // Очистка отсчета
+  const clearCountdown = () => {
+    if (idleTimeout.current) {
+      clearTimeout(idleTimeout.current);
+      idleTimeout.current = null;
+    }
+    if (countdownInterval.current) {
+      clearInterval(countdownInterval.current);
+      countdownInterval.current = null;
+    }
+    setTimeUntilRobotStart(0);
   };
 
   // Создание заказа
@@ -107,7 +127,7 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
   const checkPaymentAsync = async () => {
     try {
       if (order?.id) {
-        const orderDetails = await getOrderById(order.id); // нужно будет получить чек, когда статус payed  
+        const orderDetails = await getOrderById(order.id);
 
         if (orderDetails.amount_sum) {
           const amountSum = Number(orderDetails.amount_sum);
@@ -121,7 +141,8 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
           if (amountSum >= Number(selectedProgram?.price)) {
             console.log(`[${paymentMethod}Page] Получена вся сумма`);
             clearAllTimers();
-            navigate("/success");
+            setPaymentSuccess(true);
+            setIsLoading(true);
           }
         }
       }
@@ -144,6 +165,7 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
     clearAllTimers();
     closeLoyaltyCardModal();
     setIsLoading(false);
+    setPaymentSuccess(false);
 
     if (order?.id) {
       cancelOrder(order.id);
@@ -152,13 +174,42 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
     navigate('/');
   };
 
+  const startRobot = () => {
+    console.log("Запускаем робот");
+    clearCountdown(); 
+    navigate('/success');
+  }
+
+  // Запуск отсчета до автоматического старта робота
+  const startCountdown = () => {
+    const initialTime = START_ROBOT_INTERVAL / 1000; 
+    setTimeUntilRobotStart(initialTime);
+
+    // Запускаем таймер для автоматического старта
+    idleTimeout.current = setTimeout(startRobot, START_ROBOT_INTERVAL);
+
+    // Запускаем интервал для обновления отсчета каждую секунду
+    countdownInterval.current = setInterval(() => {
+      setTimeUntilRobotStart(prev => {
+        if (prev <= 1) {
+          if (countdownInterval.current) {
+            clearInterval(countdownInterval.current);
+            countdownInterval.current = null;
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   // Эффект для лояльности
   useEffect(() => {
     if (isLoyalty) {
       console.log(`[${paymentMethod}Page] Сценарий с лояльностью`);
       openLoyaltyCardModal();
       openLoyaltyCardReader();
-      
+
       checkLoyaltyIntervalRef.current = setInterval(checkLoyaltyAsync, LOYALTY_INTERVAL);
       loyalityEmptyTimeoutRef.current = setTimeout(() => {
         console.log(`[${paymentMethod}Page] Таймаут лояльности истек`);
@@ -202,11 +253,24 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
     };
   }, [order]);
 
+  useEffect(() => {
+    if (paymentSuccess) {
+      startCountdown();
+    }
+
+    return () => {
+      clearCountdown();
+    }
+  }, [paymentSuccess]);
+
   return {
     handleSkipLoyalty,
     handleBack,
     isLoyaltyCardModalOpen,
     selectedProgram,
-    order
+    order,
+    paymentSuccess,
+    startRobot,
+    timeUntilRobotStart 
   };
 };

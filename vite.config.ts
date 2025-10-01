@@ -11,4 +11,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    host: true, // Разрешает доступ с внешних устройств
+    allowedHosts: [
+      "uniformly-different-cony.cloudpub.ru", // Разрешаем доступ с CloudPub
+      "localhost", // Разрешаем локальный доступ
+      "127.0.0.1", // Разрешаем доступ по IP
+    ],
+  },
 });

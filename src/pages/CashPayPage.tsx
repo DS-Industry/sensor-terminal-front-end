@@ -10,23 +10,24 @@ import useStore from "../components/state/store";
 import { EPaymentMethod } from "../components/state/order/orderSlice";
 import { usePaymentProcessing } from "../hooks/usePaymentProcessing";
 import { LoyaltyCardModal } from "../components/modals/LoyaltyCardModal";
+import SuccessPayment from "../components/successPayment/SuccessPayment";
 
 export default function CashPayPage() {
   const { t } = useTranslation();
   const { attachemntUrl } = useMediaCampaign();
   const { isLoyaltyCardModalOpen, insertedAmount } = useStore();
 
-  const { selectedProgram, handleBack, handleSkipLoyalty } = usePaymentProcessing(EPaymentMethod.CASH);
+  const { selectedProgram, handleBack, handleSkipLoyalty, paymentSuccess, startRobot, timeUntilRobotStart } = usePaymentProcessing(EPaymentMethod.CASH);
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
       {/* Video Section - 40% of screen height */}
-      <MediaCampaign attachemntUrl={attachemntUrl}/>
+      <MediaCampaign attachemntUrl={attachemntUrl} />
 
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">
         {/* Header with Logo and Controls */}
-        <HeaderWithLogo backButtonClick={handleBack}/>
+        <HeaderWithLogo backButtonClick={handleBack} />
 
         {/* Main Content Area - Full Screen */}
         <div className="flex-1 flex flex-col">
@@ -41,36 +42,41 @@ export default function CashPayPage() {
           {/* Payment Interface - Full Height */}
           <div className="flex-1 flex">
             {/* Left Side - Instructions and Graphics */}
-            <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
-              <div className="relative mb-12">
-                {/* Cash Machine Visual */}
-                <div className="relative">
-                  <div className="w-80 h-48 bg-gradient-to-b from-gray-600 to-gray-700 rounded-t-2xl shadow-lg flex justify-center items-end pb-4">
-                    <div className="w-64 h-8 bg-gray-500 rounded"></div>
+
+            {paymentSuccess
+              ? <SuccessPayment />
+              : (
+                <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+                  <div className="relative mb-12">
+                    {/* Cash Machine Visual */}
+                    <div className="relative">
+                      <div className="w-80 h-48 bg-gradient-to-b from-gray-600 to-gray-700 rounded-t-2xl shadow-lg flex justify-center items-end pb-4">
+                        <div className="w-64 h-8 bg-gray-500 rounded"></div>
+                      </div>
+                      <div className="w-80 h-20 bg-gradient-to-b from-gray-600 to-gray-700 rounded-b-2xl shadow-lg flex justify-center items-start pt-4">
+                        <div className="w-64 h-8 bg-gray-500 rounded"></div>
+                      </div>
+                      <img
+                        src={Cash}
+                        alt="cash"
+                        className="absolute -bottom-8 -right-8 w-80 h-48 object-contain -rotate-90"
+                      />
+                    </div>
                   </div>
-                  <div className="w-80 h-20 bg-gradient-to-b from-gray-600 to-gray-700 rounded-b-2xl shadow-lg flex justify-center items-start pt-4">
-                    <div className="w-64 h-8 bg-gray-500 rounded"></div>
+
+                  <div className="text-center max-w-md">
+                    <div className="text-gray-800 text-2xl font-semibold mb-4">
+                      {t("Внесите купюры в купюроприемник")}
+                    </div>
+                    <div className="text-gray-600 text-lg mb-6">
+                      {t("Принимаются купюры номиналом:")}
+                    </div>
+                    <div className="inline-flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-2xl font-bold text-xl">
+                      50 / 100 / 200
+                    </div>
                   </div>
-                  <img
-                    src={Cash}
-                    alt="cash"
-                    className="absolute -bottom-8 -right-8 w-80 h-48 object-contain -rotate-90"
-                  />
                 </div>
-              </div>
-              
-              <div className="text-center max-w-md">
-                <div className="text-gray-800 text-2xl font-semibold mb-4">
-                  {t("Внесите купюры в купюроприемник")}
-                </div>
-                <div className="text-gray-600 text-lg mb-6">
-                  {t("Принимаются купюры номиналом:")}
-                </div>
-                <div className="inline-flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-2xl font-bold text-xl">
-                  50 / 100 / 200
-                </div>
-              </div>
-            </div>
+              )}
 
             {/* Right Side - Payment Details */}
             <div className="w-96 bg-gradient-to-br from-green-500 to-green-600 text-white flex flex-col">
@@ -84,36 +90,58 @@ export default function CashPayPage() {
                 {/* Payment Details */}
                 <div className="space-y-6 flex-1">
                   <div className="bg-white/10 p-6 rounded-2xl">
-                    <div className="text-white/80 text-sm mb-3">{t("К оплате")}</div>
+                    <div className="text-white/80 text-sm mb-3">{paymentSuccess ? t("Оплачено") : t("К оплате")}</div>
                     <div className="text-white font-bold text-5xl">
                       {selectedProgram?.price} {t("р.")}
                     </div>
                   </div>
-                  
-                  <div className="bg-white/10 p-6 rounded-2xl">
-                    <div className="text-white/80 text-sm mb-3">{t("Внесено")}</div>
-                    <div className="text-white font-bold text-5xl">
-                      {insertedAmount} {t("р.")}
-                    </div>
-                  </div>
 
-                  {/* Remaining Amount */}
-                  <div className="bg-white/20 p-4 rounded-2xl">
-                    <div className="text-white/80 text-sm mb-2">{t("Осталось внести")}</div>
-                    <div className="text-white font-bold text-3xl">
-                      {Math.max(0, (Number(selectedProgram?.price) || 0) - insertedAmount)} {t("р.")}
-                    </div>
-                  </div>
-                </div>
 
-                {/* Action Button */}
-                <div className="mt-8">
-                  <button 
-                    className="w-full bg-white text-green-600 font-bold text-xl py-4 px-6 rounded-2xl shadow-lg hover:bg-gray-100 transition-all duration-300"
-                    disabled={insertedAmount < (Number(selectedProgram?.price) || 0)}
-                  >
-                    {insertedAmount >= (Number(selectedProgram?.price) || 0) ? t("Оплатить") : t("Внесите больше средств")}
-                  </button>
+
+                  {paymentSuccess
+                    ? (
+                      <div className="flex flex-col items-center">
+                        <button
+                          className="w-full px-8 py-4 rounded-3xl text-green-600  font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg z-50 mb-2"
+                          onClick={startRobot}
+                          style={{ backgroundColor: "white" }}
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            {t("Запустить")}
+                          </div>
+                        </button>
+                        {timeUntilRobotStart > 0 && (
+                          <div className="text-white/80 text-l">
+                            {t("Автоматический запуск через")} {timeUntilRobotStart} {t("сек.")}
+                          </div>
+                        )}
+                      </div>
+                    )
+                    : (
+                      <>
+                        <div className="bg-white/10 p-6 rounded-2xl">
+                          <div className="text-white/80 text-sm mb-3">{t("Внесено")}</div>
+                          <div className="text-white font-bold text-5xl">
+                            {insertedAmount} {t("р.")}
+                          </div>
+                        </div>
+
+                        {/* Remaining Amount */}
+                        <div className="bg-white/20 p-4 rounded-2xl">
+                          <div className="text-white/80 text-sm mb-2">{t("Осталось внести")}</div>
+                          <div className="text-white font-bold text-3xl">
+                            {Math.max(0, (Number(selectedProgram?.price) || 0) - insertedAmount)} {t("р.")}
+                          </div>
+                        </div>
+
+                        <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+                          <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                          <div className="text-white/90 text-sm font-medium">
+                            {t("Внесите больше средств...")}
+                          </div>
+                        </div>
+                      </>
+                    )}
                 </div>
 
                 {/* Warning */}

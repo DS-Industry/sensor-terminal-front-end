@@ -45,7 +45,7 @@ export default function InstructionLayout({
             }
           />
           <div className=" flex items-center gap-10">
-            <Menubar className=" border-0">
+            {/* <Menubar className=" border-0">
               <MenubarMenu>
                 <MenubarTrigger className="text-lg bg-gradient-to-t from-primary to-blue-650 px-5 py-2 rounded-3xl text-white-500 font-inter-semibold shadow-[0px_10px_20px_5px_rgba(0,0,0,0.3)] h-fit ">
                   <IoLanguageSharp className=" text-3xl" />
@@ -62,7 +62,7 @@ export default function InstructionLayout({
                   ))}
                 </MenubarContent>
               </MenubarMenu>
-            </Menubar>
+            </Menubar> */}
             <NavigationButton
               label={
                 <>

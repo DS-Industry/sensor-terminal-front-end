@@ -9,17 +9,29 @@ import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import useStore from "../components/state/store";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import PaymentTitleSection from "../components/paymentTitleSection/PaymentTitleSection";
-import { createOrder, getMobileQr } from "../api/services/payment";
+import { getMobileQr } from "../api/services/payment";
 import QRCode from "react-qr-code";
+import { EOrderStatus } from "../components/state/order/orderSlice";
+import { useNavigate } from "react-router-dom";
+
+const IDLE_TIME = 30000;
 
 export default function MobilePayPage() {
   const { t } = useTranslation();
   const { attachemntUrl } = useMediaCampaign();
-  const { selectedProgram } = useStore();
+  const { order, selectedProgram } = useStore();
+  const navigate = useNavigate();
 
   const [qrCode, setQrCode] = useState("");
 
   const orderCreatedRef = useRef(false);
+
+  const idleTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const startRobot = () => {
+    console.log("Запускаем робот");
+    navigate('/success');
+  };
 
   const getQrCodeAsync = async () => {
     if (selectedProgram && !orderCreatedRef.current) {
@@ -29,10 +41,15 @@ export default function MobilePayPage() {
 
       if (response.qr_code) {
         console.log("Response qr", response);
-        
+
         setQrCode(response.qr_code);
+
+        if (!idleTimeout.current) {
+          idleTimeout.current = setTimeout(() => {
+            navigate('/');
+          }, IDLE_TIME);
+        }
       }
-      //await qr code
     }
   }
 
@@ -40,11 +57,24 @@ export default function MobilePayPage() {
     getQrCodeAsync();
   }, []);
 
+  useEffect(() => {
+    if (order?.status === EOrderStatus.PAYED) {
+      startRobot();
+    }
+
+    return () => {
+      if (idleTimeout.current) {
+        clearInterval(idleTimeout.current);
+        idleTimeout.current = null;
+      }
+    };
+  }, [order]);
+
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
       {/* Video Section - 40% of screen height */}
-      <MediaCampaign attachemntUrl={attachemntUrl}/>
-      
+      <MediaCampaign attachemntUrl={attachemntUrl} />
+
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">
         {/* Header with Logo and Controls */}
