@@ -2,10 +2,12 @@ import { useEffect } from 'react';
 import useStore from '../state/store';
 import { globalWebSocketManager } from '../../util/websocketManager';
 import { EOrderStatus } from '../state/order/orderSlice';
-import { getOrderById } from '../../api/services/payment';
+import { getOrderById, startRobot } from '../../api/services/payment';
+import { useNavigate } from 'react-router-dom';
 
 export function GlobalWebSocketManager() {
   const { setOrder, order, setBankCheck, setIsLoading } = useStore();
+  const navigate = useNavigate();
 
   const setCheck = async(id: string) => {    
     const response = await getOrderById(id);
@@ -37,7 +39,12 @@ export function GlobalWebSocketManager() {
       }
 
       if (data.status === EOrderStatus.PAYED) {
-        setCheck(data.order_id)
+        if (window.location.pathname === '/') {
+          startRobot(data.order_id);
+          navigate('/success');
+        } else {
+          setCheck(data.order_id);
+        }
       }
     };
 
