@@ -9,7 +9,7 @@ import useStore from "../components/state/store";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import PaymentTitleSection from "../components/paymentTitleSection/PaymentTitleSection";
 import { Icon } from "@gravity-ui/uikit";
-import { createOrder, openLoyaltyCardReader, ucnCheck } from "../api/services/payment";
+import { createOrder, openLoyaltyCardReader, startRobot, ucnCheck } from "../api/services/payment";
 import { EOrderStatus, EPaymentMethod } from "../components/state/order/orderSlice";
 import { useNavigate } from "react-router-dom";
 import { IUcnCheckResponse } from "../api/types/payment";
@@ -29,11 +29,6 @@ export default function LoyaltyPayPage() {
 
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  const startRobot = () => {
-    console.log("Запускаем робот");
-    navigate('/success');
-  };
-
   const { order, setIsLoading } = useStore();
 
   const orderCreatedRef = useRef(false);
@@ -43,6 +38,15 @@ export default function LoyaltyPayPage() {
   const idleTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const [timeUntilRobotStart, setTimeUntilRobotStart] = useState(0);
+
+  const handleStartRobot = () => {
+    console.log("Запускаем робот");
+
+    if (order?.id) {
+      startRobot(order.id);
+      navigate('/success');
+    }
+  };
 
   const clearLoyaltyTimers = () => {
     if (checkLoyaltyIntervalRef.current) {
@@ -118,7 +122,7 @@ export default function LoyaltyPayPage() {
     setTimeUntilRobotStart(initialTime);
 
     // Запускаем таймер для автоматического старта
-    idleTimeout.current = setTimeout(startRobot, START_ROBOT_INTERVAL);
+    idleTimeout.current = setTimeout(handleStartRobot, START_ROBOT_INTERVAL);
 
     // Запускаем интервал для обновления отсчета каждую секунду
     countdownInterval.current = setInterval(() => {
@@ -252,7 +256,7 @@ export default function LoyaltyPayPage() {
                       <div className="flex flex-col items-center">
                         <button
                           className="w-full px-8 py-4 rounded-3xl text-blue-600 font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg z-50 mb-2"
-                          onClick={startRobot}
+                          onClick={handleStartRobot}
                           style={{ backgroundColor: "white" }}
                         >
                           <div className="flex items-center justify-center gap-2">

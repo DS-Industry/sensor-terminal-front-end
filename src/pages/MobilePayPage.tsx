@@ -9,7 +9,7 @@ import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import useStore from "../components/state/store";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import PaymentTitleSection from "../components/paymentTitleSection/PaymentTitleSection";
-import { getMobileQr } from "../api/services/payment";
+import { getMobileQr, startRobot } from "../api/services/payment";
 import QRCode from "react-qr-code";
 import { EOrderStatus } from "../components/state/order/orderSlice";
 import { useNavigate } from "react-router-dom";
@@ -28,9 +28,13 @@ export default function MobilePayPage() {
 
   const idleTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const startRobot = () => {
+  const handleStartRobot = () => {
     console.log("Запускаем робот");
-    navigate('/success');
+    
+    if (order?.id) {
+      startRobot(order.id);
+      navigate('/success');
+    }
   };
 
   const getQrCodeAsync = async () => {
@@ -59,7 +63,7 @@ export default function MobilePayPage() {
 
   useEffect(() => {
     if (order?.status === EOrderStatus.PAYED) {
-      startRobot();
+      handleStartRobot();
     }
 
     return () => {

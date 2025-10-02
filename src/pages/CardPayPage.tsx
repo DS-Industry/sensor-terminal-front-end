@@ -25,7 +25,7 @@ export default function CardPayPage() {
     handleBack, 
     handleSkipLoyalty, 
     paymentSuccess, 
-    startRobot,
+    handleStartRobot,
     timeUntilRobotStart 
   } = usePaymentProcessing(EPaymentMethod.CARD);
 
@@ -109,7 +109,7 @@ export default function CardPayPage() {
                       <div className="flex flex-col items-center">
                         <button
                           className="w-full px-8 py-4 rounded-3xl text-blue-600 font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg z-50 mb-2"
-                          onClick={startRobot}
+                          onClick={handleStartRobot}
                           style={{ backgroundColor: "white" }}
                         >
                           <div className="flex items-center justify-center gap-2">

@@ -17,7 +17,7 @@ export default function CashPayPage() {
   const { attachemntUrl } = useMediaCampaign();
   const { isLoyaltyCardModalOpen, insertedAmount } = useStore();
 
-  const { selectedProgram, handleBack, handleSkipLoyalty, paymentSuccess, startRobot, timeUntilRobotStart } = usePaymentProcessing(EPaymentMethod.CASH);
+  const { selectedProgram, handleBack, handleSkipLoyalty, paymentSuccess, handleStartRobot, timeUntilRobotStart } = usePaymentProcessing(EPaymentMethod.CASH);
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
@@ -103,7 +103,7 @@ export default function CashPayPage() {
                       <div className="flex flex-col items-center">
                         <button
                           className="w-full px-8 py-4 rounded-3xl text-green-600  font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg z-50 mb-2"
-                          onClick={startRobot}
+                          onClick={handleStartRobot}
                           style={{ backgroundColor: "white" }}
                         >
                           <div className="flex items-center justify-center gap-2">

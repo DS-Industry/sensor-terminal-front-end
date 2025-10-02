@@ -9,6 +9,7 @@ enum PAYMENT {
   UCN_CHECK = 'ucn-check',
   OPEN_READER = 'open-reader/',
   MOBILE_QR = 'mobile-qr',
+  START = 'start',
 };
 
 export async function createOrder(
@@ -59,4 +60,9 @@ export async function getMobileQr(): Promise<IGetMobileQr> {
   const response = await axiosInstance.get<IGetMobileQr>(PAYMENT.MOBILE_QR);
 
   return response.data;
+}
+
+export async function startRobot(order_id: string): Promise<void> {  
+  
+  await axiosInstance.post(PAYMENT.START + `/${order_id}/`);
 }

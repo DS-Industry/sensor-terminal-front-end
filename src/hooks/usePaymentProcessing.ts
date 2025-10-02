@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../components/state/store';
-import { cancelOrder, createOrder, getOrderById, openLoyaltyCardReader, ucnCheck } from '../api/services/payment';
+import { cancelOrder, createOrder, getOrderById, openLoyaltyCardReader, startRobot, ucnCheck } from '../api/services/payment';
 import { EOrderStatus, EPaymentMethod } from '../components/state/order/orderSlice';
 
 const DEPOSIT_TIME = 30000;
@@ -23,7 +23,7 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
   } = useStore();
 
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [timeUntilRobotStart, setTimeUntilRobotStart] = useState(0); 
+  const [timeUntilRobotStart, setTimeUntilRobotStart] = useState(0);
 
   const orderCreatedRef = useRef(false);
   const depositTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -31,8 +31,8 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
   const checkOrderAmountSumIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const checkLoyaltyIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const idleTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const countdownInterval = useRef<ReturnType<typeof setInterval> | null>(null); 
-  
+  const countdownInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Очистка таймеров лояльности
   const clearLoyaltyTimers = () => {
     if (checkLoyaltyIntervalRef.current) {
@@ -179,19 +179,23 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
     navigate(-1);
   };
 
-  const startRobot = () => {
+  const handleStartRobot = () => {
     console.log("Запускаем робот");
-    clearCountdown(); 
-    navigate('/success');
+
+    if (order?.id) {
+      startRobot(order.id);
+      clearCountdown();
+      navigate('/success');
+    }
   }
 
   // Запуск отсчета до автоматического старта робота
   const startCountdown = () => {
-    const initialTime = START_ROBOT_INTERVAL / 1000; 
+    const initialTime = START_ROBOT_INTERVAL / 1000;
     setTimeUntilRobotStart(initialTime);
 
     // Запускаем таймер для автоматического старта
-    idleTimeout.current = setTimeout(startRobot, START_ROBOT_INTERVAL);
+    idleTimeout.current = setTimeout(handleStartRobot, START_ROBOT_INTERVAL);
 
     // Запускаем интервал для обновления отсчета каждую секунду
     countdownInterval.current = setInterval(() => {
@@ -275,7 +279,7 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
     selectedProgram,
     order,
     paymentSuccess,
-    startRobot,
-    timeUntilRobotStart 
+    handleStartRobot,
+    timeUntilRobotStart
   };
 };
