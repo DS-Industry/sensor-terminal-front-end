@@ -19,7 +19,7 @@ const CARD_PAGE_URL = "CardPage.webp";
 
 export default function CardPayPage() {
   const { t } = useTranslation();
-  const { attachemntUrl } = useMediaCampaign(CARD_PAGE_URL);
+  const { attachemntUrl, mediaStatus } = useMediaCampaign(CARD_PAGE_URL);
   const { isLoyaltyCardModalOpen } = useStore();
 
   const { 
@@ -34,7 +34,7 @@ export default function CardPayPage() {
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
       {/* Video Section - 40% of screen height */}
-      <MediaCampaign attachemntUrl={attachemntUrl} />
+      <MediaCampaign attachemntUrl={attachemntUrl} mediaStatus={mediaStatus}/>
 
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">

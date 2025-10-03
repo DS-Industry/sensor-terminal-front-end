@@ -10,7 +10,6 @@ import { useEffect, useRef } from "react";
 
 const IDLE_TIMEOUT = 30000;
 
-
 export default function ErrorPaymentPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();

@@ -20,7 +20,7 @@ const IDLE_TIME = 30000;
 
 export default function MobilePayPage() {
   const { t } = useTranslation();
-  const { attachemntUrl } = useMediaCampaign(MOBILE_PAGE_URL);
+  const { attachemntUrl, mediaStatus } = useMediaCampaign(MOBILE_PAGE_URL);
   const { order, selectedProgram } = useStore();
   const navigate = useNavigate();
 
@@ -79,7 +79,7 @@ export default function MobilePayPage() {
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
       {/* Video Section - 40% of screen height */}
-      <MediaCampaign attachemntUrl={attachemntUrl} />
+      <MediaCampaign attachemntUrl={attachemntUrl} mediaStatus={mediaStatus}/>
 
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">

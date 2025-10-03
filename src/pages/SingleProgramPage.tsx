@@ -7,17 +7,22 @@ import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import { Icon, Text } from "@gravity-ui/uikit";
 import useStore from "../components/state/store";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loyaltyCheck } from "../api/services/payment";
 import { EPaymentMethod } from "../components/state/order/orderSlice";
+import { useNavigate } from "react-router-dom";
+
+const IDLE_TIMEOUT = 30000;
 
 const SINGLE_PAGE_URL = "SinglePage.webp";
 
 export default function SingleProgramPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { selectedProgram, setIsLoyalty, isLoyalty } = useStore();
-  const { attachemntUrl } = useMediaCampaign(SINGLE_PAGE_URL);
+  const { attachemntUrl, mediaStatus } = useMediaCampaign(SINGLE_PAGE_URL);
   const [loyaltyLoading, setLoyaltyLoading] = useState(true);
+  const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const checkLoyalty = async() => {
     const isLoyalty = await loyaltyCheck();
@@ -26,8 +31,27 @@ export default function SingleProgramPage() {
     setLoyaltyLoading(false);
   }
 
+  const handleFinish = () => {
+    navigate("/");
+  }
+
+  const clearIdleTimeout = () => {
+    if (idleTimeoutRef.current) {
+      clearTimeout(idleTimeoutRef.current);
+      idleTimeoutRef.current = null;
+    }
+  }
+
   useEffect(() => {
     checkLoyalty();
+
+    if (!idleTimeoutRef.current) {
+      idleTimeoutRef.current = setTimeout(handleFinish, IDLE_TIMEOUT);
+    }
+
+    return () => {
+      clearIdleTimeout();
+    };
   }, []);
 
   const filteredPays = PAYS.filter(pay => {
@@ -41,7 +65,7 @@ export default function SingleProgramPage() {
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
       {/* Video Section - 40% of screen height */}
-      <MediaCampaign attachemntUrl={attachemntUrl}/>
+      <MediaCampaign attachemntUrl={attachemntUrl} mediaStatus={mediaStatus}/>
 
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">

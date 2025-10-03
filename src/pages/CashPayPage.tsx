@@ -16,7 +16,7 @@ const CASH_PAGE_URL = "CashPage.webp";
 
 export default function CashPayPage() {
   const { t } = useTranslation();
-  const { attachemntUrl } = useMediaCampaign(CASH_PAGE_URL);
+  const { attachemntUrl, mediaStatus } = useMediaCampaign(CASH_PAGE_URL);
   const { isLoyaltyCardModalOpen, insertedAmount } = useStore();
 
   const { selectedProgram, handleBack, handleSkipLoyalty, paymentSuccess, handleStartRobot, timeUntilRobotStart } = usePaymentProcessing(EPaymentMethod.CASH);
@@ -24,7 +24,7 @@ export default function CashPayPage() {
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
       {/* Video Section - 40% of screen height */}
-      <MediaCampaign attachemntUrl={attachemntUrl} />
+      <MediaCampaign attachemntUrl={attachemntUrl} mediaStatus={mediaStatus}/>
 
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">

@@ -16,7 +16,7 @@ const MAIN_PAGE_URL = "MainPage.webp";
 export default function MainPage() {
   const { t } = useTranslation();
   const { programs } = usePrograms();
-  const { attachemntUrl } = useMediaCampaign(MAIN_PAGE_URL);
+  const { attachemntUrl, mediaStatus } = useMediaCampaign(MAIN_PAGE_URL);
   const { order, clearOrder, setInsertedAmount, setIsLoading } = useStore();
   const navigate = useNavigate();
 
@@ -40,7 +40,7 @@ export default function MainPage() {
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-200">
       {/* Video Section - 40% of screen height */}
-      <MediaCampaign attachemntUrl={attachemntUrl}/>
+      <MediaCampaign attachemntUrl={attachemntUrl} mediaStatus={mediaStatus}/>
       
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">
