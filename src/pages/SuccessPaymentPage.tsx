@@ -1,42 +1,49 @@
 import CheckMark from "../assets/Success_perspective_matte 1.svg";
 import Sally from "../assets/Saly-22.webp";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import useStore from "../components/state/store";
+import { EOrderStatus } from "../components/state/order/orderSlice";
 
-const IDLE_TIMEOUT = 30000;
+// const IDLE_TIMEOUT = 30000;
 
 export default function SuccessPaymentPage() {
   const { t } = useTranslation();
 
   const navigate = useNavigate();
 
-  const { setIsLoading } = useStore();
+  const { setIsLoading, order } = useStore();
 
-  const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleFinish = () => {
     navigate("/");
   }
 
-  const clearIdleTimeout = () => {
-    if (idleTimeoutRef.current) {
-      clearTimeout(idleTimeoutRef.current);
-      idleTimeoutRef.current = null;
+  useEffect(() => {
+    if (order?.status === EOrderStatus.COMPLETED) {
+      handleFinish();
     }
-  }
+  }, [order]);
+
+  // const clearIdleTimeout = () => {
+  //   if (idleTimeoutRef.current) {
+  //     clearTimeout(idleTimeoutRef.current);
+  //     idleTimeoutRef.current = null;
+  //   }
+  // }
 
   useEffect(() => {
     setIsLoading(false);
 
-    if (!idleTimeoutRef.current) {
-      idleTimeoutRef.current = setTimeout(handleFinish, IDLE_TIMEOUT);
-    }
+    // if (!idleTimeoutRef.current) {
+    //   idleTimeoutRef.current = setTimeout(handleFinish, IDLE_TIMEOUT);
+    // }
 
-    return () => {
-      clearIdleTimeout();
-    };
+    // return () => {
+    //   clearIdleTimeout();
+    // };
   }, []);
 
   return (
@@ -52,7 +59,7 @@ export default function SuccessPaymentPage() {
           {t("Проезжайте в бокс!")}
         </p>
 
-        <button
+        {/* <button
           className="fixed right-8 bottom-8 px-8 py-4 rounded-3xl text-[#0B68E1] bg-white font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg z-50"
           onClick={() => {
             handleFinish();
@@ -62,7 +69,7 @@ export default function SuccessPaymentPage() {
           <div className="flex items-center justify-center gap-2">
             {t("Завершить")}
           </div>
-        </button>
+        </button> */}
 
         <img
           src={Sally}
