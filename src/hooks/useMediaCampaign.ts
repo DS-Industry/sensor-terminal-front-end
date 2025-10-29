@@ -8,7 +8,7 @@ export const useMediaCampaign = (programUrl?: string) => {
     baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
     programUrl: "",
   });
-
+  
   const [mediaStatus, setMediaStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
 
   useEffect(() => {
@@ -17,9 +17,10 @@ export const useMediaCampaign = (programUrl?: string) => {
       
       // Сбрасываем статус при смене URL
       setMediaStatus('loading');
-      
-      // Проверяем загружается ли изображение
+
+      // Проверяем загружается ли персональное изображение
       const img = new Image();
+      
       img.onload = () => {
         setMediaStatus('loaded');
         setAttachemntUrl({
@@ -27,25 +28,56 @@ export const useMediaCampaign = (programUrl?: string) => {
           programUrl: fullProgramUrl,
         });
       };
+      
       img.onerror = () => {
+        // Если персональное изображение не загрузилось, пробуем baseUrl
+        const baseImage = new Image();
+        baseImage.onload = () => {
+          setMediaStatus('loaded');
+          setAttachemntUrl({
+            baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
+            programUrl: "", // Очищаем programUrl, будем использовать baseUrl
+          });
+        };
+        
+        baseImage.onerror = () => {
+          // Если baseUrl тоже не загрузился, устанавливаем ошибку
+          setMediaStatus('error');
+          setAttachemntUrl({
+            baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
+            programUrl: "",
+          });
+        };
+        
+        baseImage.src = `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`;
+      };
+
+      img.src = fullProgramUrl;
+    } else {
+      // Если нет programUrl, пробуем загрузить baseUrl
+      const baseImage = new Image();
+      baseImage.onload = () => {
+        setMediaStatus('loaded');
+        setAttachemntUrl({
+          baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
+          programUrl: "",
+        });
+      };
+      
+      baseImage.onerror = () => {
         setMediaStatus('error');
         setAttachemntUrl({
           baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
-          programUrl: "", // Очищаем programUrl при ошибке
+          programUrl: "",
         });
       };
-      img.src = fullProgramUrl;
-    } else {
-      setAttachemntUrl({
-        baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
-        programUrl: "",
-      });
-      setMediaStatus('loaded');
+      
+      baseImage.src = `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`;
     }
   }, [programUrl]);
 
   return { 
     attachemntUrl,
-    mediaStatus // Возвращаем статус для компонента
+    mediaStatus
   };
 };

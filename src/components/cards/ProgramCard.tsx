@@ -52,7 +52,7 @@ export default function ProgramCard(program: IProgram) {
 
       <div className="flex-shrink-0 p-6 bg-white">
         {/* Cashback Section */}
-        <div className="flex items-center justify-between mb-6 p-4 bg-orange-50/80 rounded-2xl border border-orange-100/50">
+        {/* <div className="flex items-center justify-between mb-6 p-4 bg-orange-50/80 rounded-2xl border border-orange-100/50">
           <div className="flex-1">
             <p className="text-sm text-gray-600 mb-1 font-medium">{t("Ваш CashBack")}</p>
             <div className="flex items-baseline gap-1">
@@ -61,13 +61,12 @@ export default function ProgramCard(program: IProgram) {
             <p className="text-xs text-gray-500">{t("От вашей мойки")}</p>
           </div>
 
-          {/* Orange Circle Graphic */}
           <div className="relative flex-shrink-0">
             <div className="w-16 h-16 bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 rounded-full shadow-lg opacity-90" />
             <div className="absolute -top-1 -right-1 w-8 h-8 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-400 rounded-full shadow-md" />
             <div className="absolute top-2 left-2 w-3 h-3 bg-white/30 rounded-full" />
           </div>
-        </div>
+        </div> */}
 
         <div className="mb-6 text-center">
           <span className="text-6xl font-bold text-gray-900 tracking-tight">{Number(program.price)}</span>

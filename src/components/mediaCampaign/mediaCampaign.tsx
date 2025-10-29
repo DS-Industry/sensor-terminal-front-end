@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { VIDEO_TYPES } from '../hard-data';
-import SpareMedia from '../../assets/spare-media.webp';
+import SpareMedia from '../../assets/spare-media.jpg';
 
 interface IMediaCampaign {
   attachemntUrl: {
@@ -40,10 +40,12 @@ export default function MediaCampaign(props: IMediaCampaign) {
 
   const renderMedia = () => {
     const { programUrl, baseUrl } = attachemntUrl;
-    const mediaUrl = programUrl || baseUrl;
-
-    // Если статус ошибки или нет URL - сразу показываем запасное
-    if (mediaStatus === 'error' || !mediaUrl) {
+    
+    // Определяем какой URL использовать в приоритете
+    let mediaUrl = programUrl || baseUrl;
+    
+    // Если статус ошибки - используем запасное изображение
+    if (mediaStatus === 'error') {
       return (
         <img
           src={SpareMedia}
@@ -53,16 +55,16 @@ export default function MediaCampaign(props: IMediaCampaign) {
       );
     }
 
-    // Если еще загружается - показываем пустой div (не мелькает запасное)
+    // Если еще загружается - показываем пустой div
     if (mediaStatus === 'loading') {
       return (
         <div className="w-full h-full bg-transparent" />
       );
     }
 
-    // Если загружено успешно - показываем основной контент
+    // Если загружено успешно - показываем контент
     const isVideo = VIDEO_TYPES.some(ext => mediaUrl.endsWith(ext));
-
+    
     if (isVideo) {
       return (
         <video
