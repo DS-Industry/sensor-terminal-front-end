@@ -149,7 +149,7 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
             console.log(`[${paymentMethod}Page] Получена вся сумма`);
             clearAllTimers();
             setPaymentSuccess(true);
-            setIsLoading(true);
+            // setIsLoading(true);
           }
         }
       }

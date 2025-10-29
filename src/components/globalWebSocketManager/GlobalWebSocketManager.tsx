@@ -5,11 +5,10 @@ import { EOrderStatus } from '../state/order/orderSlice';
 import { getOrderById } from '../../api/services/payment';
 
 export function GlobalWebSocketManager() {
-  const { order, setOrder, setBankCheck, setIsLoading, setNavigationTarget, setErrorText } = useStore();
+  const { order, setOrder, setBankCheck, setNavigationTarget, setErrorText } = useStore();
 
   const setCheck = async (id: string) => {
     const response = await getOrderById(id);
-    setIsLoading(false);
 
     console.log("Запрос заказа", id, response);
 
