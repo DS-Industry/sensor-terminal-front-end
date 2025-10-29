@@ -11,6 +11,7 @@ export interface AppSlice {
   bankCheck: string;
   navigationTarget: string | null;
   errorText: string;
+  backConfirmationCallback: (() => void) | null;
   setIsLoyalty: (loyalty: boolean) => void;
   setPrograms: (programs: IProgram[]) => void;
   setSelectedProgram: (program: IProgram | null) => void;
@@ -20,6 +21,7 @@ export interface AppSlice {
   setNavigationTarget: (target: string | null) => void;
   clearNavigation: () => void;
   setErrorText: (error: string) => void;
+  setBackConfirmationCallback: (callback: (() => void) | null) => void;
 }
 
 export const createAppSlice: StoreSlice<AppSlice> = (set) => ({
@@ -32,6 +34,7 @@ export const createAppSlice: StoreSlice<AppSlice> = (set) => ({
   bankCheck: "",
   navigationTarget: null,
   errorText: "",
+  backConfirmationCallback: null,
 
   setPrograms: (programs) => {
     set(state => ({...state, programs}));
@@ -67,5 +70,9 @@ export const createAppSlice: StoreSlice<AppSlice> = (set) => ({
 
   setErrorText: (error) => {
     set(state => ({...state, errorText: error}));
+  },
+
+  setBackConfirmationCallback: (callback) => {
+    set(state => ({...state, backConfirmationCallback: callback}));
   }
 });

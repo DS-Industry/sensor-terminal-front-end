@@ -1,3 +1,4 @@
+import { BackConfirmationModal } from "../modals/BackConfirmationModal";
 import { LoaderModal } from "../modals/LoaderModal";
 
 export function ModalProvider() {
@@ -5,6 +6,7 @@ export function ModalProvider() {
   return (
     <>
       <LoaderModal />
+      <BackConfirmationModal />
     </>
   );
 }

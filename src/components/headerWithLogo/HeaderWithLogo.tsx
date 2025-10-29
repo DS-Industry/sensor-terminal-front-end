@@ -13,7 +13,28 @@ interface IHeaderWithLogoProps {
 export default function HeaderWithLogo(props: IHeaderWithLogoProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { insertedAmount } = useStore();
+  const {
+    openBackConfirmationModal,
+    setBackConfirmationCallback
+  } = useStore();
+
+  const handleBackClick = () => {
+    console.log("[HeaderWithLogo] Нажали назад");
+    
+    if (props.backButtonClick) {
+      console.log("[HeaderWithLogo] Есть пропс backButtonClick");
+
+      openBackConfirmationModal();
+
+      setBackConfirmationCallback(() => {
+        if (props.backButtonClick) {
+          props.backButtonClick();
+        }
+      });
+    } else {
+      navigate(-1);
+    }
+  };
 
   return (
     <Card className="mx-7 my-5 p-4 shadow-lg border-0">
@@ -23,7 +44,8 @@ export default function HeaderWithLogo(props: IHeaderWithLogoProps) {
           {props.isMainPage
             ? <>
               <button
-                className="px-8 py-4 rounded-3xl text-white font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg" onClick={() => navigate("/instruction")}
+                className="px-8 py-4 rounded-3xl text-white font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg"
+                onClick={() => navigate("/instruction")}
                 style={{ backgroundColor: "#0B68E1" }}
               >
                 Инструкция
@@ -32,15 +54,7 @@ export default function HeaderWithLogo(props: IHeaderWithLogoProps) {
             :
             <button
               className="px-8 py-4 rounded-3xl text-white font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg"
-              onClick={() => {
-                if (insertedAmount === 0) {
-                  if (props.backButtonClick) {
-                    props.backButtonClick();
-                  } else {
-                    navigate(-1);
-                  }
-                }
-              }}
+              onClick={handleBackClick}
               style={{ backgroundColor: "#0B68E1" }}
             >
               <div className="flex items-center gap-2">
@@ -53,4 +67,4 @@ export default function HeaderWithLogo(props: IHeaderWithLogoProps) {
       </div>
     </Card>
   );
-}           
+}

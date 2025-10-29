@@ -130,7 +130,7 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
         console.log(`[${paymentMethod}Page] Сделали запрос getOrderById, ждем ответ... `);
 
         const orderDetails = await getOrderById(order.id);
-        
+
         console.log(`[${paymentMethod}Page] Получили ответ getOrderById`);
 
         if (orderDetails.amount_sum) {
@@ -178,6 +178,8 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
     setIsLoading(false);
     setPaymentSuccess(false);
 
+    console.log("[usePaymentProcessing] Делам отмену заказа c id: ", order?.id);
+    
     if (order?.id) {
       cancelOrder(order.id);
     }
@@ -261,6 +263,10 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
       }, DEPOSIT_TIME);
 
       checkOrderAmountSumIntervalRef.current = setInterval(checkPaymentAsync, PAYMENT_INTERVAL);
+    }
+
+    if (order?.status === EOrderStatus.PAYED) {
+      setPaymentSuccess(true);
     }
 
     return () => {
