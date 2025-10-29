@@ -127,7 +127,11 @@ export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
   const checkPaymentAsync = async () => {
     try {
       if (order?.id) {
+        console.log(`[${paymentMethod}Page] Сделали запрос getOrderById, ждем ответ... `);
+
         const orderDetails = await getOrderById(order.id);
+        
+        console.log(`[${paymentMethod}Page] Получили ответ getOrderById`);
 
         if (orderDetails.amount_sum) {
           const amountSum = Number(orderDetails.amount_sum);
