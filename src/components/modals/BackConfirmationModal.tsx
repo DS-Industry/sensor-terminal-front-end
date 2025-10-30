@@ -5,8 +5,8 @@ import useStore from '../state/store';
 
 export function BackConfirmationModal() {
   const { t } = useTranslation();
-  const { 
-    isBackConfirmationModalOpen, 
+  const {
+    isBackConfirmationModalOpen,
     closeBackConfirmationModal,
     backConfirmationCallback,
   } = useStore();
@@ -17,7 +17,6 @@ export function BackConfirmationModal() {
     } else {
       document.body.style.overflow = 'unset';
     }
-
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -39,23 +38,23 @@ export function BackConfirmationModal() {
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-      <div className="relative z-10 bg-white rounded-3xl p-8 max-w-md w-full mx-4">
-        <h2 className="text-2xl font-bold mb-4 text-gray-900">
+      <div className="relative z-10 bg-white rounded-[2.25rem] p-24 max-w-4xl w-full mx-8 text-center">
+        <h2 className="text-6xl font-bold mb-12 text-gray-900">
           {t("Подтверждение возврата")}
         </h2>
-        <p className="text-gray-600 mb-6">
+        <p className="text-3xl text-gray-600 mb-16">
           {t("Вы действительно хотите вернуться назад? Внесенные средства будут утрачены.")}
         </p>
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-center gap-12">
           <button
-            className="px-6 py-3 rounded-2xl text-gray-600 font-medium transition-all duration-300 hover:bg-gray-100"
+            className="px-18 py-9 rounded-3xl text-white font-bold text-3xl transition-all duration-300 hover:opacity-90"
+            style={{ backgroundColor: "#0B68E1" }}
             onClick={handleCancel}
           >
             {t("Отмена")}
           </button>
           <button
-            className="px-6 py-3 rounded-2xl text-white font-medium transition-all duration-300 hover:opacity-90"
-            style={{ backgroundColor: "#0B68E1" }}
+            className="px-18 py-9 rounded-3xl text-gray-600 font-bold text-3xl transition-all duration-300 hover:bg-gray-100"
             onClick={handleConfirm}
           >
             {t("Да")}

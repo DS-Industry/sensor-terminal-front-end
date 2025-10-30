@@ -7,7 +7,7 @@ import { EOrderStatus, EPaymentMethod } from '../components/state/order/orderSli
 const DEPOSIT_TIME = 60000;
 const PAYMENT_INTERVAL = 1000;
 const LOYALTY_INTERVAL = 1000;
-const START_ROBOT_INTERVAL = 35000;
+const START_ROBOT_INTERVAL = 20000;
 
 export const usePaymentProcessing = (paymentMethod: EPaymentMethod) => {
   const navigate = useNavigate();

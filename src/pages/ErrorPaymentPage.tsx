@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import useStore from "../components/state/store";
 import { useEffect, useRef } from "react";
 
-const IDLE_TIMEOUT = 30000;
+const IDLE_TIMEOUT = 5000;
 
 export default function ErrorPaymentPage() {
   const { t } = useTranslation();
@@ -28,44 +28,41 @@ export default function ErrorPaymentPage() {
   }
 
   useEffect(() => {
-      setIsLoading(false);
+    setIsLoading(false);
 
-      if (!idleTimeoutRef.current) {
-        idleTimeoutRef.current = setTimeout(handleFinish, IDLE_TIMEOUT);
-      }
-  
-      return () => {
-        clearIdleTimeout();
-      };
-    }, []);
+    if (!idleTimeoutRef.current) {
+      idleTimeoutRef.current = setTimeout(handleFinish, IDLE_TIMEOUT);
+    }
+
+    return () => {
+      clearIdleTimeout();
+    };
+  }, []);
 
   return (
     <section className="flex flex-col justify-center bg-primary h-screen w-screen bg-[#0045FF]">
-      <div className="flex flex-col items-center">
-        <img src={Emoji} className=" mt-10" />
+      <div className="flex flex-col items-center justify-center flex-1">
+        <img src={Emoji} className="mb-8" />
 
-        <p className="text-white text-[104px] font-semibold mb-12">
+        <p className="text-white text-[104px] font-semibold mb-12 text-center">
           {errorText ? t(errorText) : t("Ошибка запуска робота")}
         </p>
 
         <img
           src={Sally}
           alt="sally"
-          className=" min-w-[50rem] min-h-[50rem] max-w-[10rem] max-h-[5rem] object-cover mt-5"
+          className="min-w-[50rem] min-h-[50rem] max-w-[10rem] max-h-[5rem] object-cover mb-12"
         />
-      </div>
 
-      <button
-        className="fixed right-8 bottom-8 px-8 py-4 rounded-3xl text-[#0B68E1] bg-white font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg z-50"
-        onClick={() => {
-          handleFinish();
-        }}
-        style={{ backgroundColor: "" }}
-      >
-        <div className="flex items-center justify-center gap-2">
-          {t("Завершить")}
-        </div>
-      </button>
+        <button
+          className="px-16 mt-10 py-6 rounded-3xl text-[#0B68E1] bg-white font-semibold text-2xl transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg"
+          onClick={handleFinish}
+        >
+          <div className="flex items-center justify-center gap-2">
+            {t("Закрыть")}
+          </div>
+        </button>
+      </div>
     </section>
   );
 }
