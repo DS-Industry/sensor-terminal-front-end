@@ -8,21 +8,22 @@ export enum EPaymentMethod {
 }
 
 export enum EOrderStatus {
-  SELECTING_PROGRAM = 'selecting_program',
-  SELECTING_PAYMENT = 'selecting_payment', 
-  PROCESSING_PAYMENT = 'processing_payment',
-  SUCCESS = 'success',
-  ERROR_PAYMENT = 'error_payment',
-  ERROR_ROBOT = 'error_robot',
-  ERROR_INSUFFICIENT_POINTS = 'error_insufficient_points',
+  CREATED = 'created',
+  WAITING_PAYMENT = 'waiting_payment',
+  PAYED = 'payed',
+  FAILED = 'failed',
+  COMPLETED = 'completed',
+  PROCESSING = 'processing',
+  MOBILE_QR_REQUEST = 'mobile_qr_request',
 }
 
 export interface Order {
-  id: string;
+  id?: string;
   programId?: number;
   status: EOrderStatus;
   paymentMethod?: EPaymentMethod;
   createdAt: string;
+  transactionId?: string;
 }
 
 export interface OrderSlice {
@@ -41,8 +42,7 @@ export const createOrderSlice: StoreSlice<OrderSlice> = (set, get) => ({
 
   setOrder: (orderData = {}) => {
     const order: Order = {
-      id: orderData.id || `order_${Date.now()}`,
-      status: orderData. status || EOrderStatus.SELECTING_PROGRAM,
+      status: orderData. status || EOrderStatus.CREATED,
       createdAt: orderData.createdAt || new Date().toISOString(),
       ...orderData, 
     };

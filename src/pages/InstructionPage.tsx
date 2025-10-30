@@ -1,6 +1,6 @@
 import InstructionLayout from "../layouts/InstructionLayout";
 import Arrow from "./../assets/up-window.svg";
-import Car from "./../assets/car-bottom-wash.svg";
+import Car from "./../assets/car.webp";
 import Stop from "./../assets/red-close.svg";
 import Cycle from "./../assets/cycle.svg";
 import AttentionTag from "../components/tags/AttentionTag";

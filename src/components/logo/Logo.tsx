@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { getS3LogoUrl } from '../../util/s3Utils';
 
+const LOGO_URL = "Logo.webp";
+
 interface ClientLogoProps {
-  client?: string;
   alt?: string;
   className?: string;
 }
 
 export default function ClientLogo({ 
-  client, 
   alt, 
   className = '', 
 }: ClientLogoProps) {
   const [hasError, setHasError] = useState(false);
   
-  const logoUrl = client ? getS3LogoUrl(client.toLowerCase()) : "";
+  const logoUrl = LOGO_URL ? getS3LogoUrl(LOGO_URL) : "";
   
   const handleError = () => {
     setHasError(true);

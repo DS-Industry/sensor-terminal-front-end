@@ -2,8 +2,9 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { createOrderSlice, OrderSlice } from './order/orderSlice';
 import { AppSlice, createAppSlice } from './app/appSlice';
+import { createModalSlice, ModalSlice } from './modal/modalSlice';
 
-export type StoreState =  OrderSlice & AppSlice;
+export type StoreState =  OrderSlice & AppSlice & ModalSlice;
 
 const useStore = create<StoreState>()(
   devtools(
@@ -11,6 +12,7 @@ const useStore = create<StoreState>()(
       (set, get) => ({
         ...createOrderSlice(set, get),
         ...createAppSlice(set, get),
+        ...createModalSlice(set, get),
       }),
       {
         name: 'app-storage',

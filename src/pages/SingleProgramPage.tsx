@@ -7,26 +7,65 @@ import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import { Icon, Text } from "@gravity-ui/uikit";
 import useStore from "../components/state/store";
+import { useEffect, useRef, useState } from "react";
+import { loyaltyCheck } from "../api/services/payment";
+import { EPaymentMethod } from "../components/state/order/orderSlice";
+import { useNavigate } from "react-router-dom";
+
+const IDLE_TIMEOUT = 30000;
+
+const SINGLE_PAGE_URL = "SinglePage.webp";
 
 export default function SingleProgramPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { selectedProgram, setIsLoyalty, isLoyalty } = useStore();
+  const { attachemntUrl, mediaStatus } = useMediaCampaign(SINGLE_PAGE_URL);
+  const [loyaltyLoading, setLoyaltyLoading] = useState(true);
+  const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // const { data: paymentMethods, error: paymentMethodsError, isLoading: paymentMethodsLoading } = useSWR<IPaymentMethod[]>(
-  //   '/payment-methods',
-  //   getPaymentMethods,
-  //   {
-  //     revalidateOnFocus: false,
-  //     errorRetryCount: 2,
-  //   }
-  // );
+  const checkLoyalty = async() => {
+    const isLoyalty = await loyaltyCheck();
+    const loyaltyStatus = isLoyalty.loyalty_status;    
+    setIsLoyalty(loyaltyStatus);
+    setLoyaltyLoading(false);
+  }
 
-  const { selectedProgram } = useStore();
-  const { attachemntUrl } = useMediaCampaign();
+  const handleFinish = () => {
+    navigate("/");
+  }
+
+  const clearIdleTimeout = () => {
+    if (idleTimeoutRef.current) {
+      clearTimeout(idleTimeoutRef.current);
+      idleTimeoutRef.current = null;
+    }
+  }
+
+  useEffect(() => {
+    checkLoyalty();
+
+    if (!idleTimeoutRef.current) {
+      idleTimeoutRef.current = setTimeout(handleFinish, IDLE_TIMEOUT);
+    }
+
+    return () => {
+      clearIdleTimeout();
+    };
+  }, []);
+
+  const filteredPays = PAYS.filter(pay => {
+    if (!isLoyalty) {
+      return pay.type !== EPaymentMethod.MOBILE_PAYMENT && 
+             pay.type !== EPaymentMethod.LOYALTY;
+    }
+    return true;
+  });
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
       {/* Video Section - 40% of screen height */}
-      <MediaCampaign attachemntUrl={attachemntUrl}/>
+      <MediaCampaign attachemntUrl={attachemntUrl} mediaStatus={mediaStatus}/>
 
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">
@@ -63,7 +102,7 @@ export default function SingleProgramPage() {
 
                 {/* Payment Cards */}
                 <div className="grid grid-cols-2 gap-6 justify-items-center max-w-2xl mx-auto">
-                  {PAYS.map((pay, index) => (
+                  {!loyaltyLoading && filteredPays.map((pay, index) => (
                     <PayCard
                       key={index}
                       payType={pay.type}

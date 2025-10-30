@@ -2,7 +2,7 @@ import { axiosInstance } from "../../axiosConfig";
 import { IProgram } from "../../types/program";
 
 enum PROGRAM {
-  PROGRAM = '/wash-programs/',
+  PROGRAM = 'wash-programs/',
 };
 
 export async function getPrograms(): Promise<IProgram[]> {

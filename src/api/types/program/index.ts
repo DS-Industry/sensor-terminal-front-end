@@ -4,4 +4,5 @@ export interface IProgram {
   price: string;
   description: string;
   duration: number;
+  functions: string;
 };

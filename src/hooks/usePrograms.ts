@@ -3,8 +3,7 @@ import useSWR from 'swr';
 import useStore from '../components/state/store';
 import { IProgram } from '../api/types/program';
 
-// 1 час
-const REFRESH_INTERVAL = 3600000;
+const VITE_REFRESH_INTERVAL = import.meta.env.VITE_REFRESH_INTERVAL || 3600000;
 
 export function usePrograms() {
   const { programs, setPrograms } = useStore();
@@ -15,7 +14,7 @@ export function usePrograms() {
     {
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
-      refreshInterval: REFRESH_INTERVAL, 
+      refreshInterval: VITE_REFRESH_INTERVAL, 
       onSuccess: (data) => {
         setPrograms(data)
       }

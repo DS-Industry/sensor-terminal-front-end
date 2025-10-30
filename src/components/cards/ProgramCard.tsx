@@ -21,7 +21,7 @@ export default function ProgramCard(program: IProgram) {
         navigate(`/programs/${program.id}`)
       }}
     >
-      <div className="flex-shrink-0 h-96 p-6 relative flex flex-col bg-gradient-to-br from-blue-500 to-blue-600">
+      <div className="flex-shrink-0 h-96 p-4 relative flex flex-col bg-gradient-to-br from-blue-500 to-blue-600">
         {/* Duration Badge */}
         <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-6 self-start bg-white/20 backdrop-blur-sm border border-white/10">
           <Clock className="w-4 h-4 text-white" />
@@ -29,12 +29,12 @@ export default function ProgramCard(program: IProgram) {
         </div>
 
         {/* Title */}
-        <h2 className="text-3xl font-bold mb-6 text-balance leading-tight text-white">{t(`${program.name}`)}</h2>
+        <h2 className="text-3xl font-bold mb-5 text-balance leading-tight text-white whitespace-nowrap">{t(`${program.name}`)}</h2>
 
         {/* Service List - No scroll needed with bigger header */}
         <div className="flex-1">
-          <ul className="space-y-3">
-            {program.description.split(", ").map((service, index) => (
+          <ul className="space-y-2">
+            {program.functions && program.functions.split(", ").map((service, index) => (
               <li key={index} className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full flex-shrink-0 bg-white" />
                 <span className="text-sm font-medium text-white">{t(`${service}`)}</span>
@@ -52,7 +52,7 @@ export default function ProgramCard(program: IProgram) {
 
       <div className="flex-shrink-0 p-6 bg-white">
         {/* Cashback Section */}
-        <div className="flex items-center justify-between mb-6 p-4 bg-orange-50/80 rounded-2xl border border-orange-100/50">
+        {/* <div className="flex items-center justify-between mb-6 p-4 bg-orange-50/80 rounded-2xl border border-orange-100/50">
           <div className="flex-1">
             <p className="text-sm text-gray-600 mb-1 font-medium">{t("Ваш CashBack")}</p>
             <div className="flex items-baseline gap-1">
@@ -61,13 +61,12 @@ export default function ProgramCard(program: IProgram) {
             <p className="text-xs text-gray-500">{t("От вашей мойки")}</p>
           </div>
 
-          {/* Orange Circle Graphic */}
           <div className="relative flex-shrink-0">
             <div className="w-16 h-16 bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 rounded-full shadow-lg opacity-90" />
             <div className="absolute -top-1 -right-1 w-8 h-8 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-400 rounded-full shadow-md" />
             <div className="absolute top-2 left-2 w-3 h-3 bg-white/30 rounded-full" />
           </div>
-        </div>
+        </div> */}
 
         <div className="mb-6 text-center">
           <span className="text-6xl font-bold text-gray-900 tracking-tight">{Number(program.price)}</span>

@@ -27,14 +27,12 @@ export default function PayCard({
 }: IPayCard) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { setOrderPaymentMethod } = useStore.getState();
 
   return (
     <Card
       type="action"
       className="w-80 h-64 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-105 border-0 overflow-hidden"
       onClick={() => {
-        setOrderPaymentMethod(payType);
 
         navigate(`./${endPoint}`, {
           state: {
