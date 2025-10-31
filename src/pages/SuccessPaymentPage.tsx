@@ -1,6 +1,6 @@
 import CheckMark from "../assets/Success_perspective_matte 1.svg";
 import Sally from "../assets/Saly-22.webp";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import useStore from "../components/state/store";
@@ -14,8 +14,8 @@ export default function SuccessPaymentPage() {
   const navigate = useNavigate();
 
   const { setIsLoading, order } = useStore();
-
-  // const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  const [displayText, setDisplayText] = useState("Проезжайте в бокс!");
 
   const handleFinish = () => {
     navigate("/");
@@ -27,23 +27,16 @@ export default function SuccessPaymentPage() {
     }
   }, [order]);
 
-  // const clearIdleTimeout = () => {
-  //   if (idleTimeoutRef.current) {
-  //     clearTimeout(idleTimeoutRef.current);
-  //     idleTimeoutRef.current = null;
-  //   }
-  // }
-
   useEffect(() => {
     setIsLoading(false);
 
-    // if (!idleTimeoutRef.current) {
-    //   idleTimeoutRef.current = setTimeout(handleFinish, IDLE_TIMEOUT);
-    // }
+    const textTimer = setTimeout(() => {
+      setDisplayText("Идет мойка");
+    }, 10000);
 
-    // return () => {
-    //   clearIdleTimeout();
-    // };
+    return () => {
+      clearTimeout(textTimer);
+    };
   }, []);
 
   return (
@@ -56,20 +49,8 @@ export default function SuccessPaymentPage() {
         />
 
         <p className="text-white text-[124px] font-semibold mb-12">
-          {t("Проезжайте в бокс!")}
+          {t(displayText)}
         </p>
-
-        {/* <button
-          className="fixed right-8 bottom-8 px-8 py-4 rounded-3xl text-[#0B68E1] bg-white font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg z-50"
-          onClick={() => {
-            handleFinish();
-          }}
-          style={{ backgroundColor: "" }}
-        >
-          <div className="flex items-center justify-center gap-2">
-            {t("Завершить")}
-          </div>
-        </button> */}
 
         <img
           src={Sally}
