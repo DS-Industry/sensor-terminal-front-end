@@ -211,7 +211,7 @@ export default function LoyaltyPayPage() {
     console.log("[LoyaltyPayPage] Инициализация страницы оплаты лояльности");
 
     // Запускаем считыватель карт
-    openLoyaltyCardReader().then(response => {
+    openLoyaltyCardReader().then(() => {
       console.log("[LoyaltyPayPage] Кард-ридер запущен");
     }).catch(error => {
       console.error("[LoyaltyPayPage] Ошибка при запуске кард-ридера:", error);

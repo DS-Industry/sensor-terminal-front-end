@@ -9,7 +9,6 @@ import PaymentTitleSection from "../components/paymentTitleSection/PaymentTitleS
 import useStore from "../components/state/store";
 import { EPaymentMethod } from "../components/state/order/orderSlice";
 import { usePaymentProcessing } from "../hooks/usePaymentProcessing";
-import { LoyaltyCardModal } from "../components/modals/LoyaltyCardModal";
 import SuccessPayment from "../components/successPayment/SuccessPayment";
 
 const CASH_PAGE_URL = "CashPage.webp";
@@ -17,9 +16,9 @@ const CASH_PAGE_URL = "CashPage.webp";
 export default function CashPayPage() {
   const { t } = useTranslation();
   const { attachemntUrl, mediaStatus } = useMediaCampaign(CASH_PAGE_URL);
-  const { isLoyaltyCardModalOpen, insertedAmount } = useStore();
+  const { insertedAmount } = useStore();
 
-  const { selectedProgram, handleBack, handleSkipLoyalty, paymentSuccess, handleStartRobot, timeUntilRobotStart } = usePaymentProcessing(EPaymentMethod.CASH);
+  const { selectedProgram, handleBack, paymentSuccess, handleStartRobot, timeUntilRobotStart } = usePaymentProcessing(EPaymentMethod.CASH);
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
@@ -159,9 +158,9 @@ export default function CashPayPage() {
         </div>
       </div>
 
-      {isLoyaltyCardModalOpen && (
-        <LoyaltyCardModal onSkipLoyalty={handleSkipLoyalty} />
-      )}
+      {/*{isLoyaltyCardModalOpen && (*/}
+      {/*  <LoyaltyCardModal onSkipLoyalty={handleSkipLoyalty} />*/}
+      {/*)}*/}
     </div>
   );
 }

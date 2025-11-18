@@ -7,11 +7,9 @@ import { useTranslation } from "react-i18next";
 import { CreditCard } from "@gravity-ui/icons";
 import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
-import useStore from "../components/state/store";
 import PaymentTitleSection from "../components/paymentTitleSection/PaymentTitleSection";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import { EPaymentMethod } from "../components/state/order/orderSlice";
-import { LoyaltyCardModal } from "../components/modals/LoyaltyCardModal";
 import { usePaymentProcessing } from "../hooks/usePaymentProcessing";
 import SuccessPayment from "../components/successPayment/SuccessPayment";
 
@@ -20,13 +18,11 @@ const CARD_PAGE_URL = "CardPage.webp";
 export default function CardPayPage() {
   const { t } = useTranslation();
   const { attachemntUrl, mediaStatus } = useMediaCampaign(CARD_PAGE_URL);
-  const { isLoyaltyCardModalOpen } = useStore();
 
   const { 
     selectedProgram, 
     handleBack, 
-    handleSkipLoyalty, 
-    paymentSuccess, 
+    paymentSuccess,
     handleStartRobot,
     timeUntilRobotStart 
   } = usePaymentProcessing(EPaymentMethod.CARD);
@@ -140,9 +136,9 @@ export default function CardPayPage() {
         </div>
       </div>
       
-      {isLoyaltyCardModalOpen && (
-        <LoyaltyCardModal onSkipLoyalty={handleSkipLoyalty} />
-      )}
+      {/*{isLoyaltyCardModalOpen && (*/}
+      {/*  <LoyaltyCardModal onSkipLoyalty={handleSkipLoyalty} />*/}
+      {/*)}*/}
     </div>
   );
 }
