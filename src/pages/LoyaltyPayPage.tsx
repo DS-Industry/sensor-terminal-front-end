@@ -17,8 +17,7 @@ import SuccessPayment from "../components/successPayment/SuccessPayment";
 import { globalWebSocketManager } from "../util/websocketManager";
 
 const LOYALTY_PAGE_URL = "LoyaltyPage.webp";
-const DEPOSIT_TIME = 30000;
-const START_ROBOT_INTERVAL = 35000;
+const DEPOSIT_TIME = 300000;
 
 // Типы статусов кард-ридера
 enum CardReaderStatus {
@@ -43,9 +42,6 @@ export default function LoyaltyPayPage() {
 
   const orderCreatedRef = useRef(false);
   const loyalityEmptyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const idleTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const countdownInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [timeUntilRobotStart, setTimeUntilRobotStart] = useState(0);
 
   const handleStartRobot = () => {
     console.log("Запускаем робот");
@@ -100,62 +96,25 @@ export default function LoyaltyPayPage() {
 
       switch (data.code) {
         case CardReaderStatus.WAITING_CARD:
-          console.log("Ожидание карты");
+          console.log("ВЕБСОКЕТ КОД 1: Ожидание карты");
           setIsLoading(false);
           break;
         case CardReaderStatus.SEARCHING_DATA:
-          console.log("Поиск данных по карте");
+          console.log("ВЕБСОКЕТ КОД 2: Поиск данных по карте");
           setIsLoading(true);
           break;
         case CardReaderStatus.READING_COMPLETE:
-          console.log("Чтение карты завершено");
-          // Не вызываем openLoyaltyCardReader повторно - ждем ответ от изначального вызова
+          console.log("ВЕБСОКЕТ КОД 3: Чтение карты завершено");
           setIsLoading(false);
           break;
       }
     }
-  };
-
-  // Очистка отсчета
-  const clearCountdown = () => {
-    if (idleTimeout.current) {
-      clearTimeout(idleTimeout.current);
-      idleTimeout.current = null;
-    }
-    if (countdownInterval.current) {
-      clearInterval(countdownInterval.current);
-      countdownInterval.current = null;
-    }
-    setTimeUntilRobotStart(0);
-  };
-
-  const startCountdown = () => {
-    const initialTime = START_ROBOT_INTERVAL / 1000;
-    setTimeUntilRobotStart(initialTime);
-
-    // Запускаем таймер для автоматического старта
-    idleTimeout.current = setTimeout(handleStartRobot, START_ROBOT_INTERVAL);
-
-    // Запускаем интервал для обновления отсчета каждую секунду
-    countdownInterval.current = setInterval(() => {
-      setTimeUntilRobotStart(prev => {
-        if (prev <= 1) {
-          if (countdownInterval.current) {
-            clearInterval(countdownInterval.current);
-            countdownInterval.current = null;
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
+  }; 
 
   // Обработка кнопки назад
   const handleBack = () => {
     console.log("[LoyaltyPayPage] Нажата кнопка назад");
     clearLoyaltyTimers();
-    clearCountdown();
     setIsLoading(false);
     
     // НЕ отменяем заказ, так как он еще не создан (создается только при нажатии Оплатить)
@@ -163,7 +122,17 @@ export default function LoyaltyPayPage() {
   };
 
   useEffect(() => {
-    console.log("[LoyaltyPayPage] Инициализация страницы оплаты лояльности");
+    loyalityEmptyTimeoutRef.current = setTimeout(() => {
+      if (!loyaltyCard && !cardNotFound && !insufficientBalance) {
+        console.log(`[LoyaltyPayPage] Таймаут ожидания карты истек`);
+        navigate("/");
+      }
+    }, DEPOSIT_TIME);
+
+    // Подписываемся на события веб-сокета только для отображения статусов
+    const removeCardReaderListener = globalWebSocketManager.addListener('card_reader', handleCardReaderEvent);
+
+    console.log("[LoyaltyPayPage] Запрос openLoyaltyCardReader, ждем данные карты");
 
     // ОДИН раз вызываем openLoyaltyCardReader и ждем ответ
     openLoyaltyCardReader()
@@ -181,6 +150,7 @@ export default function LoyaltyPayPage() {
 
           // Если карта найдена и есть баланс
           if (cardData.balance !== undefined) {
+            console.log(`[LoyaltyPayPage] Карта найдена`);
             setLoyaltyCard(cardData);
             setIsLoading(false);
 
@@ -206,18 +176,7 @@ export default function LoyaltyPayPage() {
       .catch(error => {
         console.error("[LoyaltyPayPage] Ошибка при получении данных карты:", error);
         setIsLoading(false);
-      });
-
-    // Таймаут ожидания карты (30 секунд)
-    loyalityEmptyTimeoutRef.current = setTimeout(() => {
-      if (!loyaltyCard && !cardNotFound && !insufficientBalance) {
-        console.log(`[LoyaltyPayPage] Таймаут ожидания карты истек`);
-        navigate("/");
-      }
-    }, DEPOSIT_TIME);
-
-    // Подписываемся на события веб-сокета только для отображения статусов
-    const removeCardReaderListener = globalWebSocketManager.addListener('card_reader', handleCardReaderEvent);
+      });    
 
     return () => {
       console.log("[LoyaltyPayPage] Очистка таймеров и подписок");
@@ -237,37 +196,13 @@ export default function LoyaltyPayPage() {
 
   useEffect(() => {
     if (paymentSuccess) {
-      startCountdown();
+      handleStartRobot();
     }
 
-    return () => {
-      clearCountdown();
-    }
   }, [paymentSuccess]);
 
   // Функция для рендеринга правой части в зависимости от состояния
   const renderRightSideContent = () => {
-    // Если успешная оплата
-    if (paymentSuccess) {
-      return (
-        <div className="flex flex-col items-center">
-          <button
-            className="w-full px-8 py-4 rounded-3xl text-blue-600 font-semibold text-medium transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-lg z-50 mb-2"
-            onClick={handleStartRobot}
-            style={{ backgroundColor: "white" }}
-          >
-            <div className="flex items-center justify-center gap-2">
-              {t("Запустить")}
-            </div>
-          </button>
-          {timeUntilRobotStart > 0 && (
-            <div className="text-white/80 text-l">
-              {t("Автоматический запуск через")} {timeUntilRobotStart} {t("сек.")}
-            </div>
-          )}
-        </div>
-      );
-    }
 
     // Если карта не найдена
     if (cardNotFound) {
