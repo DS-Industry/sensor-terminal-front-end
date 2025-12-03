@@ -25,10 +25,16 @@ export default function SingleProgramPage() {
   const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const checkLoyalty = async() => {
-    const isLoyalty = await loyaltyCheck();
-    const loyaltyStatus = isLoyalty.loyalty_status;    
-    setIsLoyalty(loyaltyStatus);
-    setLoyaltyLoading(false);
+    try {
+      const isLoyalty = await loyaltyCheck();
+      const loyaltyStatus = isLoyalty.loyalty_status;    
+      setIsLoyalty(loyaltyStatus);
+      setLoyaltyLoading(false);
+    } catch (error) {
+      console.error("Ошибка при проверке лояльности", error);
+    } finally {
+      setLoyaltyLoading(false);
+    }
   }
 
   const handleFinish = () => {
@@ -66,6 +72,9 @@ export default function SingleProgramPage() {
     // В остальных случаях показываем карточку
     return true;
   });
+
+  console.log("filteredPays", filteredPays);
+
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
