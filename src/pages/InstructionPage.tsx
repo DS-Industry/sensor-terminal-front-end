@@ -7,10 +7,11 @@ import AttentionTag from "../components/tags/AttentionTag";
 import Fire from "./../assets/Fire_perspective_matte.svg";
 import { Trans, useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { logger } from "../util/logger";
 
 export default function InstructionPage() {
   const { t, i18n } = useTranslation();
-  console.log(i18n.language);
+  logger.debug("Current language:", i18n.language);
   const navigate = useNavigate();
   
   return (

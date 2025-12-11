@@ -8,7 +8,7 @@ import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import PaymentTitleSection from "../components/paymentTitleSection/PaymentTitleSection";
 import useStore from "../components/state/store";
 import { EPaymentMethod } from "../components/state/order/orderSlice";
-import { usePaymentProcessing } from "../hooks/usePaymentProcessing";
+import { usePaymentFlow } from "../hooks/payment/usePaymentFlow";
 import SuccessPayment from "../components/successPayment/SuccessPayment";
 
 const CASH_PAGE_URL = "CashPage.webp";
@@ -18,7 +18,7 @@ export default function CashPayPage() {
   const { attachemntUrl, mediaStatus } = useMediaCampaign(CASH_PAGE_URL);
   const { insertedAmount } = useStore();
 
-  const { selectedProgram, handleBack, paymentSuccess, handleStartRobot, timeUntilRobotStart } = usePaymentProcessing(EPaymentMethod.CASH);
+  const { selectedProgram, handleBack, paymentSuccess, handleStartRobot, timeUntilRobotStart } = usePaymentFlow(EPaymentMethod.CASH);
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">

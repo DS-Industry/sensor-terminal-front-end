@@ -15,4 +15,10 @@ export default defineConfig({
     port: 5173, // Порт, на котором работает Vite
     strictPort: true, // Гарантирует, что сервер не запустится на другом порту, если 5173 занят
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    css: true,
+  },
 });

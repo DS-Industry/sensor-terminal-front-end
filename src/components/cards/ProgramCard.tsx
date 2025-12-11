@@ -5,6 +5,7 @@ import { Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useStore from "../state/store";
 import { IProgram } from "../../api/types/program";
+import { logger } from "../../util/logger";
 
 export default function ProgramCard(program: IProgram) {
   const { t } = useTranslation();
@@ -15,7 +16,7 @@ export default function ProgramCard(program: IProgram) {
   return (
     <Card type="action" className="w-80 bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col border-0"
       onClick={() => {
-        console.log("order:", order);
+        logger.debug("order:", order);
         setOrderProgramId(program.id);
         setSelectedProgram(program);
         navigate(`/programs/${program.id}`)

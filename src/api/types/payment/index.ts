@@ -5,7 +5,7 @@ export interface IPaymentMethod {
   imgUrl: string;
   type: EPaymentMethod;
   endPoint: string;
-};
+}
 
 export interface ICreateOrderRequest {
   program_id: number,

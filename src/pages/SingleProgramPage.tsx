@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import { loyaltyCheck } from "../api/services/payment";
 import { EPaymentMethod } from "../components/state/order/orderSlice";
 import { useNavigate } from "react-router-dom";
+import { logger } from "../util/logger";
 
 const IDLE_TIMEOUT = 30000;
 
@@ -31,7 +32,7 @@ export default function SingleProgramPage() {
       setIsLoyalty(loyaltyStatus);
       setLoyaltyLoading(false);
     } catch (error) {
-      console.error("Ошибка при проверке лояльности", error);
+      logger.error("Ошибка при проверке лояльности", error);
     } finally {
       setLoyaltyLoading(false);
     }
@@ -73,7 +74,7 @@ export default function SingleProgramPage() {
     return true;
   });
 
-  console.log("filteredPays", filteredPays);
+  logger.debug("filteredPays", filteredPays);
 
 
   return (

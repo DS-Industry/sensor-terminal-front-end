@@ -4,6 +4,7 @@ import ClientLogo from "../logo/Logo";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from 'react-router-dom';
 import useStore from '../state/store';
+import { logger } from '../../util/logger';
 
 interface IHeaderWithLogoProps {
   isMainPage?: boolean;
@@ -20,10 +21,10 @@ export default function HeaderWithLogo(props: IHeaderWithLogoProps) {
   } = useStore();
 
   const handleBackClick = () => {
-    console.log("[HeaderWithLogo] Нажали назад");
+    logger.debug("[HeaderWithLogo] Нажали назад");
 
     if (props.backButtonClick) {
-      console.log("[HeaderWithLogo] Есть пропс backButtonClick");
+      logger.debug("[HeaderWithLogo] Есть пропс backButtonClick");
       openBackConfirmationModal();
 
       setBackConfirmationCallback(() => {

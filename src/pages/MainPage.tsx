@@ -10,6 +10,7 @@ import useStore from "../components/state/store";
 import { EOrderStatus } from "../components/state/order/orderSlice";
 import { startRobot } from "../api/services/payment";
 import { useNavigate } from "react-router-dom";
+import { logger } from "../util/logger";
 
 const MAIN_PAGE_URL = "MainPage.webp";
 
@@ -28,7 +29,7 @@ export default function MainPage() {
 
   useEffect(() => {
     if (order?.status === EOrderStatus.PAYED) {
-      console.log("Оплата мобильным приложением", order);
+      logger.info("Оплата мобильным приложением", order);
 
       if (order.id) {
         startRobot(order.id);

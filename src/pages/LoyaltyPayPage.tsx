@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { IUcnCheckResponse } from "../api/types/payment";
 import SuccessPayment from "../components/successPayment/SuccessPayment";
 import { globalWebSocketManager } from "../util/websocketManager";
+import { logger } from "../util/logger";
 
 const LOYALTY_PAGE_URL = "LoyaltyPage.webp";
 const DEPOSIT_TIME = 30000;
@@ -42,7 +43,7 @@ export default function LoyaltyPayPage() {
   const loyalityEmptyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleStartRobot = () => {
-    console.log("Запускаем робот");
+    logger.info("Запускаем робот");
 
     if (order?.id) {
       startRobot(order.id);
@@ -64,7 +65,7 @@ export default function LoyaltyPayPage() {
 
   const cancelLoyaltyRequest = () => {
     if (abortControllerRef.current) {
-      console.log("[LoyaltyPayPage] Отменяем запрос кард-ридера");
+      logger.debug("[LoyaltyPayPage] Отменяем запрос кард-ридера");
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
@@ -73,7 +74,7 @@ export default function LoyaltyPayPage() {
   // Создание заказа только при нажатии "Оплатить"
   const createOrderAsync = async () => {
     if (!selectedProgram || orderCreatedRef.current || !loyaltyCard?.ucn) {
-      console.log(`[LoyaltyPayPage] Ошибка создания заказа`);
+      logger.warn(`[LoyaltyPayPage] Ошибка создания заказа`);
       return;
     }
 
@@ -88,30 +89,30 @@ export default function LoyaltyPayPage() {
         payment_type: EPaymentMethod.LOYALTY,
         ucn: ucn,
       });
-      console.log(`[LoyaltyPayPage] Создали заказ с UCN`);
+      logger.info(`[LoyaltyPayPage] Создали заказ с UCN`);
     } catch (err) {
-      console.error(`[LoyaltyPayPage] Ошибка создания заказа`, err);
+      logger.error(`[LoyaltyPayPage] Ошибка создания заказа`, err);
       setIsLoading(false);
     }
   };
 
   // Обработчик веб-сокет событий кард-ридера
-  const handleCardReaderEvent = (data: any) => {
+  const handleCardReaderEvent = (data: { type: string; code?: number }) => {
     if (data.type === 'card_reader' && data.code) {
-      console.log(`[LoyaltyPayPage] Получен статус кард-ридера:`, data.code);
+      logger.debug(`[LoyaltyPayPage] Получен статус кард-ридера:`, data.code);
       setCardReaderStatus(data.code);
 
       switch (data.code) {
         case CardReaderStatus.WAITING_CARD:
-          console.log("ВЕБСОКЕТ КОД 1: Ожидание карты");
+          logger.debug("ВЕБСОКЕТ КОД 1: Ожидание карты");
           setIsLoading(false);
           break;
         case CardReaderStatus.SEARCHING_DATA:
-          console.log("ВЕБСОКЕТ КОД 2: Поиск данных по карте");
+          logger.debug("ВЕБСОКЕТ КОД 2: Поиск данных по карте");
           setIsLoading(true);
           break;
         case CardReaderStatus.READING_COMPLETE:
-          console.log("ВЕБСОКЕТ КОД 3: Чтение карты завершено");
+          logger.debug("ВЕБСОКЕТ КОД 3: Чтение карты завершено");
           setIsLoading(false);
           break;
       }
@@ -120,7 +121,7 @@ export default function LoyaltyPayPage() {
 
   // Обработка кнопки назад
   const handleBack = () => {
-    console.log("[LoyaltyPayPage] Нажата кнопка назад");
+    logger.debug("[LoyaltyPayPage] Нажата кнопка назад");
     clearLoyaltyTimers();
     setIsLoading(false);
     cancelLoyaltyRequest();
@@ -132,7 +133,7 @@ export default function LoyaltyPayPage() {
     abortControllerRef.current = new AbortController();
     loyalityEmptyTimeoutRef.current = setTimeout(() => {
       if (!loyaltyCard && !cardNotFound && !insufficientBalance) {
-        console.log(`[LoyaltyPayPage] Таймаут ожидания карты истек`);
+        logger.debug(`[LoyaltyPayPage] Таймаут ожидания карты истек`);
         navigate("/");
       }
     }, DEPOSIT_TIME);
@@ -140,18 +141,18 @@ export default function LoyaltyPayPage() {
     // Подписываемся на события веб-сокета только для отображения статусов
     const removeCardReaderListener = globalWebSocketManager.addListener('card_reader', handleCardReaderEvent);
 
-    console.log("[LoyaltyPayPage] Запрос openLoyaltyCardReader, ждем данные карты");
+    logger.debug("[LoyaltyPayPage] Запрос openLoyaltyCardReader, ждем данные карты");
     // Передаем openLoyaltyCardReader и ждем ответ
     openLoyaltyCardReader(abortControllerRef.current.signal)
       .then(cardData => {
-        console.log("[LoyaltyPayPage] Получили данные карты:", cardData);
+        logger.debug("[LoyaltyPayPage] Получили данные карты:", cardData);
 
         if (cardData && cardData.ucn) {
           setIsCardDataReceived(true); // Устанавливаем флаг, что данные получены
 
           // Проверяем случай, когда карта не найдена (ucn = -1)
           if (Number(cardData.ucn) === -1) {
-            console.log("[LoyaltyPayPage] Карта лояльности не найдена");
+            logger.info("[LoyaltyPayPage] Карта лояльности не найдена");
             setCardNotFound(true);
             setIsLoading(false);
             return;
@@ -159,7 +160,7 @@ export default function LoyaltyPayPage() {
 
           // Если карта найдена и есть баланс
           if (cardData.balance !== undefined) {
-            console.log(`[LoyaltyPayPage] Карта найдена`);
+            logger.info(`[LoyaltyPayPage] Карта найдена`);
             setLoyaltyCard(cardData);
             setIsLoading(false);
 
@@ -168,7 +169,7 @@ export default function LoyaltyPayPage() {
             const cardBalance = Number(cardData.balance) || 0;
             
             if (cardBalance < programPrice) {
-              console.log(`[LoyaltyPayPage] Недостаточно баллов: ${cardBalance} < ${programPrice}`);
+              logger.warn(`[LoyaltyPayPage] Недостаточно баллов: ${cardBalance} < ${programPrice}`);
               setInsufficientBalance(true);
               return;
             }
@@ -176,19 +177,19 @@ export default function LoyaltyPayPage() {
             // Очищаем общий таймаут и запускаем таймаут ожидания оплаты
             clearLoyaltyTimers();
             loyalityEmptyTimeoutRef.current = setTimeout(() => {
-              console.log(`[LoyaltyPayPage] Ожидание нажатия кнопки Оплатить истекло`);
+              logger.debug(`[LoyaltyPayPage] Ожидание нажатия кнопки Оплатить истекло`);
               navigate("/");
             }, DEPOSIT_TIME);
           }
         }
       })
       .catch(error => {
-        console.error("[LoyaltyPayPage] Ошибка при получении данных карты:", error);
+        logger.error("[LoyaltyPayPage] Ошибка при получении данных карты:", error);
         setIsLoading(false);
       });
 
     return () => {
-      console.log("[LoyaltyPayPage] Очистка таймеров и подписок");
+      logger.debug("[LoyaltyPayPage] Очистка таймеров и подписок");
       clearLoyaltyTimers();
       removeCardReaderListener();
       // Отменяем запрос только если данные ещё не получены
@@ -200,7 +201,7 @@ export default function LoyaltyPayPage() {
 
   useEffect(() => {
     if (order?.status === EOrderStatus.PAYED) {
-      console.log("[LoyaltyPayPage] Заказ оплачен");
+      logger.info("[LoyaltyPayPage] Заказ оплачен");
       clearLoyaltyTimers();
       setIsLoading(false);
       setPaymentSuccess(true);

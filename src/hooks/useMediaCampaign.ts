@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
+import { env } from '../config/env';
 
 export const useMediaCampaign = (programUrl?: string) => {
   const [attachemntUrl, setAttachemntUrl] = useState<{
     baseUrl: string;
     programUrl: string;
   }>({
-    baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
+    baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
     programUrl: "",
   });
   
@@ -13,7 +14,7 @@ export const useMediaCampaign = (programUrl?: string) => {
 
   useEffect(() => {
     if (programUrl) {
-      const fullProgramUrl = `${import.meta.env.VITE_S3_URL}/${programUrl}`;
+      const fullProgramUrl = `${env.VITE_S3_URL}/${programUrl}`;
       
       // Сбрасываем статус при смене URL
       setMediaStatus('loading');
@@ -24,7 +25,7 @@ export const useMediaCampaign = (programUrl?: string) => {
       img.onload = () => {
         setMediaStatus('loaded');
         setAttachemntUrl({
-          baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
+          baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
           programUrl: fullProgramUrl,
         });
       };
@@ -35,7 +36,7 @@ export const useMediaCampaign = (programUrl?: string) => {
         baseImage.onload = () => {
           setMediaStatus('loaded');
           setAttachemntUrl({
-            baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
+            baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
             programUrl: "", // Очищаем programUrl, будем использовать baseUrl
           });
         };
@@ -44,12 +45,12 @@ export const useMediaCampaign = (programUrl?: string) => {
           // Если baseUrl тоже не загрузился, устанавливаем ошибку
           setMediaStatus('error');
           setAttachemntUrl({
-            baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
+            baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
             programUrl: "",
           });
         };
         
-        baseImage.src = `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`;
+        baseImage.src = env.VITE_ATTACHMENT_BASE_URL || '';
       };
 
       img.src = fullProgramUrl;
@@ -59,7 +60,7 @@ export const useMediaCampaign = (programUrl?: string) => {
       baseImage.onload = () => {
         setMediaStatus('loaded');
         setAttachemntUrl({
-          baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
+          baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
           programUrl: "",
         });
       };
@@ -67,12 +68,12 @@ export const useMediaCampaign = (programUrl?: string) => {
       baseImage.onerror = () => {
         setMediaStatus('error');
         setAttachemntUrl({
-          baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
+          baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
           programUrl: "",
         });
       };
       
-      baseImage.src = `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`;
+      baseImage.src = env.VITE_ATTACHMENT_BASE_URL || '';
     }
   }, [programUrl]);
 

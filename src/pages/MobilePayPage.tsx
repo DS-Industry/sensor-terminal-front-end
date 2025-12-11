@@ -13,6 +13,7 @@ import { getMobileQr, startRobot } from "../api/services/payment";
 import QRCode from "react-qr-code";
 import { EOrderStatus } from "../components/state/order/orderSlice";
 import { useNavigate } from "react-router-dom";
+import { logger } from "../util/logger";
 
 const MOBILE_PAGE_URL = "MobilePage.webp";
 
@@ -31,7 +32,7 @@ export default function MobilePayPage() {
   const idleTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleStartRobot = () => {
-    console.log("Запускаем робот");
+    logger.info("Запускаем робот");
     
     if (order?.id) {
       startRobot(order.id);
@@ -46,7 +47,7 @@ export default function MobilePayPage() {
       const response = await getMobileQr();
 
       if (response.qr_code) {
-        console.log("Response qr", response);
+        logger.debug("Response qr", response);
 
         setQrCode(response.qr_code);
 

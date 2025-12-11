@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import MainPage from "./pages/MainPage.tsx";
 import "./index.css";
 import "./styles/styles.css";
+import "./config/env";
 import "./i18n/index.ts";
 import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { ThemeProvider } from "@gravity-ui/uikit";
@@ -14,16 +15,23 @@ import SuccessPaymentPage from "./pages/SuccessPaymentPage.tsx";
 import MobilePayPage from "./pages/MobilePayPage.tsx";
 import LoyaltyPayPage from "./pages/LoyaltyPayPage.tsx";
 import ErrorPaymentPage from "./pages/ErrorPaymentPage.tsx";
-import { NavigationHandler } from "./components/navigationHandler/NavigationHandler.tsx";
-import { GlobalWebSocketManager } from "./components/globalWebSocketManager/GlobalWebSocketManager.tsx";
+import ErrorPage from "./pages/ErrorPage.tsx";
+import WashingInProgressPage from "./pages/WashingInProgressPage.tsx";
+import QueueWaitingPage from "./pages/QueueWaitingPage.tsx";
 import { ModalProvider } from "./components/modalProvider/ModalProvider.tsx";
+import { WebSocketService } from "./services/websocketService.ts";
+import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
+import { PaymentGuard } from "./components/guards/PaymentGuard.tsx";
+import { AppHealthMonitor } from "./components/appHealth/AppHealthMonitor.tsx";
 
+WebSocketService.initialize();
+
+// eslint-disable-next-line react-refresh/only-export-components
 function Root() {
   return (
     <>
       <ModalProvider />
-      <GlobalWebSocketManager />
-      <NavigationHandler />
+      <AppHealthMonitor />
       <Outlet />
     </>
   );
@@ -64,20 +72,54 @@ const router = createBrowserRouter([
       },
       {
         path: "/success",
-        element: <SuccessPaymentPage />,
+        element: (
+          <PaymentGuard>
+            <SuccessPaymentPage />
+          </PaymentGuard>
+        ),
       },
       {
         path: "/error",
-        element: <ErrorPaymentPage />,
+        element: (
+          <PaymentGuard>
+            <ErrorPage />
+          </PaymentGuard>
+        ),
+      },
+      {
+        path: "/error-payment",
+        element: (
+          <PaymentGuard>
+            <ErrorPaymentPage />
+          </PaymentGuard>
+        ),
+      },
+      {
+        path: "/washing",
+        element: (
+          <PaymentGuard>
+            <WashingInProgressPage />
+          </PaymentGuard>
+        ),
+      },
+      {
+        path: "/queue-waiting",
+        element: (
+          <PaymentGuard>
+            <QueueWaitingPage />
+          </PaymentGuard>
+        ),
       },
     ],
   },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <ThemeProvider theme="light">
-    <Suspense fallback="...is loading">
-      <RouterProvider router={router} />
-    </Suspense>
-  </ThemeProvider>
+  <ErrorBoundary>
+    <ThemeProvider theme="light">
+      <Suspense fallback="...is loading">
+        <RouterProvider router={router} />
+      </Suspense>
+    </ThemeProvider>
+  </ErrorBoundary>
 );

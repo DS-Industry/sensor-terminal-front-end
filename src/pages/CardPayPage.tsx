@@ -10,7 +10,7 @@ import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import PaymentTitleSection from "../components/paymentTitleSection/PaymentTitleSection";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import { EPaymentMethod } from "../components/state/order/orderSlice";
-import { usePaymentProcessing } from "../hooks/usePaymentProcessing";
+import { usePaymentFlow } from "../hooks/payment/usePaymentFlow";
 import SuccessPayment from "../components/successPayment/SuccessPayment";
 
 const CARD_PAGE_URL = "CardPage.webp";
@@ -25,7 +25,7 @@ export default function CardPayPage() {
     paymentSuccess,
     handleStartRobot,
     timeUntilRobotStart 
-  } = usePaymentProcessing(EPaymentMethod.CARD);
+  } = usePaymentFlow(EPaymentMethod.CARD);
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
