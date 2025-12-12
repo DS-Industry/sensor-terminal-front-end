@@ -184,19 +184,28 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
 
       logger.debug(`[${paymentMethod}] WebSocket status update: ${orderStatus} for order ${orderId}`);
 
-      const currentOrder = useStore.getState().order;
-      if (currentOrder?.id === orderId) {
-        setOrder({
-          ...currentOrder,
-          status: orderStatus,
-          transactionId: data.transaction_id,
-        });
+      // Check if payment is already successful - if so, don't update anything to preserve timer
+      const currentPaymentState = useStore.getState().paymentState;
+      const isAlreadySuccessful = currentPaymentState === PaymentState.PAYMENT_SUCCESS;
+
+      // Only update order if payment is not already successful
+      // This prevents unnecessary re-renders that might interfere with the countdown timer
+      if (!isAlreadySuccessful) {
+        const currentOrder = useStore.getState().order;
+        if (currentOrder?.id === orderId) {
+          setOrder({
+            ...currentOrder,
+            status: orderStatus,
+            transactionId: data.transaction_id,
+          });
+        }
+      } else {
+        logger.debug(`[${paymentMethod}] Payment already successful, skipping order update to preserve timer`);
       }
 
       if (orderStatus === EOrderStatus.PAYED) {
         // Check if payment is already successful - if so, don't fetch details again
-        const currentPaymentState = useStore.getState().paymentState;
-        if (currentPaymentState === PaymentState.PAYMENT_SUCCESS) {
+        if (isAlreadySuccessful) {
           logger.debug(`[${paymentMethod}] PAYED status received but payment already successful, skipping fetch to preserve timer`);
         } else {
           await fetchOrderDetailsOnPayed(orderId);
