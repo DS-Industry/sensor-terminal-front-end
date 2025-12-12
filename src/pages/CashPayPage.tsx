@@ -64,6 +64,18 @@ export default function CashPayPage() {
       return;
     }
 
+    // Stop polling if enough money is already inserted
+    const selectedProgramPrice = useStore.getState().selectedProgram?.price;
+    const currentInsertedAmount = useStore.getState().insertedAmount;
+    if (selectedProgramPrice && currentInsertedAmount >= Number(selectedProgramPrice)) {
+      logger.debug(`[CASH] Enough money inserted (${currentInsertedAmount} >= ${selectedProgramPrice}), stopping polling`);
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+      return;
+    }
+
     // If polling is already running for this orderId, don't start another one
     if (pollingIntervalRef.current) {
       logger.debug(`[CASH] Polling already running for order ${orderId}, skipping`);
@@ -82,11 +94,20 @@ export default function CashPayPage() {
       try {
         const orderDetails = await getOrderById(currentOrderId);
         const amountSum = orderDetails.amount_sum ? Number(orderDetails.amount_sum) : 0;
+        const selectedProgramPrice = useStore.getState().selectedProgram?.price;
         
         if (isMountedRef.current) {
           setInsertedAmount(amountSum);
-          const selectedProgramPrice = useStore.getState().selectedProgram?.price;
           logger.debug(`[CASH] Polled order ${currentOrderId}, insertedAmount: ${amountSum}, remaining: ${(Number(selectedProgramPrice) || 0) - amountSum}`);
+          
+          // Stop polling if enough money is inserted
+          if (selectedProgramPrice && amountSum >= Number(selectedProgramPrice)) {
+            logger.info(`[CASH] Enough money inserted (${amountSum} >= ${selectedProgramPrice}), stopping polling`);
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+              pollingIntervalRef.current = null;
+            }
+          }
         }
       } catch (err) {
         logger.error(`[CASH] Error polling order for insertedAmount`, err);
@@ -101,7 +122,7 @@ export default function CashPayPage() {
         pollingIntervalRef.current = null;
       }
     };
-  }, [order?.id, paymentState]); // Removed setInsertedAmount and selectedProgram?.price from dependencies
+  }, [order?.id, paymentState, insertedAmount]); // Added insertedAmount to check if enough money is inserted
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">

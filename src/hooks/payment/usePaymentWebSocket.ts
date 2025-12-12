@@ -40,8 +40,12 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
       return;
     }
 
+    // Check if payment is already successful - if so, don't refresh state, just update queue info
+    const currentPaymentState = useStore.getState().paymentState;
+    const isAlreadySuccessful = currentPaymentState === PaymentState.PAYMENT_SUCCESS;
+
     try {
-      logger.info(`[${paymentMethod}] Fetching order details after PAYED status received`);
+      logger.info(`[${paymentMethod}] Fetching order details after PAYED status received (already successful: ${isAlreadySuccessful})`);
       const orderDetails = await getOrderById(orderId);
 
       if (!isMountedRef.current) return;
@@ -140,6 +144,12 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
 
       logger.debug(`[${paymentMethod}] Payment verification - amountSum: ${amountSum}, expected: ${expectedAmount}`);
 
+      // If payment is already successful, don't change state - let the countdown timer continue
+      if (isAlreadySuccessful) {
+        logger.info(`[${paymentMethod}] Payment already successful, not changing state - timer will continue`);
+        return;
+      }
+
       if (amountSum >= expectedAmount || amountSum === 0) {
         logger.info(`[${paymentMethod}] Payment confirmed! Amount: ${amountSum} (expected: ${expectedAmount})`);
         setPaymentError(null);
@@ -184,7 +194,13 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
       }
 
       if (orderStatus === EOrderStatus.PAYED) {
-        await fetchOrderDetailsOnPayed(orderId);
+        // Check if payment is already successful - if so, don't fetch details again
+        const currentPaymentState = useStore.getState().paymentState;
+        if (currentPaymentState === PaymentState.PAYMENT_SUCCESS) {
+          logger.debug(`[${paymentMethod}] PAYED status received but payment already successful, skipping fetch to preserve timer`);
+        } else {
+          await fetchOrderDetailsOnPayed(orderId);
+        }
       } else if (orderStatus === EOrderStatus.COMPLETED) {
         if (depositTimeoutRef.current) {
           clearTimeout(depositTimeoutRef.current);
