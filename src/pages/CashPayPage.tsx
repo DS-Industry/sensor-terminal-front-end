@@ -16,7 +16,7 @@ import { PaymentState } from "../state/paymentStateMachine";
 import { logger } from "../util/logger";
 
 const CASH_PAGE_URL = "CashPage.webp";
-const POLL_INTERVAL = 500; // Poll every 500ms
+const POLL_INTERVAL = 3000; // Poll every 3 seconds
 
 export default function CashPayPage() {
   const { t } = useTranslation();
@@ -24,6 +24,7 @@ export default function CashPayPage() {
   const { insertedAmount, order, paymentState, setInsertedAmount } = useStore();
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isMountedRef = useRef(true);
+  const currentOrderIdRef = useRef<string | undefined>(undefined);
 
   const { selectedProgram, handleBack, paymentSuccess, handleStartRobot, timeUntilRobotStart } = usePaymentFlow(EPaymentMethod.CASH);
 
@@ -31,6 +32,15 @@ export default function CashPayPage() {
   useEffect(() => {
     isMountedRef.current = true;
     const orderId = order?.id;
+
+    // Clean up previous interval if orderId changed
+    if (currentOrderIdRef.current !== orderId && pollingIntervalRef.current) {
+      logger.debug(`[CASH] OrderId changed from ${currentOrderIdRef.current} to ${orderId}, cleaning up previous interval`);
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+
+    currentOrderIdRef.current = orderId;
 
     logger.debug(`[CASH] Polling effect - orderId: ${orderId}, paymentState: ${paymentState}`);
 
@@ -54,9 +64,9 @@ export default function CashPayPage() {
       return;
     }
 
-    // If polling is already running, don't start another one
+    // If polling is already running for this orderId, don't start another one
     if (pollingIntervalRef.current) {
-      logger.debug(`[CASH] Polling already running, skipping`);
+      logger.debug(`[CASH] Polling already running for order ${orderId}, skipping`);
       return;
     }
 
@@ -64,18 +74,19 @@ export default function CashPayPage() {
 
     // Start polling for order amount_sum
     pollingIntervalRef.current = setInterval(async () => {
-      if (!orderId || !isMountedRef.current) {
+      const currentOrderId = currentOrderIdRef.current;
+      if (!currentOrderId || !isMountedRef.current) {
         return;
       }
 
       try {
-        logger.debug(`[CASH] Polling order ${orderId}...`);
-        const orderDetails = await getOrderById(orderId);
+        const orderDetails = await getOrderById(currentOrderId);
         const amountSum = orderDetails.amount_sum ? Number(orderDetails.amount_sum) : 0;
         
         if (isMountedRef.current) {
           setInsertedAmount(amountSum);
-          logger.info(`[CASH] Polled order ${orderId}, insertedAmount: ${amountSum}, remaining: ${(Number(selectedProgram?.price) || 0) - amountSum}`);
+          const selectedProgramPrice = useStore.getState().selectedProgram?.price;
+          logger.debug(`[CASH] Polled order ${currentOrderId}, insertedAmount: ${amountSum}, remaining: ${(Number(selectedProgramPrice) || 0) - amountSum}`);
         }
       } catch (err) {
         logger.error(`[CASH] Error polling order for insertedAmount`, err);
@@ -90,7 +101,7 @@ export default function CashPayPage() {
         pollingIntervalRef.current = null;
       }
     };
-  }, [order?.id, paymentState, setInsertedAmount, selectedProgram?.price]);
+  }, [order?.id, paymentState]); // Removed setInsertedAmount and selectedProgram?.price from dependencies
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
