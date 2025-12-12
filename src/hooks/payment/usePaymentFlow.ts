@@ -87,9 +87,21 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
 
   useEffect(() => {
     if (paymentState === PaymentState.PAYMENT_SUCCESS && !countdownTimeoutRef.current) {
+      logger.debug(`[${paymentMethod}] Payment success detected, starting countdown`);
       startCountdown();
+    } else if (paymentState !== PaymentState.PAYMENT_SUCCESS && countdownTimeoutRef.current) {
+      // Only stop countdown if payment state changes away from SUCCESS
+      logger.debug(`[${paymentMethod}] Payment state changed from SUCCESS, stopping countdown`);
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+      if (countdownTimeoutRef.current) {
+        clearTimeout(countdownTimeoutRef.current);
+        countdownTimeoutRef.current = null;
+      }
     }
-  }, [paymentState, startCountdown]);
+  }, [paymentState, startCountdown, paymentMethod]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -100,14 +112,19 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
     }
     
     return () => {
-      isMountedRef.current = false;
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-        countdownIntervalRef.current = null;
-      }
-      if (countdownTimeoutRef.current) {
-        clearTimeout(countdownTimeoutRef.current);
-        countdownTimeoutRef.current = null;
+      // Only cleanup countdown if we're not in PAYMENT_SUCCESS state
+      // This prevents WebSocket updates from stopping the countdown
+      const currentPaymentState = useStore.getState().paymentState;
+      if (currentPaymentState !== PaymentState.PAYMENT_SUCCESS) {
+        isMountedRef.current = false;
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+          countdownIntervalRef.current = null;
+        }
+        if (countdownTimeoutRef.current) {
+          clearTimeout(countdownTimeoutRef.current);
+          countdownTimeoutRef.current = null;
+        }
       }
     };
   }, [selectedProgram, paymentMethod, paymentState, createOrder]);
@@ -171,12 +188,15 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
 
   useEffect(() => {
     return () => {
+      // Only cleanup on actual unmount, not on re-renders
       isMountedRef.current = false;
       if (countdownIntervalRef.current) {
         clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
       }
       if (countdownTimeoutRef.current) {
         clearTimeout(countdownTimeoutRef.current);
+        countdownTimeoutRef.current = null;
       }
     };
   }, []);
