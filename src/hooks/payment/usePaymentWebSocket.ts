@@ -24,6 +24,7 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
     setPaymentError,
     setIsLoading,
     setBankCheck,
+    setInsertedAmount,
   } = useStore();
 
   const depositTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -140,6 +141,9 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
 
       logger.debug(`[${paymentMethod}] Payment verification - amountSum: ${amountSum}, expected: ${expectedAmount}`);
 
+      // Update insertedAmount in store
+      setInsertedAmount(amountSum);
+
       if (amountSum >= expectedAmount || amountSum === 0) {
         logger.info(`[${paymentMethod}] Payment confirmed! Amount: ${amountSum} (expected: ${expectedAmount})`);
         setPaymentError(null);
@@ -156,7 +160,7 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
         setIsLoading(false);
       }
     }
-  }, [paymentMethod, selectedProgram, setQueuePosition, setQueueNumber, setPaymentState, setPaymentError, setIsLoading, setBankCheck]);
+  }, [paymentMethod, selectedProgram, setQueuePosition, setQueueNumber, setPaymentState, setPaymentError, setIsLoading, setBankCheck, setInsertedAmount]);
 
   useEffect(() => {
     if (!orderId) return;
@@ -208,6 +212,12 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
           try {
             const orderDetails = await getOrderById(orderId);
             const amountSum = orderDetails.amount_sum ? Number(orderDetails.amount_sum) : 0;
+            
+            // Update insertedAmount in store for cash payments
+            if (amountSum !== lastAmountSumRef.current) {
+              setInsertedAmount(amountSum);
+              logger.debug(`[${paymentMethod}] Updated insertedAmount: ${amountSum}`);
+            }
             
             if (amountSum > lastAmountSumRef.current && amountSum > 0) {
               logger.info(`[${paymentMethod}] Card detected! Amount: ${amountSum}, setting processing state`);
@@ -280,7 +290,7 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
       }
       lastAmountSumRef.current = 0;
     };
-  }, [orderId, order?.status, paymentMethod, fetchOrderDetailsOnPayed, setOrder, setIsLoading]);
+  }, [orderId, order?.status, paymentMethod, fetchOrderDetailsOnPayed, setOrder, setIsLoading, setInsertedAmount]);
 
   return {};
 }
