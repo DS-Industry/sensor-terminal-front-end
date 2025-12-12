@@ -54,7 +54,7 @@ export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCre
       logger.info(`[${paymentMethod}] Order creation API called successfully, waiting for order ID from WebSocket`);
       setPaymentState(PaymentState.WAITING_PAYMENT);
     } catch (err: unknown) {
-      const error = err as { name?: string };
+      const error = err as { name?: string; response?: { data?: { error?: string } }; message?: string };
       if (error?.name === 'AbortError' || abortSignal.aborted) {
         logger.info(`[${paymentMethod}] Order creation aborted`);
         return;
@@ -66,10 +66,10 @@ export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCre
       setPaymentState(PaymentState.PAYMENT_ERROR);
       
       let errorMessage = 'Произошла ошибка при создании заказа';
-      if (err?.response?.data?.error) {
-        errorMessage = err.response.data.error;
-      } else if (err?.message) {
-        errorMessage = err.message;
+      if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.message) {
+        errorMessage = error.message;
       }
       
       setPaymentError(errorMessage);
@@ -91,4 +91,5 @@ export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCre
     isCreating: isCreatingRef.current,
   };
 }
+
 

@@ -62,3 +62,4 @@ export function getNextValidStates(state: PaymentState): PaymentState[] {
   return VALID_TRANSITIONS[state] ?? [];
 }
 
+

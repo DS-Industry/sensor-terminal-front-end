@@ -1,11 +1,10 @@
-import { Icon } from "@gravity-ui/uikit";
+import { Icon, type IconData } from "@gravity-ui/uikit";
 import { useTranslation } from "react-i18next";
-import { ComponentType } from "react";
 
 interface IPaymentTitleSectionProps {
   title: string;
   description?: string;
-  icon?: ComponentType<{ className?: string }>;
+  icon?: IconData;
   iconClassName?: string;
 }
 
