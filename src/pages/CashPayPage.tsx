@@ -14,6 +14,7 @@ import SuccessPayment from "../components/successPayment/SuccessPayment";
 import { getOrderById } from "../api/services/payment";
 import { PaymentState } from "../state/paymentStateMachine";
 import { logger } from "../util/logger";
+import { Spin } from "@gravity-ui/uikit";
 
 const CASH_PAGE_URL = "CashPage.webp";
 const POLL_INTERVAL = 3000; // Poll every 3 seconds
@@ -26,7 +27,8 @@ export default function CashPayPage() {
   const isMountedRef = useRef(true);
   const currentOrderIdRef = useRef<string | undefined>(undefined);
 
-  const { selectedProgram, handleBack, paymentSuccess, handleStartRobot, timeUntilRobotStart } = usePaymentFlow(EPaymentMethod.CASH);
+  const { selectedProgram, handleBack, paymentSuccess, isPaymentProcessing, handleStartRobot, timeUntilRobotStart } = usePaymentFlow(EPaymentMethod.CASH);
+  const { setPaymentState, setIsLoading } = useStore();
 
   // Poll order by ID to get insertedAmount and remaining amount
   useEffect(() => {
@@ -54,9 +56,10 @@ export default function CashPayPage() {
       return;
     }
 
-    // Stop polling if payment is successful
-    if (paymentState === PaymentState.PAYMENT_SUCCESS) {
-      logger.debug(`[CASH] Payment successful, stopping polling`);
+    // Stop polling if payment is successful or processing
+    if (paymentState === PaymentState.PAYMENT_SUCCESS || 
+        paymentState === PaymentState.PROCESSING_PAYMENT) {
+      logger.debug(`[CASH] Payment ${paymentState}, stopping polling`);
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
@@ -64,11 +67,14 @@ export default function CashPayPage() {
       return;
     }
 
-    // Stop polling if enough money is already inserted
+    // Check if enough money is already inserted - if so, stop polling and wait for websocket update
     const selectedProgramPrice = useStore.getState().selectedProgram?.price;
     const currentInsertedAmount = useStore.getState().insertedAmount;
+    
     if (selectedProgramPrice && currentInsertedAmount >= Number(selectedProgramPrice)) {
-      logger.debug(`[CASH] Enough money inserted (${currentInsertedAmount} >= ${selectedProgramPrice}), stopping polling`);
+      logger.debug(`[CASH] Enough money inserted (${currentInsertedAmount} >= ${selectedProgramPrice}), stopping polling and waiting for websocket status update`);
+      
+      // Stop polling since we have enough money - websocket will handle state transition
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
@@ -96,17 +102,19 @@ export default function CashPayPage() {
         const amountSum = orderDetails.amount_sum ? Number(orderDetails.amount_sum) : 0;
         const selectedProgramPrice = useStore.getState().selectedProgram?.price;
         
-        if (isMountedRef.current) {
-          setInsertedAmount(amountSum);
-          logger.debug(`[CASH] Polled order ${currentOrderId}, insertedAmount: ${amountSum}, remaining: ${(Number(selectedProgramPrice) || 0) - amountSum}`);
+        if (!isMountedRef.current) return;
+        
+        setInsertedAmount(amountSum);
+        logger.debug(`[CASH] Polled order ${currentOrderId}, insertedAmount: ${amountSum}, remaining: ${(Number(selectedProgramPrice) || 0) - amountSum}`);
+        
+        // Check if enough money is inserted
+        if (selectedProgramPrice && amountSum >= Number(selectedProgramPrice)) {
+          logger.info(`[CASH] Enough money inserted (${amountSum} >= ${selectedProgramPrice}), stopping polling and waiting for websocket status update`);
           
-          // Stop polling if enough money is inserted
-          if (selectedProgramPrice && amountSum >= Number(selectedProgramPrice)) {
-            logger.info(`[CASH] Enough money inserted (${amountSum} >= ${selectedProgramPrice}), stopping polling`);
-            if (pollingIntervalRef.current) {
-              clearInterval(pollingIntervalRef.current);
-              pollingIntervalRef.current = null;
-            }
+          // Stop polling - websocket will handle state transition
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
           }
         }
       } catch (err) {
@@ -122,7 +130,7 @@ export default function CashPayPage() {
         pollingIntervalRef.current = null;
       }
     };
-  }, [order?.id, paymentState, insertedAmount]); // Added insertedAmount to check if enough money is inserted
+  }, [order?.id, paymentState, setPaymentState, setIsLoading]); // Removed insertedAmount to prevent unnecessary re-runs
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
@@ -150,7 +158,19 @@ export default function CashPayPage() {
 
             {paymentSuccess
               ? <SuccessPayment />
-              : (
+              : isPaymentProcessing ? (
+                <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+                  <div className="flex flex-col items-center">
+                    <Spin size="xl" />
+                    <p className="text-gray-800 text-3xl font-semibold mt-8 mb-4">
+                      {t("Обработка оплаты...")}
+                    </p>
+                    <p className="text-gray-600 text-xl font-medium">
+                      {t("Пожалуйста, подождите подтверждения оплаты")}
+                    </p>
+                  </div>
+                </div>
+              ) : (
                 <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
                   <div className="relative mb-12">
                     {/* Cash Machine Visual */}
@@ -239,12 +259,21 @@ export default function CashPayPage() {
                           </div>
                         </div>
 
-                        <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
-                          <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-                          <div className="text-white/90 text-sm font-medium">
-                            {t("Внесите больше средств...")}
+                        {isPaymentProcessing ? (
+                          <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+                            <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                            <div className="text-white/90 text-sm font-medium">
+                              {t("Обработка оплаты...")}
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+                            <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                            <div className="text-white/90 text-sm font-medium">
+                              {t("Внесите больше средств...")}
+                            </div>
+                          </div>
+                        )}
                       </>
                     )}
                 </div>

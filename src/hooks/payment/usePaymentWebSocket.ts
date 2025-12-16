@@ -150,6 +150,14 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
         return;
       }
 
+      // Double-check state hasn't changed while fetching (race condition guard)
+      const currentStateAfterFetch = useStore.getState().paymentState;
+      if (currentStateAfterFetch === PaymentState.PAYMENT_SUCCESS || 
+          currentStateAfterFetch === PaymentState.PROCESSING_PAYMENT) {
+        logger.debug(`[${paymentMethod}] State already ${currentStateAfterFetch} (possibly updated by polling), skipping WebSocket transition`);
+        return;
+      }
+
       if (amountSum >= expectedAmount || amountSum === 0) {
         logger.info(`[${paymentMethod}] Payment confirmed! Amount: ${amountSum} (expected: ${expectedAmount})`);
         setPaymentError(null);
@@ -221,7 +229,19 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
           clearTimeout(depositTimeoutRef.current);
           depositTimeoutRef.current = null;
         }
-        setIsLoading(false);
+        
+        // For cash payments, transition to PROCESSING_PAYMENT when PROCESSING status is received
+        if (paymentMethod === EPaymentMethod.CASH) {
+          const currentPaymentState = useStore.getState().paymentState;
+          if (currentPaymentState !== PaymentState.PROCESSING_PAYMENT && 
+              currentPaymentState !== PaymentState.PAYMENT_SUCCESS) {
+            logger.info(`[${paymentMethod}] PROCESSING status received, transitioning to PROCESSING_PAYMENT`);
+            setPaymentState(PaymentState.PROCESSING_PAYMENT);
+            setIsLoading(true);
+          }
+        } else {
+          setIsLoading(false);
+        }
       } else if (orderStatus === EOrderStatus.WAITING_PAYMENT) {
         if (checkAmountIntervalRef.current) {
           clearInterval(checkAmountIntervalRef.current);
