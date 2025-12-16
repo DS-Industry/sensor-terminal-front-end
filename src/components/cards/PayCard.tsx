@@ -1,7 +1,6 @@
 import { RiMastercardLine, RiVisaLine } from "react-icons/ri";
 import { FaApplePay, FaGooglePay } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { Card, Text, Icon } from "@gravity-ui/uikit";
 import { SealPercent } from '@gravity-ui/icons';
 import { EPaymentMethod } from "../state/order/orderSlice";
@@ -25,7 +24,6 @@ export default function PayCard({
   price,
 }: IPayCard) {
   const navigate = useNavigate();
-  const { t } = useTranslation();
 
   return (
     <Card
@@ -45,7 +43,7 @@ export default function PayCard({
         {/* Header with Title and Icon */}
         <div className="flex justify-between items-start mb-4 relative">
           <Text className="text-white font-bold text-2xl">
-            {t(`${label}`)}
+            {label}
           </Text>
           {(payType === EPaymentMethod.MOBILE_PAYMENT) && (
             <div className="absolute top-0 right-0 bg-yellow-400 p-2 rounded-full">
@@ -68,7 +66,7 @@ export default function PayCard({
           {/* Payment Type Specific Content */}
           {payType === EPaymentMethod.CARD && (
             <div className="bg-white/20 p-2 rounded-2xl text-center w-full h-full flex flex-col justify-center">
-              <div className="text-white/80 text-sm mb-1">{t("Банковские карты")}</div>
+              <div className="text-white/80 text-sm mb-1">Банковские карты</div>
               <div className="flex flex-row justify-center gap-3 items-center h-6">
                 <RiMastercardLine className="text-white text-xl" />
                 <RiVisaLine className="text-white text-xl" />
@@ -80,7 +78,7 @@ export default function PayCard({
 
           {payType === EPaymentMethod.CASH && (
             <div className="bg-white/20 p-2 rounded-2xl text-center w-full h-full flex flex-col justify-center">
-              <div className="text-white/80 text-sm mb-1">{t("Купюры")}</div>
+              <div className="text-white/80 text-sm mb-1">Купюры</div>
               <div className="text-white font-semibold text-base h-6 flex items-center justify-center">50, 100, 200</div>
             </div>
           )}
@@ -88,7 +86,7 @@ export default function PayCard({
           {(payType === EPaymentMethod.LOYALTY) && (
             <div className="bg-white/20 p-2 rounded-2xl text-center w-full h-full flex flex-col justify-center">
               <div className="text-white/80 text-sm mb-1">
-                {t("Карта лояльности")}
+                Карта лояльности
               </div>
               <div className="text-white font-bold text-base h-6 flex items-center justify-center">МОЙ-КА! DS</div>
             </div>
@@ -97,7 +95,7 @@ export default function PayCard({
           {(payType === EPaymentMethod.MOBILE_PAYMENT) && (
             <div className="bg-white/20 p-2 rounded-2xl text-center w-full h-full flex flex-col justify-center">
               <div className="text-white/80 text-sm mb-1">
-                {t("Ваш CashBack")}
+                Ваш CashBack
               </div>
               <div className="text-white font-bold text-base h-6 flex items-center justify-center">+10%</div>
             </div>

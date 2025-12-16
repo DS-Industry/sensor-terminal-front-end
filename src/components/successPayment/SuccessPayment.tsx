@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import QRCode from "react-qr-code";
 import CheckMark from "../../assets/Success_perspective_matte 1.svg";
 import useStore from "../state/store";
@@ -6,7 +5,6 @@ import { Spin } from "@gravity-ui/uikit";
 import { useEffect, useState } from "react";
 
 export default function SuccessPayment() {
-  const { t } = useTranslation();
   const { bankCheck } = useStore();
   const [isCheckLoading, setIsCheckLoading] = useState(!bankCheck);
 
@@ -33,14 +31,14 @@ export default function SuccessPayment() {
           className="min-w-[160px] min-h-[160px] max-w-[160px] max-h-[160px] mb-2"
         />
         <p className="text-gray-800 text-6xl font-semibold mb-12">
-          {t("Успешно")}
+          Успешно
         </p>
 
         {isCheckLoading ? (
           <div className="flex flex-col items-center">
             <Spin size="xl" />
             <p className="text-gray-600 text-xl font-medium mt-4">
-              {t("Формирование чека...")}
+              Формирование чека...
             </p>
           </div>
         ) : bankCheck ? (
@@ -54,13 +52,13 @@ export default function SuccessPayment() {
               />
             </div>
             <p className="text-gray-600 text-xl font-medium">
-              {t("Ваш чек")}
+              Ваш чек
             </p>
           </div>
         ) : (
           <div className="flex flex-col items-center">
             <p className="text-gray-600 text-xl font-medium">
-              {t("Чек не сформирован")}
+              Чек не сформирован
             </p>
           </div>
         )}

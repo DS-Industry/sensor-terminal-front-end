@@ -1,6 +1,5 @@
 import "./../App.css";
 import ProgramCard from "../components/cards/ProgramCard";
-import { useTranslation } from "react-i18next";
 import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
@@ -15,7 +14,6 @@ import { logger } from "../util/logger";
 const MAIN_PAGE_URL = "MainPage.webp";
 
 export default function MainPage() {
-  const { t } = useTranslation();
   const { programs } = usePrograms();
   const { attachemntUrl, mediaStatus } = useMediaCampaign(MAIN_PAGE_URL);
   const { order, clearOrder, setInsertedAmount, setIsLoading } = useStore();
@@ -55,7 +53,7 @@ export default function MainPage() {
             {/* Title Section */}
             <div className="mb-8">
               <div className="text-gray-900 font-bold text-4xl text-center">
-                {t("Выберите программу")}
+                Выберите программу
               </div>
             </div>
 

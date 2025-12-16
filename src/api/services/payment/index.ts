@@ -16,8 +16,24 @@ enum PAYMENT {
 export async function createOrder(
   body: ICreateOrderRequest,
   signal?: AbortSignal
-): Promise<void> {  
-  await axiosInstance.post(PAYMENT.PAY, body, { signal });
+): Promise<void> {
+  logger.info('[API] ===== createOrder CALLED =====');
+  logger.info('[API] Endpoint:', PAYMENT.PAY);
+  logger.info('[API] Body:', body);
+  logger.info('[API] Has abort signal:', !!signal);
+  
+  try {
+    await axiosInstance.post(PAYMENT.PAY, body, { signal });
+    logger.info('[API] ===== createOrder SUCCESS =====');
+  } catch (error) {
+    logger.error('[API] ===== createOrder ERROR =====');
+    logger.error('[API] Error:', error);
+    if (error instanceof Error) {
+      logger.error('[API] Error name:', error.name);
+      logger.error('[API] Error message:', error.message);
+    }
+    throw error;
+  }
 }
 
 export async function getOrderById(
@@ -62,7 +78,24 @@ export async function getMobileQr(): Promise<IGetMobileQr> {
   return response.data;
 }
 
-export async function startRobot(order_id: string): Promise<{ message?: string }> {  
-  const response = await axiosInstance.post(PAYMENT.START + `/${order_id}/`);
-  return response.data || {};
+export async function startRobot(order_id: string): Promise<{ message?: string }> {
+  logger.info('[API] ===== startRobot CALLED =====');
+  logger.info('[API] Endpoint:', PAYMENT.START + `/${order_id}/`);
+  logger.info('[API] Order ID:', order_id);
+  
+  try {
+    const response = await axiosInstance.post(PAYMENT.START + `/${order_id}/`);
+    logger.info('[API] ===== startRobot SUCCESS =====');
+    logger.info('[API] Response status:', response.status);
+    logger.info('[API] Response data:', response.data);
+    return response.data || {};
+  } catch (error) {
+    logger.error('[API] ===== startRobot ERROR =====');
+    logger.error('[API] Error:', error);
+    if (error instanceof Error) {
+      logger.error('[API] Error name:', error.name);
+      logger.error('[API] Error message:', error.message);
+    }
+    throw error;
+  }
 }

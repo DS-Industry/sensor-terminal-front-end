@@ -1,6 +1,5 @@
 import { PAYS } from "../pays-data";
 import PayCard from "../components/cards/PayCard";
-import { useTranslation } from "react-i18next";
 import { Clock } from "@gravity-ui/icons";
 import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
@@ -18,7 +17,6 @@ const IDLE_TIMEOUT = 30000;
 const SINGLE_PAGE_URL = "SinglePage.webp";
 
 export default function SingleProgramPage() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { selectedProgram, setIsLoyalty, isLoyalty } = useStore();
   const { attachemntUrl, mediaStatus } = useMediaCampaign(SINGLE_PAGE_URL);
@@ -95,20 +93,20 @@ export default function SingleProgramPage() {
               <div className="text-center mb-8 flex-col items-center">
                 {/* Large Program Title */}
                 <div className="text-gray-900 font-bold text-3xl mb-6">
-                  {t(`${selectedProgram.name}`)}
+                  {selectedProgram.name}
                 </div>
                 
                 {/* Duration Badge */}
                 <div className="inline-flex items-center gap-3 bg-blue-100 px-6 py-2 rounded-full mb-4">
                   <Icon data={Clock} size={24} className="text-blue-600" />
                   <Text className="text-blue-800 font-semibold text-xl">
-                    {selectedProgram.duration} {t("мин.")}
+                    {selectedProgram.duration} мин.
                   </Text>
                 </div>
                 
                 {/* Description */}
                 <div className="text-gray-600 text-sm">
-                  {t(`${selectedProgram.description}`)}
+                  {selectedProgram.description}
                 </div>
               </div>
 

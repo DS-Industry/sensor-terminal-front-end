@@ -104,18 +104,37 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
   }, [paymentState, startCountdown, paymentMethod]);
 
   useEffect(() => {
+    logger.debug(`[${paymentMethod}] ===== usePaymentFlow ORDER CREATION EFFECT =====`);
+    logger.debug(`[${paymentMethod}] selectedProgram:`, selectedProgram?.id);
+    logger.debug(`[${paymentMethod}] paymentState: ${paymentState}`);
+    logger.debug(`[${paymentMethod}] order?.id: ${order?.id}`);
+    logger.debug(`[${paymentMethod}] Time until robot start: ${timeUntilRobotStart}`);
+    
     isMountedRef.current = true;
     
     if (selectedProgram && paymentState === PaymentState.IDLE) {
-      logger.debug(`[${paymentMethod}] Component mounted, creating order`);
+      logger.info(`[${paymentMethod}] ===== CREATING ORDER FROM EFFECT =====`);
+      logger.info(`[${paymentMethod}] Payment state: ${paymentState}`);
+      logger.info(`[${paymentMethod}] Time until robot start: ${timeUntilRobotStart}`);
       createOrder();
+    } else {
+      logger.debug(`[${paymentMethod}] NOT creating order:`, {
+        hasProgram: !!selectedProgram,
+        paymentState,
+        isIdle: paymentState === PaymentState.IDLE
+      });
     }
     
     return () => {
+      logger.debug(`[${paymentMethod}] ===== usePaymentFlow ORDER CREATION EFFECT CLEANUP =====`);
+      logger.debug(`[${paymentMethod}] Current payment state: ${useStore.getState().paymentState}`);
+      logger.debug(`[${paymentMethod}] Time until robot start: ${useStore.getState().timeUntilRobotStart}`);
+      
       // Only cleanup countdown if we're not in PAYMENT_SUCCESS state
       // This prevents WebSocket updates from stopping the countdown
       const currentPaymentState = useStore.getState().paymentState;
       if (currentPaymentState !== PaymentState.PAYMENT_SUCCESS) {
+        logger.debug(`[${paymentMethod}] Cleaning up countdown (not PAYMENT_SUCCESS)`);
         isMountedRef.current = false;
         if (countdownIntervalRef.current) {
           clearInterval(countdownIntervalRef.current);
@@ -125,9 +144,11 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
           clearTimeout(countdownTimeoutRef.current);
           countdownTimeoutRef.current = null;
         }
+      } else {
+        logger.debug(`[${paymentMethod}] NOT cleaning up countdown (PAYMENT_SUCCESS - preserving timer)`);
       }
     };
-  }, [selectedProgram, paymentMethod, paymentState, createOrder]);
+  }, [selectedProgram, paymentMethod, paymentState, createOrder, order?.id, timeUntilRobotStart]);
 
   const handleBack = useCallback(async () => {
     logger.info(`[${paymentMethod}] Handling back navigation - cleaning up everything`);

@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import Cash from "./../assets/cash.svg";
 import AttentionTag from "../components/tags/AttentionTag";
-import { useTranslation } from "react-i18next";
 import { CreditCard } from "@gravity-ui/icons";
 import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
@@ -15,12 +14,12 @@ import { getOrderById } from "../api/services/payment";
 import { PaymentState } from "../state/paymentStateMachine";
 import { logger } from "../util/logger";
 import { Spin } from "@gravity-ui/uikit";
+import CashPaymentDevPanel from "../components/dev/CashPaymentDevPanel";
 
 const CASH_PAGE_URL = "CashPage.webp";
 const POLL_INTERVAL = 3000; // Poll every 3 seconds
 
 export default function CashPayPage() {
-  const { t } = useTranslation();
   const { attachemntUrl, mediaStatus } = useMediaCampaign(CASH_PAGE_URL);
   const { insertedAmount, order, paymentState, setInsertedAmount } = useStore();
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -163,10 +162,10 @@ export default function CashPayPage() {
                   <div className="flex flex-col items-center">
                     <Spin size="xl" />
                     <p className="text-gray-800 text-3xl font-semibold mt-8 mb-4">
-                      {t("Обработка оплаты...")}
+                      Обработка оплаты...
                     </p>
                     <p className="text-gray-600 text-xl font-medium">
-                      {t("Пожалуйста, подождите подтверждения оплаты")}
+                      Пожалуйста, подождите подтверждения оплаты
                     </p>
                   </div>
                 </div>
@@ -191,10 +190,10 @@ export default function CashPayPage() {
 
                   <div className="text-center max-w-md">
                     <div className="text-gray-800 text-2xl font-semibold mb-4">
-                      {t("Внесите купюры в купюроприемник")}
+                      Внесите купюры в купюроприемник
                     </div>
                     <div className="text-gray-600 text-lg mb-6">
-                      {t("Принимаются купюры номиналом:")}
+                      Принимаются купюры номиналом:
                     </div>
                     <div className="inline-flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-2xl font-bold text-xl">
                       50 / 100 / 200
@@ -208,16 +207,16 @@ export default function CashPayPage() {
               <div className="p-8 h-full flex flex-col justify-between">
                 {/* Program Info */}
                 <div className="bg-white/10 p-4 rounded-2xl mb-6">
-                  <div className="text-white/80 text-sm mb-2">{t("Программа")}</div>
-                  <div className="text-white font-semibold text-lg">{t(`${selectedProgram?.name}`)}</div>
+                  <div className="text-white/80 text-sm mb-2">Программа</div>
+                  <div className="text-white font-semibold text-lg">{selectedProgram?.name}</div>
                 </div>
 
                 {/* Payment Details */}
                 <div className="space-y-6 flex-1">
                   <div className="bg-white/10 p-6 rounded-2xl">
-                    <div className="text-white/80 text-sm mb-3">{paymentSuccess ? t("Оплачено") : t("К оплате")}</div>
+                    <div className="text-white/80 text-sm mb-3">{paymentSuccess ? "Оплачено" : "К оплате"}</div>
                     <div className="text-white font-bold text-5xl">
-                      {selectedProgram?.price} {t("р.")}
+                      {selectedProgram?.price} р.
                     </div>
                   </div>
 
@@ -232,12 +231,12 @@ export default function CashPayPage() {
                           style={{ backgroundColor: "white" }}
                         >
                           <div className="flex items-center justify-center gap-2">
-                            {t("Запустить")}
+                            Запустить
                           </div>
                         </button>
                         {timeUntilRobotStart > 0 && (
                           <div className="text-white/80 text-l">
-                            {t("Автоматический запуск через")} {timeUntilRobotStart} {t("сек.")}
+                            Автоматический запуск через {timeUntilRobotStart} сек.
                           </div>
                         )}
                       </div>
@@ -245,17 +244,17 @@ export default function CashPayPage() {
                     : (
                       <>
                         <div className="bg-white/10 p-6 rounded-2xl">
-                          <div className="text-white/80 text-sm mb-3">{t("Внесено")}</div>
+                          <div className="text-white/80 text-sm mb-3">Внесено</div>
                           <div className="text-white font-bold text-5xl">
-                            {insertedAmount} {t("р.")}
+                            {insertedAmount} р.
                           </div>
                         </div>
 
                         {/* Remaining Amount */}
                         <div className="bg-white/20 p-4 rounded-2xl">
-                          <div className="text-white/80 text-sm mb-2">{t("Осталось внести")}</div>
+                          <div className="text-white/80 text-sm mb-2">Осталось внести</div>
                           <div className="text-white font-bold text-3xl">
-                            {Math.max(0, (Number(selectedProgram?.price) || 0) - insertedAmount)} {t("р.")}
+                            {Math.max(0, (Number(selectedProgram?.price) || 0) - insertedAmount)} р.
                           </div>
                         </div>
 
@@ -263,14 +262,14 @@ export default function CashPayPage() {
                           <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
                             <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
                             <div className="text-white/90 text-sm font-medium">
-                              {t("Обработка оплаты...")}
+                              Обработка оплаты...
                             </div>
                           </div>
                         ) : (
                           <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
                             <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
                             <div className="text-white/90 text-sm font-medium">
-                              {t("Внесите больше средств...")}
+                              Внесите больше средств...
                             </div>
                           </div>
                         )}
@@ -281,7 +280,7 @@ export default function CashPayPage() {
                 {/* Warning */}
                 <div className="mt-6 text-center">
                   <AttentionTag
-                    label={t("Терминал сдачу не выдает!")}
+                    label="Терминал сдачу не выдает!"
                     additionalStyles="text-red-300 bg-red-500/20 px-4 py-2 rounded-full text-sm"
                   />
                 </div>
@@ -294,6 +293,9 @@ export default function CashPayPage() {
       {/*{isLoyaltyCardModalOpen && (*/}
       {/*  <LoyaltyCardModal onSkipLoyalty={handleSkipLoyalty} />*/}
       {/*)}*/}
+
+      {/* Dev Panel for Testing */}
+      <CashPaymentDevPanel />
     </div>
   );
 }

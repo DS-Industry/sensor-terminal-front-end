@@ -135,6 +135,16 @@ class WebSocketManager {
     this.listeners.clear();
     this.isConnected = false;
   }
+
+  // Dev-only method to simulate WebSocket events for testing
+  simulateEvent(data: WebSocketMessage) {
+    if (import.meta.env.DEV) {
+      logger.debug('[DEV] Simulating WebSocket event:', data);
+      this.notifyListeners(data);
+    } else {
+      logger.warn('simulateEvent is only available in development mode');
+    }
+  }
 }
 
 export const globalWebSocketManager = new WebSocketManager();

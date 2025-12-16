@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import { Card, Icon, Text } from "@gravity-ui/uikit";
 import { ArrowRight } from "@gravity-ui/icons";
 import { Clock } from "lucide-react";
@@ -8,7 +7,6 @@ import { IProgram } from "../../api/types/program";
 import { logger } from "../../util/logger";
 
 export default function ProgramCard(program: IProgram) {
-  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const { order, setOrderProgramId, setSelectedProgram } = useStore.getState();
@@ -30,7 +28,7 @@ export default function ProgramCard(program: IProgram) {
         </div>
 
         {/* Title */}
-        <h2 className="text-3xl font-bold mb-5 text-balance leading-tight text-white whitespace-nowrap">{t(`${program.name}`)}</h2>
+        <h2 className="text-3xl font-bold mb-5 text-balance leading-tight text-white whitespace-nowrap">{program.name}</h2>
 
         {/* Service List - No scroll needed with bigger header */}
         <div className="flex-1">
@@ -38,7 +36,7 @@ export default function ProgramCard(program: IProgram) {
             {program.functions && program.functions.split(", ").map((service, index) => (
               <li key={index} className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full flex-shrink-0 bg-white" />
-                <span className="text-sm font-medium text-white">{t(`${service}`)}</span>
+                <span className="text-sm font-medium text-white">{service}</span>
               </li>
             ))}
           </ul>
@@ -71,12 +69,12 @@ export default function ProgramCard(program: IProgram) {
 
         <div className="mb-6 text-center">
           <span className="text-6xl font-bold text-gray-900 tracking-tight">{Number(program.price)}</span>
-          <span className="text-2xl text-gray-500 ml-1">{t("р.")}</span>
+          <span className="text-2xl text-gray-500 ml-1">р.</span>
         </div>
 
         {/* Action Button */}
         <div className="flex items-center justify-between p-3 cursor-pointer animate-pulse">
-          <Text className="text-black-800">{t("Выбрать программу")}</Text>
+          <Text className="text-black-800">Выбрать программу</Text>
           <Icon data={ArrowRight} size={18} className="text-gray-600" />
         </div>
 
