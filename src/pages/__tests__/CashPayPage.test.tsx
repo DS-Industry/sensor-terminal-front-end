@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import CashPayPage from '../CashPayPage';
 import useStore from '../../components/state/store';
-import { EPaymentMethod, EOrderStatus } from '../../components/state/order/orderSlice';
+import { EOrderStatus } from '../../components/state/order/orderSlice';
 import { PaymentState } from '../../state/paymentStateMachine';
 import { globalWebSocketManager } from '../../util/websocketManager';
 import * as paymentApi from '../../api/services/payment';
