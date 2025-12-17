@@ -208,6 +208,11 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
           clearInterval(checkAmountIntervalRef.current);
         }
         
+        // For CASH payments, ensure loading is false when starting to wait for payment
+        if (paymentMethod === EPaymentMethod.CASH) {
+          setIsLoading(false);
+        }
+        
         checkAmountIntervalRef.current = setInterval(async () => {
           if (!orderId || !isMountedRef.current) return;
           
@@ -235,7 +240,10 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
               } else if (amountSum > 0 && amountSum < expectedAmount) {
                 logger.debug(`[${paymentMethod}] Partial cash payment: ${amountSum} < ${expectedAmount}`);
                 setPaymentState(PaymentState.PROCESSING_PAYMENT);
-                setIsLoading(true);
+                setIsLoading(false); // Don't show spinner for partial cash payments
+              } else {
+                // No money inserted yet, keep loading false
+                setIsLoading(false);
               }
             } else {
               // For CARD payment method, detect card insertion
@@ -255,7 +263,7 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
           } catch (err) {
             logger.error(`[${paymentMethod}] Error checking amount`, err);
           }
-        }, 500);
+        }, 1500);
         
         if (depositTimeoutRef.current) {
           clearTimeout(depositTimeoutRef.current);
@@ -284,6 +292,9 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
     if (order?.status === EOrderStatus.WAITING_PAYMENT && orderId) {
       // Start amount polling for CASH payments
       if (paymentMethod === EPaymentMethod.CASH && !checkAmountIntervalRef.current) {
+        // Ensure loading is false when starting polling for cash
+        setIsLoading(false);
+        
         checkAmountIntervalRef.current = setInterval(async () => {
           if (!orderId || !isMountedRef.current) return;
           
@@ -309,7 +320,10 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
             } else if (amountSum > 0 && amountSum < expectedAmount) {
               logger.debug(`[${paymentMethod}] Partial cash payment: ${amountSum} < ${expectedAmount}`);
               setPaymentState(PaymentState.PROCESSING_PAYMENT);
-              setIsLoading(true);
+              setIsLoading(false); // Don't show spinner for partial cash payments
+            } else {
+              // No money inserted yet, keep loading false
+              setIsLoading(false);
             }
             
             lastAmountSumRef.current = amountSum;
