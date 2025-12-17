@@ -7,7 +7,7 @@ import { usePrograms } from "../hooks/usePrograms";
 import { useEffect } from "react";
 import useStore from "../components/state/store";
 import { EOrderStatus } from "../components/state/order/orderSlice";
-import { startRobot } from "../api/services/payment";
+import { startRobot, cancelOrder } from "../api/services/payment";
 import { useNavigate } from "react-router-dom";
 import { logger } from "../util/logger";
 
@@ -16,13 +16,63 @@ const MAIN_PAGE_URL = "MainPage.webp";
 export default function MainPage() {
   const { programs } = usePrograms();
   const { attachemntUrl, mediaStatus } = useMediaCampaign(MAIN_PAGE_URL);
-  const { order, clearOrder, setInsertedAmount, setIsLoading } = useStore();
+  const { 
+    order, 
+    clearOrder, 
+    setInsertedAmount, 
+    setIsLoading,
+    resetPayment,
+    setSelectedProgram,
+    setBankCheck,
+    setQueuePosition,
+    setQueueNumber,
+    setErrorCode,
+    closeBackConfirmationModal,
+    closeLoyaltyCardModal,
+  } = useStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    clearOrder();
-    setInsertedAmount(0);
-    setIsLoading(false);
+    const resetAllStates = async () => {
+      logger.info('[MainPage] Resetting all states on mount');
+      
+      // Get current order from store to check if it exists
+      const currentOrder = useStore.getState().order;
+      
+      // Cancel existing order if any
+      if (currentOrder?.id) {
+        try {
+          await cancelOrder(currentOrder.id);
+          logger.info('[MainPage] Order cancelled on mount', { orderId: currentOrder.id });
+        } catch (error) {
+          logger.error('[MainPage] Error cancelling order on mount', error);
+        }
+      }
+
+      // Close all modals
+      closeBackConfirmationModal();
+      closeLoyaltyCardModal();
+
+      // Reset payment state
+      resetPayment();
+
+      // Clear order
+      clearOrder();
+
+      // Reset all app states
+      setSelectedProgram(null);
+      setBankCheck("");
+      setInsertedAmount(0);
+      setQueuePosition(null);
+      setQueueNumber(null);
+      setErrorCode(null);
+      setIsLoading(false);
+
+      logger.info('[MainPage] All states reset successfully');
+    };
+
+    resetAllStates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
