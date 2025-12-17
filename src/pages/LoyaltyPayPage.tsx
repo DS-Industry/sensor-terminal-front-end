@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import WifiBlue from "../assets/blue_wifi.svg";
 import PromoCard from "../assets/promo_card.svg";
-import { useTranslation } from "react-i18next";
 import { CreditCard } from "@gravity-ui/icons";
 import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
@@ -28,7 +27,6 @@ enum CardReaderStatus {
 }
 
 export default function LoyaltyPayPage() {
-  const { t } = useTranslation();
   const { attachemntUrl, mediaStatus } = useMediaCampaign(LOYALTY_PAGE_URL);
   const { selectedProgram, setIsLoading, order } = useStore();
   const navigate = useNavigate();
@@ -224,10 +222,10 @@ export default function LoyaltyPayPage() {
         <div className="flex flex-col items-center justify-center h-full space-y-6">
           <div className="text-center">
             <div className="text-white text-2xl font-semibold mb-4">
-              {t("Карта не найдена")}
+              Карта не найдена
             </div>
             <div className="text-white/80 text-lg">
-              {t("Пожалуйста, проверьте карту и попробуйте снова")}
+              Пожалуйста, проверьте карту и попробуйте снова
             </div>
           </div>
 
@@ -237,7 +235,7 @@ export default function LoyaltyPayPage() {
             style={{ backgroundColor: "white" }}
           >
             <div className="flex items-center justify-center gap-2">
-              {t("Завершить")}
+              Завершить
             </div>
           </button>
         </div>
@@ -250,24 +248,24 @@ export default function LoyaltyPayPage() {
         <div className="flex flex-col items-center justify-center h-full space-y-6">
           <div className="text-center">
             <div className="text-white text-2xl font-semibold mb-4">
-              {t("Недостаточно баллов")}
+              Недостаточно баллов
             </div>
             <div className="text-white/80 text-lg">
-              {t("На вашей карте недостаточно баллов для оплаты выбранной программы")}
+              На вашей карте недостаточно баллов для оплаты выбранной программы
             </div>
           </div>
 
           <div className="bg-white/20 p-6 rounded-2xl w-full">
-            <div className="text-white/80 text-sm mb-2">{t("Ваш баланс")}</div>
+            <div className="text-white/80 text-sm mb-2">Ваш баланс</div>
             <div className="text-white font-bold text-3xl">
-              {loyaltyCard?.balance} {t("баллов")}
+              {loyaltyCard?.balance} баллов
             </div>
           </div>
 
           <div className="bg-white/20 p-6 rounded-2xl w-full">
-            <div className="text-white/80 text-sm mb-2">{t("Требуется баллов")}</div>
+            <div className="text-white/80 text-sm mb-2">Требуется баллов</div>
             <div className="text-white font-bold text-3xl">
-              {selectedProgram?.price} {t("баллов")}
+              {selectedProgram?.price} баллов
             </div>
           </div>
 
@@ -277,7 +275,7 @@ export default function LoyaltyPayPage() {
             style={{ backgroundColor: "white" }}
           >
             <div className="flex items-center justify-center gap-2">
-              {t("Завершить")}
+              Завершить
             </div>
           </button>
         </div>
@@ -288,16 +286,16 @@ export default function LoyaltyPayPage() {
       return (
         <>
           <div className="bg-white/20 p-4 rounded-2xl">
-            <div className="text-white/80 text-sm mb-2">{t("Ваш баланс")}</div>
+            <div className="text-white/80 text-sm mb-2">Ваш баланс</div>
             <div className="text-white font-bold text-3xl">
-              {loyaltyCard.balance} {t("баллов")}
+              {loyaltyCard.balance} баллов
             </div>
           </div>
 
           <div className="bg-white/20 p-4 rounded-2xl">
-            <div className="text-white/80 text-sm mb-2">{t("Спишется баллов")}</div>
+            <div className="text-white/80 text-sm mb-2">Спишется баллов</div>
             <div className="text-white font-bold text-3xl">
-              {selectedProgram?.price} {t("баллов")}
+              {selectedProgram?.price} баллов
             </div>
           </div>
 
@@ -307,7 +305,7 @@ export default function LoyaltyPayPage() {
             style={{ backgroundColor: "white" }}
           >
             <div className="flex items-center justify-center gap-2">
-              {t("Оплатить")}
+              Оплатить
             </div>
           </button>
         </>
@@ -321,8 +319,8 @@ export default function LoyaltyPayPage() {
           <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
           <div className="text-white/90 text-sm font-medium">
             {cardReaderStatus === CardReaderStatus.SEARCHING_DATA
-              ? t("Поиск данных по карте...")
-              : t("Ожидание карты лояльности...")
+              ? "Поиск данных по карте..."
+              : "Ожидание карты лояльности..."
             }
           </div>
         </div>
@@ -367,22 +365,22 @@ export default function LoyaltyPayPage() {
                 <div className="text-center max-w-md">
                   <div className="text-gray-800 text-2xl font-semibold mb-4">
                     {cardNotFound
-                      ? t("Карта не найдена")
+                      ? "Карта не найдена"
                       : insufficientBalance
-                        ? t("Недостаточно баллов")
+                        ? "Недостаточно баллов"
                         : cardReaderStatus === CardReaderStatus.SEARCHING_DATA
-                          ? t("Поиск данных по карте...")
-                          : t("Поднесите карту лояльности к терминалу")
+                          ? "Поиск данных по карте..."
+                          : "Поднесите карту лояльности к терминалу"
                     }
                   </div>
                   <div className="text-gray-600 text-lg">
                     {cardNotFound
-                      ? t("Проверьте карту и попробуйте снова")
+                      ? "Проверьте карту и попробуйте снова"
                       : insufficientBalance
-                        ? t("Пополните карту лояльности и попробуйте снова")
+                        ? "Пополните карту лояльности и попробуйте снова"
                         : cardReaderStatus === CardReaderStatus.SEARCHING_DATA
-                          ? t("Ищем данные по вашей карте...")
-                          : t("Дождитесь подтверждения оплаты")
+                          ? "Ищем данные по вашей карте..."
+                          : "Дождитесь подтверждения оплаты"
                     }
                   </div>
                 </div>
@@ -396,7 +394,7 @@ export default function LoyaltyPayPage() {
                 {!cardNotFound && !insufficientBalance && (
                   <div className="flex flex-col items-center">
                     <div className="text-white/80 text-sm mb-5 font-medium">
-                      {t("Карта лояльности")}
+                      Карта лояльности
                     </div>
                     <div className="w-48 h-32 bg-white/20 rounded-2xl flex items-center justify-center">
                       <div className="text-center">
@@ -410,8 +408,8 @@ export default function LoyaltyPayPage() {
                 {/* Program Info - скрываем при ошибках */}
                 {!cardNotFound && !insufficientBalance && (
                   <div className="bg-white/10 p-4 rounded-2xl">
-                    <div className="text-white/80 text-sm mb-2">{t("Программа")}</div>
-                    <div className="text-white font-semibold text-lg">{t(`${selectedProgram?.name}`)}</div>
+                    <div className="text-white/80 text-sm mb-2">Программа</div>
+                    <div className="text-white font-semibold text-lg">{selectedProgram?.name}</div>
                   </div>
                 )}
 
@@ -420,9 +418,9 @@ export default function LoyaltyPayPage() {
                   {/* Сумма к оплате - показываем всегда кроме успешной оплаты и когда карта не найдена */}
                   {!paymentSuccess && !cardNotFound && (
                     <div className="bg-white/10 p-6 rounded-2xl">
-                      <div className="text-white/80 text-sm mb-3">{t("К оплате")}</div>
+                      <div className="text-white/80 text-sm mb-3">К оплате</div>
                       <div className="text-white font-bold text-5xl">
-                        {selectedProgram?.price} {t("р.")}
+                        {selectedProgram?.price} р.
                       </div>
                     </div>
                   )}

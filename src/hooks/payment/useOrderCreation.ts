@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { createOrder } from '../../api/services/payment';
 import { EPaymentMethod } from '../../components/state/order/orderSlice';
 import { PaymentState } from '../../state/paymentStateMachine';
@@ -12,7 +12,7 @@ interface UseOrderCreationOptions {
 }
 
 export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCreationOptions) {
-  const { setIsLoading, setOrder, setPaymentState, setPaymentError } = useStore();
+  const { setIsLoading, setOrder, setPaymentState, setPaymentError, order } = useStore();
   const isCreatingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -48,15 +48,19 @@ export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCre
 
       if (abortSignal.aborted) {
         logger.info(`[${paymentMethod}] Order creation aborted`);
+        isCreatingRef.current = false;
         return;
       }
 
-      logger.info(`[${paymentMethod}] Order creation API called successfully, waiting for order ID from WebSocket`);
-      setPaymentState(PaymentState.WAITING_PAYMENT);
+      // logger.info(`[${paymentMethod}] Order creation API called successfully, waiting for order ID from WebSocket`);
+      // setPaymentState(PaymentState.WAITING_PAYMENT);
+      // Reset flag after successful API call - order ID will come via WebSocket
+      isCreatingRef.current = false;
     } catch (err: unknown) {
       const error = err as { name?: string };
       if (error?.name === 'AbortError' || abortSignal.aborted) {
         logger.info(`[${paymentMethod}] Order creation aborted`);
+        isCreatingRef.current = false;
         return;
       }
 
@@ -66,10 +70,11 @@ export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCre
       setPaymentState(PaymentState.PAYMENT_ERROR);
       
       let errorMessage = 'Произошла ошибка при создании заказа';
-      if (err?.response?.data?.error) {
-        errorMessage = err.response.data.error;
-      } else if (err?.message) {
-        errorMessage = err.message;
+      const axiosError = err as { response?: { data?: { error?: string } }; message?: string };
+      if (axiosError?.response?.data?.error) {
+        errorMessage = axiosError.response.data.error;
+      } else if (axiosError?.message) {
+        errorMessage = axiosError.message;
       }
       
       setPaymentError(errorMessage);
@@ -84,6 +89,14 @@ export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCre
     }
     isCreatingRef.current = false;
   }, []);
+
+  // Reset isCreatingRef when order ID is received via WebSocket
+  useEffect(() => {
+    if (order?.id && isCreatingRef.current) {
+      logger.debug(`[${paymentMethod}] Order ID received via WebSocket: ${order.id}, resetting creation flag`);
+      isCreatingRef.current = false;
+    }
+  }, [order?.id, paymentMethod]);
 
   return {
     createOrder: createOrderAsync,

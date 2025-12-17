@@ -52,7 +52,7 @@ export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCre
       }
 
       logger.info(`[${paymentMethod}] Order creation API called successfully, waiting for order ID from WebSocket`);
-      setPaymentState(PaymentState.WAITING_PAYMENT);
+      // setPaymentState(PaymentState.WAITING_PAYMENT);
     } catch (err: any) {
       if (err?.name === 'AbortError' || abortSignal.aborted) {
         logger.info(`[${paymentMethod}] Order creation aborted`);

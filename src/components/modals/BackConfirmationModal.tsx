@@ -1,10 +1,8 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useTranslation } from 'react-i18next';
 import useStore from '../state/store';
 
 export function BackConfirmationModal() {
-  const { t } = useTranslation();
   const {
     isBackConfirmationModalOpen,
     closeBackConfirmationModal,
@@ -40,10 +38,10 @@ export function BackConfirmationModal() {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div className="relative z-10 bg-white rounded-[2.25rem] p-24 max-w-4xl w-full mx-8 text-center">
         <h2 className="text-6xl font-bold mb-12 text-gray-900">
-          {t("Подтверждение возврата")}
+          Подтверждение возврата
         </h2>
         <p className="text-3xl text-gray-600 mb-16">
-          {t("Вы действительно хотите вернуться назад? Внесенные средства будут утрачены.")}
+          Вы действительно хотите вернуться назад? Внесенные средства будут утрачены.
         </p>
         <div className="flex justify-center gap-12">
           <button
@@ -51,13 +49,13 @@ export function BackConfirmationModal() {
             style={{ backgroundColor: "#0B68E1" }}
             onClick={handleCancel}
           >
-            {t("Отмена")}
+            Отмена
           </button>
           <button
             className="px-18 py-9 rounded-3xl text-gray-600 font-bold text-3xl transition-all duration-300 hover:bg-gray-100"
             onClick={handleConfirm}
           >
-            {t("Да")}
+            Да
           </button>
         </div>
       </div>

@@ -5,7 +5,6 @@ import InfoTag from "../components/tags/InfoTag";
 import Car from "./../assets/car-instruction.svg";
 import WhiteBack from "./../assets/exit_to_app_white.svg";
 import Logo from "./../assets/Logo-white.svg";
-import { useTranslation } from "react-i18next";
 
 export default function InstructionLayout({
   children,
@@ -13,7 +12,6 @@ export default function InstructionLayout({
   children: React.ReactNode;
 }) {
   const [isLoading, setIsloading] = useState<number>(0);
-  const { t } = useTranslation();
   return (
     <main className=" w-screen min-h-screen">
       <div className=" flex flex-col justify-center items-center min-h-[500px] w-full bg-primary ">
@@ -78,12 +76,12 @@ export default function InstructionLayout({
           </div>
         </div>
         <p className=" font-inter-semibold text-white-500 text-5xl mb-20">
-          {t("Габариты авто")}
+          Габариты авто
         </p>
         <div className=" w-1/3 flex flex-row justify-evenly gap-5 mb-20">
-          <InfoTag label={t("Высота")} value={`${t("до")} 2 м`} />
-          <InfoTag label={t("Длина")} value={`${t("до")} 6.25 м`} />
-          <InfoTag label={t("Ширина")} value={`${t("до")} 6 м`} />
+          <InfoTag label="Высота" value="до 2 м" />
+          <InfoTag label="Длина" value="до 6.25 м" />
+          <InfoTag label="Ширина" value="до 6 м" />
         </div>
         <div className=" min-h-[387px] max-h-[387px] mb-5">
           <img
@@ -106,7 +104,7 @@ export default function InstructionLayout({
 
         <div className=" w-full flex justify-end mb-6 pr-8">
           <AttentionTag
-            label={t("Не рекомендуется мыть автомобили с панорамной крышей!")}
+            label="Не рекомендуется мыть автомобили с панорамной крышей!"
             additionalStyles=" text-red-400 px-2 min-w-[20rem]"
           />
         </div>

@@ -24,6 +24,7 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
     setPaymentError,
     setIsLoading,
     setBankCheck,
+    setInsertedAmount,
   } = useStore();
 
   const depositTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -140,6 +141,11 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
 
       logger.debug(`[${paymentMethod}] Payment verification - amountSum: ${amountSum}, expected: ${expectedAmount}`);
 
+      // Update insertedAmount for CASH payments
+      if (paymentMethod === EPaymentMethod.CASH) {
+        setInsertedAmount(amountSum);
+      }
+
       if (amountSum >= expectedAmount || amountSum === 0) {
         logger.info(`[${paymentMethod}] Payment confirmed! Amount: ${amountSum} (expected: ${expectedAmount})`);
         setPaymentError(null);
@@ -156,7 +162,7 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
         setIsLoading(false);
       }
     }
-  }, [paymentMethod, selectedProgram, setQueuePosition, setQueueNumber, setPaymentState, setPaymentError, setIsLoading, setBankCheck]);
+  }, [paymentMethod, selectedProgram, setQueuePosition, setQueueNumber, setPaymentState, setPaymentError, setIsLoading, setBankCheck, setInsertedAmount]);
 
   useEffect(() => {
     if (!orderId) return;
@@ -208,21 +214,46 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
           try {
             const orderDetails = await getOrderById(orderId);
             const amountSum = orderDetails.amount_sum ? Number(orderDetails.amount_sum) : 0;
+            const expectedAmount = selectedProgram ? Number(selectedProgram.price) : 0;
             
-            if (amountSum > lastAmountSumRef.current && amountSum > 0) {
-              logger.info(`[${paymentMethod}] Card detected! Amount: ${amountSum}, setting processing state`);
-              setPaymentState(PaymentState.PROCESSING_PAYMENT);
-              setIsLoading(true);
+            // For CASH payment method, update insertedAmount continuously
+            if (paymentMethod === EPaymentMethod.CASH) {
+              logger.debug(`[${paymentMethod}] Cash payment - updating insertedAmount: ${amountSum}`);
+              setInsertedAmount(amountSum);
               
-              if (checkAmountIntervalRef.current) {
-                clearInterval(checkAmountIntervalRef.current);
-                checkAmountIntervalRef.current = null;
+              // Check if payment is complete
+              if (amountSum >= expectedAmount && expectedAmount > 0) {
+                logger.info(`[${paymentMethod}] Cash payment complete! Amount: ${amountSum} >= ${expectedAmount}`);
+                setPaymentState(PaymentState.PAYMENT_SUCCESS);
+                setIsLoading(false);
+                
+                // Stop polling when payment is complete
+                if (checkAmountIntervalRef.current) {
+                  clearInterval(checkAmountIntervalRef.current);
+                  checkAmountIntervalRef.current = null;
+                }
+              } else if (amountSum > 0 && amountSum < expectedAmount) {
+                logger.debug(`[${paymentMethod}] Partial cash payment: ${amountSum} < ${expectedAmount}`);
+                setPaymentState(PaymentState.PROCESSING_PAYMENT);
+                setIsLoading(true);
+              }
+            } else {
+              // For CARD payment method, detect card insertion
+              if (amountSum > lastAmountSumRef.current && amountSum > 0) {
+                logger.info(`[${paymentMethod}] Card detected! Amount: ${amountSum}, setting processing state`);
+                setPaymentState(PaymentState.PROCESSING_PAYMENT);
+                setIsLoading(true);
+                
+                if (checkAmountIntervalRef.current) {
+                  clearInterval(checkAmountIntervalRef.current);
+                  checkAmountIntervalRef.current = null;
+                }
               }
             }
             
             lastAmountSumRef.current = amountSum;
           } catch (err) {
-            logger.error(`[${paymentMethod}] Error checking amount for card detection`, err);
+            logger.error(`[${paymentMethod}] Error checking amount`, err);
           }
         }, 500);
         
@@ -249,7 +280,45 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
 
     const removeListener = globalWebSocketManager.addListener('status_update', handleStatusUpdate);
 
-    if (order?.status === EOrderStatus.WAITING_PAYMENT) {
+    // Start polling if order is already in WAITING_PAYMENT status
+    if (order?.status === EOrderStatus.WAITING_PAYMENT && orderId) {
+      // Start amount polling for CASH payments
+      if (paymentMethod === EPaymentMethod.CASH && !checkAmountIntervalRef.current) {
+        checkAmountIntervalRef.current = setInterval(async () => {
+          if (!orderId || !isMountedRef.current) return;
+          
+          try {
+            const orderDetails = await getOrderById(orderId);
+            const amountSum = orderDetails.amount_sum ? Number(orderDetails.amount_sum) : 0;
+            const expectedAmount = selectedProgram ? Number(selectedProgram.price) : 0;
+            
+            logger.debug(`[${paymentMethod}] Cash payment - updating insertedAmount: ${amountSum}`);
+            setInsertedAmount(amountSum);
+            
+            // Check if payment is complete
+            if (amountSum >= expectedAmount && expectedAmount > 0) {
+              logger.info(`[${paymentMethod}] Cash payment complete! Amount: ${amountSum} >= ${expectedAmount}`);
+              setPaymentState(PaymentState.PAYMENT_SUCCESS);
+              setIsLoading(false);
+              
+              // Stop polling when payment is complete
+              if (checkAmountIntervalRef.current) {
+                clearInterval(checkAmountIntervalRef.current);
+                checkAmountIntervalRef.current = null;
+              }
+            } else if (amountSum > 0 && amountSum < expectedAmount) {
+              logger.debug(`[${paymentMethod}] Partial cash payment: ${amountSum} < ${expectedAmount}`);
+              setPaymentState(PaymentState.PROCESSING_PAYMENT);
+              setIsLoading(true);
+            }
+            
+            lastAmountSumRef.current = amountSum;
+          } catch (err) {
+            logger.error(`[${paymentMethod}] Error checking amount`, err);
+          }
+        }, 1000);
+      }
+      
       depositTimeoutRef.current = setTimeout(async () => {
         logger.info(`[${paymentMethod}] Payment timeout reached, cancelling order`);
         try {

@@ -1,7 +1,6 @@
 import { Card, Icon } from '@gravity-ui/uikit';
 import { ArrowLeft } from "@gravity-ui/icons";
 import ClientLogo from "../logo/Logo";
-import { useTranslation } from "react-i18next";
 import { useNavigate } from 'react-router-dom';
 import useStore from '../state/store';
 import { logger } from '../../util/logger';
@@ -14,7 +13,6 @@ interface IHeaderWithLogoProps {
 
 export default function HeaderWithLogo(props: IHeaderWithLogoProps) {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const {
     openBackConfirmationModal,
     setBackConfirmationCallback
@@ -60,7 +58,7 @@ export default function HeaderWithLogo(props: IHeaderWithLogoProps) {
             >
               <div className="flex items-center gap-2">
                 <Icon data={ArrowLeft} size={20} />
-                {t("Назад")}
+                Назад
               </div>
             </button>
           }

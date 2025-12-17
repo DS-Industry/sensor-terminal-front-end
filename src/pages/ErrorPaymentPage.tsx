@@ -1,6 +1,5 @@
 import Emoji from "../assets/emoji-sad.svg";
 import Sally from "../assets/Saly-2.webp";
-import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import useStore from "../components/state/store";
 import { useEffect, useRef } from "react";
@@ -8,7 +7,6 @@ import { useEffect, useRef } from "react";
 const IDLE_TIMEOUT = 5000;
 
 export default function ErrorPaymentPage() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { errorCode, setIsLoading } = useStore();
   const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -39,15 +37,15 @@ export default function ErrorPaymentPage() {
   const getErrorDisplayText = () => {
     switch (errorCode) {
       case 1001:
-        return t("Ошибка приема наличных средств. Воспользуйтесь другим способом оплаты.");
+        return "Ошибка приема наличных средств. Воспользуйтесь другим способом оплаты.";
       case 1002:
-        return t("Ошибка безналичной оплаты. Воспользуйтесь другим способом оплаты.");
+        return "Ошибка безналичной оплаты. Воспользуйтесь другим способом оплаты.";
       case 1003:
-        return t("Ошибка оплаты картой лояльности. Воспользуйтесь другим способом оплаты.");
+        return "Ошибка оплаты картой лояльности. Воспользуйтесь другим способом оплаты.";
       case 1004:
-        return t("Ошибка запуска оборудования");
+        return "Ошибка запуска оборудования";
       default:
-        return errorCode ? errorCode : t("Ошибка запуска робота");
+        return errorCode ? errorCode : "Ошибка запуска робота";
     }
   };
 
@@ -71,7 +69,7 @@ export default function ErrorPaymentPage() {
           onClick={handleFinish}
         >
           <div className="flex items-center justify-center gap-2">
-            {t("Закрыть")}
+            Закрыть
           </div>
         </button>
       </div>

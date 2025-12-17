@@ -5,7 +5,7 @@ const WS_BASE_URL = env.VITE_API_BASE_WS_URL;
 
 type WebSocketEvent = 'status_update' | 'mobile_payment' | 'device_status' | 'error' | 'card_reader';
 
-interface WebSocketMessage {
+export interface WebSocketMessage {
   type: WebSocketEvent;
   order_id?: string;
   status?: string;

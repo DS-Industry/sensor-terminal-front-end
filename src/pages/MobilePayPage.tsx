@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import GooglePlay from "../assets/Frame.svg";
 import AppStore from "../assets/Frame_apple.svg";
 import Bell from "../assets/Bell_perspective_matte.svg";
-import { useTranslation } from "react-i18next";
 import { Smartphone } from "@gravity-ui/icons";
 import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
@@ -20,7 +19,6 @@ const MOBILE_PAGE_URL = "MobilePage.webp";
 const IDLE_TIME = 30000;
 
 export default function MobilePayPage() {
-  const { t } = useTranslation();
   const { attachemntUrl, mediaStatus } = useMediaCampaign(MOBILE_PAGE_URL);
   const { order, selectedProgram } = useStore();
   const navigate = useNavigate();
@@ -108,7 +106,7 @@ export default function MobilePayPage() {
                   </div>
                   <div className="flex-1">
                     <div className="text-gray-800 text-2xl font-semibold mb-2">
-                      {t("Откройте мобильное приложение")}
+                      Откройте мобильное приложение
                     </div>
                     <div className="text-gray-600 text-lg">
                       Запустите приложение "Мой-ка!DS" на вашем смартфоне
@@ -123,10 +121,10 @@ export default function MobilePayPage() {
                   </div>
                   <div className="flex-1">
                     <div className="text-gray-800 text-2xl font-semibold mb-2">
-                      {t("Просканируйте QR-код")}
+                      Просканируйте QR-код
                     </div>
                     <div className="text-gray-600 text-lg">
-                      {t("Используйте камеру приложения для сканирования QR-кода")}
+                      Используйте камеру приложения для сканирования QR-кода
                     </div>
                   </div>
                 </div>
@@ -173,21 +171,21 @@ export default function MobilePayPage() {
 
                 {/* Program Info */}
                 <div className="bg-white/10 p-4 rounded-2xl mb-6">
-                  <div className="text-white/80 text-sm mb-2">{t("Программа")}</div>
-                  <div className="text-white font-semibold text-lg">{t(`${selectedProgram?.name}`)}</div>
+                  <div className="text-white/80 text-sm mb-2">Программа</div>
+                  <div className="text-white font-semibold text-lg">{selectedProgram?.name}</div>
                 </div>
 
                 {/* Payment Details */}
                 <div className="space-y-4">
                   <div className="bg-white/10 p-6 rounded-2xl">
-                    <div className="text-white/80 text-sm mb-3">{t("К оплате")}</div>
+                    <div className="text-white/80 text-sm mb-3">К оплате</div>
                     <div className="text-white font-bold text-4xl">
-                      {Number(selectedProgram?.price)} {t("р.")}
+                      {Number(selectedProgram?.price)} р.
                     </div>
                   </div>
 
                   <div className="bg-white/20 p-4 rounded-2xl">
-                    <div className="text-white/80 text-sm mb-2">{t("Ваш CashBack")}</div>
+                    <div className="text-white/80 text-sm mb-2">Ваш CashBack</div>
                     <div className="text-white font-bold text-2xl">+10%</div>
                   </div>
                 </div>
@@ -197,7 +195,7 @@ export default function MobilePayPage() {
                   <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
                     <img src={Bell} alt="bell" className="w-4 h-4" />
                     <div className="text-white/90 text-sm font-medium">
-                      {t("Следуйте инструкции в приложении")}
+                      Следуйте инструкции в приложении
                     </div>
                   </div>
                 </div>

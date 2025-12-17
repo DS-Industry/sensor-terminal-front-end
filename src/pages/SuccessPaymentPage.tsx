@@ -1,7 +1,6 @@
 import CheckMark from "../assets/Success_perspective_matte 1.svg";
 import Sally from "../assets/Saly-22.webp";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import useStore from "../components/state/store";
 import { EOrderStatus } from "../components/state/order/orderSlice";
@@ -9,8 +8,6 @@ import { EOrderStatus } from "../components/state/order/orderSlice";
 // const IDLE_TIMEOUT = 30000;
 
 export default function SuccessPaymentPage() {
-  const { t } = useTranslation();
-
   const navigate = useNavigate();
 
   const { setIsLoading, order } = useStore();
@@ -49,7 +46,7 @@ export default function SuccessPaymentPage() {
         />
 
         <p className="text-white text-[124px] font-semibold mb-12">
-          {t(displayText)}
+          {displayText}
         </p>
 
         <img
