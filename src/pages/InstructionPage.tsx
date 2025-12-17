@@ -6,7 +6,6 @@ import Cycle from "./../assets/cycle.svg";
 import AttentionTag from "../components/tags/AttentionTag";
 import Fire from "./../assets/Fire_perspective_matte.svg";
 import { useNavigate } from "react-router-dom";
-import { logger } from "../util/logger";
 
 export default function InstructionPage() {
   const navigate = useNavigate();

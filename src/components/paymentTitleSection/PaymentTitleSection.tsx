@@ -1,10 +1,9 @@
-import { Icon } from "@gravity-ui/uikit";
-import { ComponentType } from "react";
+import { Icon, type IconData } from "@gravity-ui/uikit";
 
 interface IPaymentTitleSectionProps {
   title: string;
   description?: string;
-  icon?: ComponentType<{ className?: string }>;
+  icon?: IconData;
   iconClassName?: string;
 }
 
