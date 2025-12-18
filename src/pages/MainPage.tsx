@@ -29,6 +29,7 @@ export default function MainPage() {
     setErrorCode,
     closeBackConfirmationModal,
     closeLoyaltyCardModal,
+    setCarWashId,
   } = useStore();
   const navigate = useNavigate();
 
@@ -76,6 +77,10 @@ export default function MainPage() {
         logger.info('[MainPage] Fetching terminal data');
         const terminalData = await getTerminalData();
         logger.info('[MainPage] Terminal data fetched successfully', terminalData);
+        if (terminalData?.car_wash_id) {
+          setCarWashId(terminalData.car_wash_id);
+          logger.info('[MainPage] Saved car_wash_id', { car_wash_id: terminalData.car_wash_id });
+        }
       } catch (error) {
         logger.error('[MainPage] Error fetching terminal data', error);
       }

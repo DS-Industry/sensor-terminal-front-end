@@ -1,81 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { env } from '../config/env';
+import useStore from '../components/state/store';
 
 export const useMediaCampaign = (programUrl?: string) => {
-  const [attachemntUrl, setAttachemntUrl] = useState<{
-    baseUrl: string;
-    programUrl: string;
-  }>({
-    baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
-    programUrl: "",
-  });
+  const car_wash_id = useStore((state) => state.car_wash_id);
   
-  const [mediaStatus, setMediaStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
-
-  useEffect(() => {
-    if (programUrl) {
-      const fullProgramUrl = `${env.VITE_S3_URL}/${programUrl}`;
-      
-      // Сбрасываем статус при смене URL
-      setMediaStatus('loading');
-
-      // Проверяем загружается ли персональное изображение
-      const img = new Image();
-      
-      img.onload = () => {
-        setMediaStatus('loaded');
-        setAttachemntUrl({
+  const { attachemntUrl, mediaStatus } = useMemo(() => {
+    // Если есть car_wash_id, используем banner из S3
+    if (car_wash_id) {
+      return {
+        attachemntUrl: {
           baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
-          programUrl: fullProgramUrl,
-        });
+          programUrl: `${env.VITE_S3_URL}/${car_wash_id}/banner.webp`,
+        },
+        mediaStatus: 'loaded' as const,
       };
-      
-      img.onerror = () => {
-        // Если персональное изображение не загрузилось, пробуем baseUrl
-        const baseImage = new Image();
-        baseImage.onload = () => {
-          setMediaStatus('loaded');
-          setAttachemntUrl({
-            baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
-            programUrl: "", // Очищаем programUrl, будем использовать baseUrl
-          });
-        };
-        
-        baseImage.onerror = () => {
-          // Если baseUrl тоже не загрузился, устанавливаем ошибку
-          setMediaStatus('error');
-          setAttachemntUrl({
-            baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
-            programUrl: "",
-          });
-        };
-        
-        baseImage.src = env.VITE_ATTACHMENT_BASE_URL || '';
-      };
-
-      img.src = fullProgramUrl;
-    } else {
-      // Если нет programUrl, пробуем загрузить baseUrl
-      const baseImage = new Image();
-      baseImage.onload = () => {
-        setMediaStatus('loaded');
-        setAttachemntUrl({
-          baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
-          programUrl: "",
-        });
-      };
-      
-      baseImage.onerror = () => {
-        setMediaStatus('error');
-        setAttachemntUrl({
-          baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
-          programUrl: "",
-        });
-      };
-      
-      baseImage.src = env.VITE_ATTACHMENT_BASE_URL || '';
     }
-  }, [programUrl]);
+
+    // Если нет car_wash_id, используем дефолтное изображение
+    if (programUrl) {
+      return {
+        attachemntUrl: {
+          baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
+          programUrl: `${env.VITE_S3_URL}/${programUrl}`,
+        },
+        mediaStatus: 'loaded' as const,
+      };
+    }
+
+    return {
+      attachemntUrl: {
+        baseUrl: env.VITE_ATTACHMENT_BASE_URL || '',
+        programUrl: "",
+      },
+      mediaStatus: 'loaded' as const,
+    };
+  }, [programUrl, car_wash_id]);
 
   return { 
     attachemntUrl,

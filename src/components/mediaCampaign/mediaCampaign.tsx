@@ -51,7 +51,7 @@ export default function MediaCampaign(props: IMediaCampaign) {
         <img
           src={SpareMedia}
           alt="Default media"
-          className="w-full h-full object-cover"
+          className="w-full h-[890px] object-cover"
         />
       );
     }
@@ -59,7 +59,7 @@ export default function MediaCampaign(props: IMediaCampaign) {
     // Если еще загружается - показываем пустой div
     if (mediaStatus === 'loading') {
       return (
-        <div className="w-full h-full bg-transparent" />
+        <div className="w-full h-[890px] bg-transparent" />
       );
     }
 
@@ -70,7 +70,7 @@ export default function MediaCampaign(props: IMediaCampaign) {
       return (
         <video
           ref={videoRef}
-          className="w-full h-full object-cover"
+          className="w-full h-[890px] object-cover"
           autoPlay={autoPlay}
           loop={loop}
           muted={muted}
@@ -89,7 +89,7 @@ export default function MediaCampaign(props: IMediaCampaign) {
         <img
           src={mediaUrl}
           alt={programUrl ? "Program Image" : "Promotion Image"}
-          className="w-full h-full object-cover"
+          className="w-full h-[890px] object-cover"
           loading={loading}
           onError={handleMediaError}
         />
@@ -98,7 +98,7 @@ export default function MediaCampaign(props: IMediaCampaign) {
   };
 
   return (
-    <div className="h-[40vh] w-full flex justify-center items-center relative overflow-hidden">
+    <div className="h-[890px] w-full flex justify-center items-center relative overflow-hidden">
       {renderMedia()}
     </div>
   );
