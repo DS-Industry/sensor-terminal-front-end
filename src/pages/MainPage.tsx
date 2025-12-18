@@ -126,6 +126,7 @@ export default function MainPage() {
                   >
                     {programs.map((item) => (
                       <ProgramCard
+                        key={`program-card-${item.id}`}
                         id={item.id}
                         name={item.name}
                         price={item.price}
