@@ -41,3 +41,62 @@
 .animated-blob-2 {
   animation: blobMove2 8s ease-in-out infinite;
 }
+
+
+@keyframes cardEnter {
+    0% {
+      transform: translate(260px, -100px) rotate(-75deg) scale(0.85);
+      opacity: 1;
+    }
+    50% {
+      transform: translate(0, 0) rotate(15deg) scale(1.15);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(260px, -100px) rotate(-75deg) scale(0.85);
+      opacity: 1;
+    }
+}
+
+@keyframes carDrive {
+  0% {
+    transform: translateX(-400px) translateY(0);
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(100vw - 700px)) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes carDriveSuccess {
+  0% {
+    transform: translateX(-100%) translateY(0);
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(100vw + 100%)) translateY(0);
+    opacity: 1;
+  }
+}
+
+.car-drive-animation {
+  animation: carDrive 4s ease-in-out forwards;
+}
+
+.car-drive-animation-success {
+  animation: carDriveSuccess 4s ease-in-out forwards;
+}
+  

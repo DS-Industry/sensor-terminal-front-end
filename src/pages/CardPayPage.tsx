@@ -1,8 +1,5 @@
 import Wifi from "./../assets/wifi.svg";
 import Card from "./../assets/card-big.svg";
-import Mir from "./../assets/mir-logo 1.svg";
-import { FaApplePay, FaGooglePay } from "react-icons/fa6";
-import { RiMastercardLine, RiVisaLine } from "react-icons/ri";
 import { CreditCard } from "@gravity-ui/icons";
 import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
@@ -51,13 +48,24 @@ export default function CardPayPage() {
             {paymentSuccess
               ? <SuccessPayment />
               : (
-                <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+                <div className="flex-1 flex flex-col items-center justify-center bg-[#EEEEEE]">
                   <div className="relative mb-12">
-                    <img src={Wifi} alt="wifi" className="w-80 h-80 object-contain" />
+                    <img 
+                      src={Wifi} 
+                      alt="wifi" 
+                      className="w-68 h-68 object-contain"
+                      loading="lazy"
+                      decoding="async"
+                    />
                     <img
                       src={Card}
                       alt="card"
                       className="absolute -bottom-12 -right-12 w-96 h-60 object-contain"
+                      style={{
+                        animation: 'cardEnter 5s ease-in-out infinite'
+                      }}
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                   <div className="text-center max-w-md">
@@ -74,17 +82,6 @@ export default function CardPayPage() {
             {/* Right Side - Payment Details */}
             <div className="w-96 bg-gradient-to-br from-blue-500 to-blue-600 text-white flex flex-col">
               <div className="p-8 h-full flex flex-col justify-start gap-6">
-                {/* Payment Methods */}
-                <div className="flex flex-col items-center mb-12">
-                  <div className="text-white/80 text-sm mb-6 font-medium">Поддерживаемые карты</div>
-                  <div className="flex flex-wrap justify-center gap-6">
-                    <RiMastercardLine className="text-white text-5xl" />
-                    <RiVisaLine className="text-white text-5xl" />
-                    <img src={Mir} alt="mir" className="w-16 h-16 object-contain" />
-                    <FaGooglePay className="text-white text-5xl" />
-                    <FaApplePay className="text-white text-5xl" />
-                  </div>
-                </div>
 
                 {/* Payment Details */}
                 <div className="space-y-6">
@@ -93,7 +90,7 @@ export default function CardPayPage() {
                     <div className="text-white font-semibold text-lg">{selectedProgram?.name}</div>
                   </div>
 
-                  <div className="bg-white/10 p-6 rounded-2xl">
+                  <div className="bg-white/10 p-6 rounded-2xl mt-12">
                     <div className="text-white/80 text-sm mb-3">{paymentSuccess ? "Оплачено" : "К оплате"}</div>
                     <div className="text-white font-bold text-5xl">
                       {selectedProgram?.price} р.
@@ -120,7 +117,7 @@ export default function CardPayPage() {
                       </div>
                     )
                     : (
-                      <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+                      <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full  w-full flex justify-center">
                         <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
                         <div className="text-white/90 text-sm font-medium">
                           Ожидание карты...
