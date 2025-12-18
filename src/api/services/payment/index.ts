@@ -1,5 +1,5 @@
 import { axiosInstance } from "../../axiosConfig";
-import { ICreateOrderRequest, IGetMobileQr, IGetOrderByIdResponse, ILoyaltyCheckResponse, IUcnCheckResponse } from "../../types/payment";
+import { ICreateOrderRequest, IGetMobileQr, IGetOrderByIdResponse, ILoyaltyCheckResponse, IUcnCheckResponse, ITerminalDataResponse } from "../../types/payment";
 import { logger } from "../../../util/logger";
 
 enum PAYMENT {
@@ -11,6 +11,7 @@ enum PAYMENT {
   OPEN_READER = 'open-reader/',
   MOBILE_QR = 'mobile-qr',
   START = 'start',
+  TERMINAL_DATA = 'terminal-data/',
 }
 
 export async function createOrder(
@@ -65,4 +66,9 @@ export async function getMobileQr(): Promise<IGetMobileQr> {
 export async function startRobot(order_id: string): Promise<{ message?: string }> {  
   const response = await axiosInstance.post(PAYMENT.START + `/${order_id}/`);
   return response.data || {};
+}
+
+export async function getTerminalData(): Promise<ITerminalDataResponse> {
+  const response = await axiosInstance.get<ITerminalDataResponse>(PAYMENT.TERMINAL_DATA);
+  return response.data;
 }

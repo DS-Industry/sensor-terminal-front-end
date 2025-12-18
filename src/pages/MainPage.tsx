@@ -7,7 +7,7 @@ import { usePrograms } from "../hooks/usePrograms";
 import { useEffect } from "react";
 import useStore from "../components/state/store";
 import { EOrderStatus } from "../components/state/order/orderSlice";
-import { startRobot, cancelOrder } from "../api/services/payment";
+import { startRobot, cancelOrder, getTerminalData } from "../api/services/payment";
 import { useNavigate } from "react-router-dom";
 import { logger } from "../util/logger";
 
@@ -71,7 +71,18 @@ export default function MainPage() {
       logger.info('[MainPage] All states reset successfully');
     };
 
+    const fetchTerminalData = async () => {
+      try {
+        logger.info('[MainPage] Fetching terminal data');
+        const terminalData = await getTerminalData();
+        logger.info('[MainPage] Terminal data fetched successfully', terminalData);
+      } catch (error) {
+        logger.error('[MainPage] Error fetching terminal data', error);
+      }
+    };
+
     resetAllStates();
+    fetchTerminalData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -87,29 +98,21 @@ export default function MainPage() {
   }, [order])
 
   return (
-    <div className="flex flex-col min-h-screen w-screen bg-gray-200">
+    <div className="flex flex-col min-h-screen w-screen bg-[#EEEEEE]">
       {/* Video Section - 40% of screen height */}
       <MediaCampaign attachemntUrl={attachemntUrl} mediaStatus={mediaStatus}/>
       
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">
         {/* Header with Logo and Controls */}
-        <HeaderWithLogo isMainPage={true}/> 
+        <HeaderWithLogo isMainPage={true} title="Выберите программу" /> 
 
         {/* Main Content Area */}
         <div className="flex-1 px-7 pb-7">
           <div className="flex flex-col h-full">
-            
-            {/* Title Section */}
-            <div className="mb-8">
-              <div className="text-gray-900 font-bold text-4xl text-center">
-                Выберите программу
-              </div>
-            </div>
 
-            {/* Program Cards Section */}
             {programs && (
-              <div className="flex-1 flex flex-col justify-center">
+              <div className="flex-1 flex flex-col justify-center mt-10">
                 <div
                   className={`w-full snap-x`}
                 >

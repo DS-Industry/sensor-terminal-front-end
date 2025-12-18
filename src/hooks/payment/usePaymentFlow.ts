@@ -41,10 +41,50 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
     paymentMethod,
   });
 
+  const handleOrderCanceled = useCallback(async () => {
+    logger.info(`[${paymentMethod}] Order canceled, cleaning up and navigating to main page`);
+    
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+    if (countdownTimeoutRef.current) {
+      clearTimeout(countdownTimeoutRef.current);
+      countdownTimeoutRef.current = null;
+    }
+    
+    setIsLoading(false);
+    resetPayment();
+    setGlobalQueuePosition(null);
+    setGlobalQueueNumber(null);
+    
+    if (isMountedRef.current) {
+      clearOrder();
+      setSelectedProgram(null);
+      setBankCheck("");
+      setInsertedAmount(0);
+      setIsLoading(false);
+      
+      navigateToMain(navigate);
+    }
+  }, [
+    paymentMethod,
+    navigate,
+    setIsLoading,
+    resetPayment,
+    setGlobalQueuePosition,
+    setGlobalQueueNumber,
+    clearOrder,
+    setSelectedProgram,
+    setBankCheck,
+    setInsertedAmount,
+  ]);
+
   usePaymentWebSocket({
     orderId: order?.id,
     selectedProgram,
     paymentMethod,
+    onOrderCanceled: handleOrderCanceled,
   });
 
   useQueueManagement({
@@ -115,6 +155,11 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
   const handleBack = useCallback(async () => {
     logger.info(`[${paymentMethod}] Handling back navigation - cleaning up everything`);
     
+    const { setIsCancellingOrder, closeBackConfirmationModal } = useStore.getState();
+    
+    // Set loading state
+    setIsCancellingOrder(true);
+    
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
       countdownIntervalRef.current = null;
@@ -146,6 +191,10 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
       setBankCheck("");
       setInsertedAmount(0);
       setIsLoading(false);
+      
+      // Clear loading state and close modal before navigation
+      setIsCancellingOrder(false);
+      closeBackConfirmationModal();
       
       navigateToMain(navigate);
     }

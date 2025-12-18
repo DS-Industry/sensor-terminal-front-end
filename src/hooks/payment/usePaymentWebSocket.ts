@@ -12,9 +12,10 @@ interface UsePaymentWebSocketOptions {
   orderId: string | undefined;
   selectedProgram: IProgram | null;
   paymentMethod: EPaymentMethod;
+  onOrderCanceled?: () => void;
 }
 
-export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }: UsePaymentWebSocketOptions) {
+export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, onOrderCanceled }: UsePaymentWebSocketOptions) {
   const {
     order,
     setOrder,
@@ -270,14 +271,46 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
         }
 
         depositTimeoutRef.current = setTimeout(async () => {
-          logger.info(`[${paymentMethod}] Payment timeout reached, cancelling order`);
-          if (checkAmountIntervalRef.current) {
-            clearInterval(checkAmountIntervalRef.current);
-            checkAmountIntervalRef.current = null;
-          }
+          if (!orderId || !isMountedRef.current) return;
+          
           try {
-            if (orderId && isMountedRef.current) {
-              await cancelOrder(orderId);
+            // Check if user has inserted any amount before canceling
+            let hasInsertedAmount = false;
+            
+            if (paymentMethod === EPaymentMethod.CASH) {
+              // For CASH payments, check insertedAmount from store
+              const currentInsertedAmount = useStore.getState().insertedAmount;
+              hasInsertedAmount = currentInsertedAmount > 0;
+              logger.debug(`[${paymentMethod}] Checking insertedAmount before cancel: ${currentInsertedAmount}`);
+            } else {
+              // For CARD payments, fetch order details to check amountSum
+              try {
+                const orderDetails = await getOrderById(orderId);
+                const amountSum = orderDetails.amount_sum ? Number(orderDetails.amount_sum) : 0;
+                hasInsertedAmount = amountSum > 0;
+                logger.debug(`[${paymentMethod}] Checking amountSum before cancel: ${amountSum}`);
+              } catch (err) {
+                logger.error(`[${paymentMethod}] Error fetching order details before cancel`, err);
+                // If we can't fetch, proceed with cancel (safer to cancel than to leave hanging)
+              }
+            }
+            
+            if (hasInsertedAmount) {
+              logger.info(`[${paymentMethod}] Payment timeout reached but user has inserted amount, not cancelling order`);
+              return;
+            }
+            
+            logger.info(`[${paymentMethod}] Payment timeout reached, cancelling order`);
+            if (checkAmountIntervalRef.current) {
+              clearInterval(checkAmountIntervalRef.current);
+              checkAmountIntervalRef.current = null;
+            }
+            
+            await cancelOrder(orderId);
+            
+            // Call the callback to handle cleanup and navigation
+            if (onOrderCanceled && isMountedRef.current) {
+              onOrderCanceled();
             }
           } catch (e) {
             logger.error(`[${paymentMethod}] Error cancelling order on timeout`, e);
@@ -334,10 +367,41 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
       }
       
       depositTimeoutRef.current = setTimeout(async () => {
-        logger.info(`[${paymentMethod}] Payment timeout reached, cancelling order`);
+        if (!orderId || !isMountedRef.current) return;
+        
         try {
-          if (orderId && isMountedRef.current) {
-            await cancelOrder(orderId);
+          // Check if user has inserted any amount before canceling
+          let hasInsertedAmount = false;
+          
+          if (paymentMethod === EPaymentMethod.CASH) {
+            // For CASH payments, check insertedAmount from store
+            const currentInsertedAmount = useStore.getState().insertedAmount;
+            hasInsertedAmount = currentInsertedAmount > 0;
+            logger.debug(`[${paymentMethod}] Checking insertedAmount before cancel: ${currentInsertedAmount}`);
+          } else {
+            // For CARD payments, fetch order details to check amountSum
+            try {
+              const orderDetails = await getOrderById(orderId);
+              const amountSum = orderDetails.amount_sum ? Number(orderDetails.amount_sum) : 0;
+              hasInsertedAmount = amountSum > 0;
+              logger.debug(`[${paymentMethod}] Checking amountSum before cancel: ${amountSum}`);
+            } catch (err) {
+              logger.error(`[${paymentMethod}] Error fetching order details before cancel`, err);
+              // If we can't fetch, proceed with cancel (safer to cancel than to leave hanging)
+            }
+          }
+          
+          if (hasInsertedAmount) {
+            logger.info(`[${paymentMethod}] Payment timeout reached but user has inserted amount, not cancelling order`);
+            return;
+          }
+          
+          logger.info(`[${paymentMethod}] Payment timeout reached, cancelling order`);
+          await cancelOrder(orderId);
+          
+          // Call the callback to handle cleanup and navigation
+          if (onOrderCanceled && isMountedRef.current) {
+            onOrderCanceled();
           }
         } catch (e) {
           logger.error(`[${paymentMethod}] Error cancelling order on timeout`, e);
@@ -363,7 +427,7 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod }:
       }
       lastAmountSumRef.current = 0;
     };
-  }, [orderId, order?.status, paymentMethod, fetchOrderDetailsOnPayed, setOrder, setIsLoading]);
+  }, [orderId, order?.status, paymentMethod, fetchOrderDetailsOnPayed, setOrder, setIsLoading, onOrderCanceled]);
 
   return {};
 }

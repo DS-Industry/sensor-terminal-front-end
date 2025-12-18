@@ -1,13 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { Spin } from '@gravity-ui/uikit';
 import useStore from '../state/store';
+import { logger } from '../../util/logger';
 
 export function BackConfirmationModal() {
   const {
     isBackConfirmationModalOpen,
     closeBackConfirmationModal,
     backConfirmationCallback,
+    isCancellingOrder,
   } = useStore();
+
+  const callbackRef = useRef(backConfirmationCallback);
+  
+  useEffect(() => {
+    callbackRef.current = backConfirmationCallback;
+  }, [backConfirmationCallback]);
 
   useEffect(() => {
     if (isBackConfirmationModalOpen) {
@@ -21,13 +30,21 @@ export function BackConfirmationModal() {
   }, [isBackConfirmationModalOpen]);
 
   const handleConfirm = () => {
-    if (backConfirmationCallback) {
-      backConfirmationCallback();
+    if (isCancellingOrder) {
+      return; // Prevent action while cancelling
     }
-    closeBackConfirmationModal();
+    logger.debug("[BackConfirmationModal] Confirm clicked, executing callback");
+    const callback = callbackRef.current;
+    if (callback) {
+      callback();
+    }
+    // Don't close modal here - it will be closed after cancellation completes
   };
 
   const handleCancel = () => {
+    if (isCancellingOrder) {
+      return; // Prevent closing while cancelling
+    }
     closeBackConfirmationModal();
   };
 
@@ -43,21 +60,33 @@ export function BackConfirmationModal() {
         <p className="text-3xl text-gray-600 mb-16">
           Вы действительно хотите вернуться назад? Внесенные средства будут утрачены.
         </p>
-        <div className="flex justify-center gap-12">
-          <button
-            className="px-18 py-9 rounded-3xl text-white font-bold text-3xl transition-all duration-300 hover:opacity-90"
-            style={{ backgroundColor: "#0B68E1" }}
-            onClick={handleCancel}
-          >
-            Отмена
-          </button>
-          <button
-            className="px-18 py-9 rounded-3xl text-gray-600 font-bold text-3xl transition-all duration-300 hover:bg-gray-100"
-            onClick={handleConfirm}
-          >
-            Да
-          </button>
-        </div>
+        
+        {isCancellingOrder ? (
+          <div className="flex flex-col items-center justify-center gap-6">
+            <Spin size="xl" />
+            <p className="text-2xl text-gray-600">
+              Отмена заказа...
+            </p>
+          </div>
+        ) : (
+          <div className="flex justify-center gap-12">
+            <button
+              className="px-18 py-9 rounded-3xl text-white font-bold text-3xl transition-all duration-300 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: "#0B68E1" }}
+              onClick={handleCancel}
+              disabled={isCancellingOrder}
+            >
+              Отмена
+            </button>
+            <button
+              className="px-18 py-9 rounded-3xl text-gray-600 font-bold text-3xl transition-all duration-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleConfirm}
+              disabled={isCancellingOrder}
+            >
+              Да
+            </button>
+          </div>
+        )}
       </div>
     </div>,
     document.body
