@@ -81,7 +81,7 @@ export default function InstructionLayout({
         <div className=" w-1/3 flex flex-row justify-evenly gap-5 mb-20">
           <InfoTag label="Высота" value="до 2 м" />
           <InfoTag label="Длина" value="до 6.25 м" />
-          <InfoTag label="Ширина" value="до 6 м" />
+          <InfoTag label="Ширина" value="до 2.6 м" />
         </div>
         <div className=" min-h-[387px] max-h-[387px] mb-5">
           <img
