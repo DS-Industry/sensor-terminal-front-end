@@ -7,7 +7,6 @@ import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import useStore from "../components/state/store";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import PaymentTitleSection from "../components/paymentTitleSection/PaymentTitleSection";
-import { Icon } from "@gravity-ui/uikit";
 import { createOrder, openLoyaltyCardReader, startRobot } from "../api/services/payment";
 import { EOrderStatus, EPaymentMethod } from "../components/state/order/orderSlice";
 import { useNavigate } from "react-router-dom";
