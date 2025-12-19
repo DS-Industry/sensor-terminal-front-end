@@ -1,16 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import useStore from "../components/state/store";
-import { useEffect, useRef, useCallback } from "react";
-import gazpromHeader from "../assets/gazprom-step-2-header.webp";
+import { useCallback, useRef, useEffect } from "react";
 import errorImage from "../assets/error.webp";
 import { cancelOrder } from "../api/services/payment";
 import { logger } from "../util/logger";
 import { navigateToMain } from "../utils/navigation";
-
-const IDLE_TIMEOUT = 5000;
+import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
+import { useMediaCampaign } from "../hooks/useMediaCampaign";
 
 export default function ErrorPage() {
   const navigate = useNavigate();
+  const { attachemntUrl, mediaStatus } = useMediaCampaign();
   const { 
     setIsLoading, 
     order, 
@@ -27,7 +27,8 @@ export default function ErrorPage() {
 
   const handleFinish = useCallback(async () => {
     logger.info('[ErrorPage] Handling close - cleaning up everything');
-    
+
+       
     if (idleTimeoutRef.current) {
       clearTimeout(idleTimeoutRef.current);
       idleTimeoutRef.current = null;
@@ -96,16 +97,12 @@ export default function ErrorPage() {
   }, [handleFinish, setIsLoading]);
 
   return (
-    <div className="flex flex-col h-[1024px] w-[1280px] bg-[#0045FF] overflow-hidden">
-      <div className="w-full flex-shrink-0 h-64">
-        <img 
-          src={gazpromHeader} 
-          alt="Header" 
-          className="w-full h-full object-cover"
-          decoding="async"
-        />
-      </div>
-      <div className="flex-1 flex flex-col items-center justify-center bg-[#0045FF] relative overflow-hidden" style={{ height: 'calc(1024px - 256px)' }}>
+    <div className="flex flex-col min-h-screen w-screen bg-[#EEEEEE]">
+      {/* Media Campaign Section */}
+      <MediaCampaign attachemntUrl={attachemntUrl} mediaStatus={mediaStatus} />
+      
+      {/* Error Message Section */}
+      <div className="flex-1 flex flex-col items-center justify-center bg-[#0045FF] relative overflow-hidden">
         <div className="flex flex-col items-center justify-center z-10 mb-8">
           <div className="bg-[#89BAFB4D] rounded-2xl px-12 py-8 mb-6">
             <h1 className="text-white text-6xl font-bold text-center">
@@ -125,7 +122,6 @@ export default function ErrorPage() {
           >
             Закрыть
           </button>
-
         </div>
 
         <div className="absolute bottom-0 right-0 z-20">
