@@ -390,20 +390,6 @@ export default function LoyaltyPayPage() {
             {/* Right Side - Payment Details */}
             <div className="w-96 bg-gradient-to-br from-blue-500 to-blue-600 text-white flex flex-col">
               <div className="p-8 h-full flex flex-col justify-start gap-6">
-                {/* Loyalty Card Info - скрываем при ошибках */}
-                {!cardNotFound && !insufficientBalance && (
-                  <div className="flex flex-col items-center">
-                    <div className="text-white/80 text-sm mb-5 font-medium">
-                      Карта лояльности
-                    </div>
-                    <div className="w-48 h-32 bg-white/20 rounded-2xl flex items-center justify-center">
-                      <div className="text-center">
-                        <Icon data={CreditCard} size={48} className="text-white/60 mb-2" />
-                        <div className="text-white/80 text-sm">Карта лояльности</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Program Info - скрываем при ошибках */}
                 {!cardNotFound && !insufficientBalance && (
