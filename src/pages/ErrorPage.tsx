@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import useStore from "../components/state/store";
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback } from "react";
 import errorImage from "../assets/error.webp";
 import { cancelOrder } from "../api/services/payment";
 import { logger } from "../util/logger";
@@ -23,16 +23,9 @@ export default function ErrorPage() {
     resetPayment,
     setErrorCode
   } = useStore();
-  const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleFinish = useCallback(async () => {
     logger.info('[ErrorPage] Handling close - cleaning up everything');
-
-       
-    if (idleTimeoutRef.current) {
-      clearTimeout(idleTimeoutRef.current);
-      idleTimeoutRef.current = null;
-    }
     
     try {
       if (order?.id) {
@@ -76,25 +69,6 @@ export default function ErrorPage() {
     resetPayment,
     setErrorCode
   ]);
-
-  const clearIdleTimeout = () => {
-    if (idleTimeoutRef.current) {
-      clearTimeout(idleTimeoutRef.current);
-      idleTimeoutRef.current = null;
-    }
-  }
-
-  useEffect(() => {
-    setIsLoading(false);
-
-    if (!idleTimeoutRef.current) {
-      idleTimeoutRef.current = setTimeout(handleFinish, IDLE_TIMEOUT);
-    }
-
-    return () => {
-      clearIdleTimeout();
-    };
-  }, [handleFinish, setIsLoading]);
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-[#EEEEEE]">
