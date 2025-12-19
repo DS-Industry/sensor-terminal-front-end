@@ -175,7 +175,7 @@ export default function SingleProgramPage() {
                 </div>
 
                 <div className="flex-1 max-w-4xl">
-                  <div className="flex justify-center items-center gap-6">
+                  <div className="flex flex-wrap justify-center items-center gap-6">
                     {!loyaltyLoading && filteredPays.map((pay) => (
                       <PayCard
                         key={pay.endPoint}
