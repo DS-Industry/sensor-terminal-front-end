@@ -9,6 +9,7 @@ import { useRef, useEffect } from 'react';
 interface IHeaderWithLogoProps {
   isMainPage?: boolean;
   isInstructionPage?: boolean;
+  isLoyalty?: boolean;
   backButtonClick?: () => void;
   disableBackConfirmation?: boolean;
   title?: string;
@@ -31,7 +32,7 @@ export default function HeaderWithLogo(props: IHeaderWithLogoProps) {
   const handleBackClick = () => {
     logger.debug("[HeaderWithLogo] Back button clicked");
 
-    if (props.isInstructionPage) {
+    if (props.isInstructionPage || props.isLoyalty) {
       navigate("/");
       return;
     }

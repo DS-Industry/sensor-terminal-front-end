@@ -335,7 +335,7 @@ export default function LoyaltyPayPage() {
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">
         {/* Header with Logo and Controls */}
-        <HeaderWithLogo backButtonClick={handleBack} />
+        <HeaderWithLogo backButtonClick={handleBack} isLoyalty={true} />
 
         {/* Main Content Area - Full Screen */}
         <div className="flex-1 flex flex-col">
