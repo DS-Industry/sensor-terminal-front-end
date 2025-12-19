@@ -36,14 +36,14 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
   const qrCodePollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const qrCodePollAttemptsRef = useRef<number>(0);
 
-  const fetchOrderDetailsOnPayed = useCallback(async (orderId: string) => {
-    if (hasFetchedPayedDetailsRef.current) {
+  const fetchOrderDetailsOnPayed = useCallback(async (orderId: string, retryCount = 0) => {
+    if (hasFetchedPayedDetailsRef.current && retryCount === 0) {
       logger.debug(`[${paymentMethod}] Already fetched order details for PAYED status`);
       return;
     }
 
     try {
-      logger.info(`[${paymentMethod}] Fetching order details after PAYED status received`);
+      logger.info(`[${paymentMethod}] Fetching order details after PAYED status received (attempt ${retryCount + 1})`);
       const orderDetails = await getOrderById(orderId);
 
       if (!isMountedRef.current) return;
@@ -158,31 +158,60 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
         setIsLoading(true);
       }
     } catch (err) {
-      logger.error(`[${paymentMethod}] Error fetching order details on PAYED`, err);
-      if (isMountedRef.current) {
+      logger.error(`[${paymentMethod}] Error fetching order details on PAYED (attempt ${retryCount + 1})`, err);
+      
+      // Retry once if it failed and we haven't retried yet
+      if (retryCount === 0 && isMountedRef.current) {
+        logger.info(`[${paymentMethod}] Retrying fetchOrderDetailsOnPayed after 1 second`);
+        setTimeout(() => {
+          if (isMountedRef.current) {
+            fetchOrderDetailsOnPayed(orderId, 1);
+          }
+        }, 1000);
+      } else if (isMountedRef.current) {
         setIsLoading(false);
       }
     }
   }, [paymentMethod, selectedProgram, setQueuePosition, setQueueNumber, setPaymentState, setPaymentError, setIsLoading, setBankCheck, setInsertedAmount]);
 
   useEffect(() => {
-    if (!orderId) return;
-
+    // Don't return early - set up listener even if orderId is undefined
+    // The handler will check orderId when message arrives, using store as fallback
+    
     isMountedRef.current = true;
     hasFetchedPayedDetailsRef.current = false;
 
     const handleStatusUpdate = async (data: WebSocketMessage) => {
-      if (data.type !== 'status_update' || !data.order_id || data.order_id !== orderId) {
+      if (data.type !== 'status_update' || !data.order_id) {
+        return;
+      }
+
+      // ✅ Check both orderId from hook AND current order from store as fallback
+      const currentOrder = useStore.getState().order;
+      const relevantOrderId = orderId || currentOrder?.id;
+      
+      if (!relevantOrderId || data.order_id !== relevantOrderId) {
+        logger.debug(`[${paymentMethod}] Ignoring status update - order ID mismatch`, {
+          messageOrderId: data.order_id,
+          hookOrderId: orderId,
+          storeOrderId: currentOrder?.id,
+          status: data.status,
+        });
         return;
       }
 
       const orderStatus = data.status as EOrderStatus | undefined;
       if (!orderStatus) return;
 
-      logger.debug(`[${paymentMethod}] WebSocket status update: ${orderStatus} for order ${orderId}`);
+      logger.info(`[${paymentMethod}] WebSocket status update: ${orderStatus} for order ${data.order_id}`, {
+        messageOrderId: data.order_id,
+        hookOrderId: orderId,
+        storeOrderId: currentOrder?.id,
+        timestamp: new Date().toISOString(),
+      });
 
-      const currentOrder = useStore.getState().order;
-      if (currentOrder?.id === orderId) {
+      // Update order in store
+      if (currentOrder?.id === data.order_id) {
         setOrder({
           ...currentOrder,
           status: orderStatus,
@@ -191,7 +220,8 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
       }
 
       if (orderStatus === EOrderStatus.PAYED) {
-        await fetchOrderDetailsOnPayed(orderId);
+        // ✅ Use data.order_id instead of orderId to ensure we use the correct ID
+        await fetchOrderDetailsOnPayed(data.order_id);
       } else if (orderStatus === EOrderStatus.COMPLETED) {
         if (depositTimeoutRef.current) {
           clearTimeout(depositTimeoutRef.current);
@@ -215,10 +245,11 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
         }
         
         checkAmountIntervalRef.current = setInterval(async () => {
-          if (!orderId || !isMountedRef.current) return;
+          const currentOrderId = orderId || useStore.getState().order?.id;
+          if (!currentOrderId || !isMountedRef.current) return;
           
           try {
-            const orderDetails = await getOrderById(orderId);
+            const orderDetails = await getOrderById(currentOrderId);
             const amountSum = orderDetails.amount_sum ? Number(orderDetails.amount_sum) : 0;
             const expectedAmount = selectedProgram ? Number(selectedProgram.price) : 0;
             
@@ -271,7 +302,8 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
         }
 
         depositTimeoutRef.current = setTimeout(async () => {
-          if (!orderId || !isMountedRef.current) return;
+          const currentOrderId = orderId || useStore.getState().order?.id;
+          if (!currentOrderId || !isMountedRef.current) return;
           
           try {
             // Check if user has inserted any amount before canceling
@@ -285,7 +317,7 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
             } else {
               // For CARD payments, fetch order details to check amountSum
               try {
-                const orderDetails = await getOrderById(orderId);
+                const orderDetails = await getOrderById(currentOrderId);
                 const amountSum = orderDetails.amount_sum ? Number(orderDetails.amount_sum) : 0;
                 hasInsertedAmount = amountSum > 0;
                 logger.debug(`[${paymentMethod}] Checking amountSum before cancel: ${amountSum}`);
@@ -306,7 +338,7 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
               checkAmountIntervalRef.current = null;
             }
             
-            await cancelOrder(orderId);
+            await cancelOrder(currentOrderId);
             
             // Call the callback to handle cleanup and navigation
             if (onOrderCanceled && isMountedRef.current) {
@@ -321,18 +353,31 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
 
     const removeListener = globalWebSocketManager.addListener('status_update', handleStatusUpdate);
 
+    // ✅ Check if order is already PAYED when effect runs (defensive check)
+    const currentOrder = useStore.getState().order;
+    const relevantOrderId = orderId || currentOrder?.id;
+    
+    if (currentOrder?.status === EOrderStatus.PAYED && relevantOrderId && !hasFetchedPayedDetailsRef.current) {
+      logger.info(`[${paymentMethod}] Order already PAYED when effect runs, fetching details`, {
+        orderId: relevantOrderId,
+        storeOrderId: currentOrder.id,
+      });
+      fetchOrderDetailsOnPayed(relevantOrderId);
+    }
+
     // Start polling if order is already in WAITING_PAYMENT status
-    if (order?.status === EOrderStatus.WAITING_PAYMENT && orderId) {
+    if (order?.status === EOrderStatus.WAITING_PAYMENT && relevantOrderId) {
       // Start amount polling for CASH payments
       if (paymentMethod === EPaymentMethod.CASH && !checkAmountIntervalRef.current) {
         // Ensure loading is false when starting polling for cash
         setIsLoading(false);
         
         checkAmountIntervalRef.current = setInterval(async () => {
-          if (!orderId || !isMountedRef.current) return;
+          const currentOrderId = orderId || useStore.getState().order?.id;
+          if (!currentOrderId || !isMountedRef.current) return;
           
           try {
-            const orderDetails = await getOrderById(orderId);
+            const orderDetails = await getOrderById(currentOrderId);
             const amountSum = orderDetails.amount_sum ? Number(orderDetails.amount_sum) : 0;
             const expectedAmount = selectedProgram ? Number(selectedProgram.price) : 0;
             
@@ -367,7 +412,8 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
       }
       
       depositTimeoutRef.current = setTimeout(async () => {
-        if (!orderId || !isMountedRef.current) return;
+        const currentOrderId = orderId || useStore.getState().order?.id;
+        if (!currentOrderId || !isMountedRef.current) return;
         
         try {
           // Check if user has inserted any amount before canceling
@@ -378,26 +424,26 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
             const currentInsertedAmount = useStore.getState().insertedAmount;
             hasInsertedAmount = currentInsertedAmount > 0;
             logger.debug(`[${paymentMethod}] Checking insertedAmount before cancel: ${currentInsertedAmount}`);
-          } else {
-            // For CARD payments, fetch order details to check amountSum
-            try {
-              const orderDetails = await getOrderById(orderId);
-              const amountSum = orderDetails.amount_sum ? Number(orderDetails.amount_sum) : 0;
-              hasInsertedAmount = amountSum > 0;
-              logger.debug(`[${paymentMethod}] Checking amountSum before cancel: ${amountSum}`);
-            } catch (err) {
-              logger.error(`[${paymentMethod}] Error fetching order details before cancel`, err);
-              // If we can't fetch, proceed with cancel (safer to cancel than to leave hanging)
+            } else {
+              // For CARD payments, fetch order details to check amountSum
+              try {
+                const orderDetails = await getOrderById(currentOrderId);
+                const amountSum = orderDetails.amount_sum ? Number(orderDetails.amount_sum) : 0;
+                hasInsertedAmount = amountSum > 0;
+                logger.debug(`[${paymentMethod}] Checking amountSum before cancel: ${amountSum}`);
+              } catch (err) {
+                logger.error(`[${paymentMethod}] Error fetching order details before cancel`, err);
+                // If we can't fetch, proceed with cancel (safer to cancel than to leave hanging)
+              }
             }
-          }
-          
-          if (hasInsertedAmount) {
-            logger.info(`[${paymentMethod}] Payment timeout reached but user has inserted amount, not cancelling order`);
-            return;
-          }
-          
-          logger.info(`[${paymentMethod}] Payment timeout reached, cancelling order`);
-          await cancelOrder(orderId);
+            
+            if (hasInsertedAmount) {
+              logger.info(`[${paymentMethod}] Payment timeout reached but user has inserted amount, not cancelling order`);
+              return;
+            }
+            
+            logger.info(`[${paymentMethod}] Payment timeout reached, cancelling order`);
+            await cancelOrder(currentOrderId);
           
           // Call the callback to handle cleanup and navigation
           if (onOrderCanceled && isMountedRef.current) {
