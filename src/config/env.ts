@@ -4,6 +4,10 @@ interface EnvConfig {
   VITE_S3_URL?: string;
   VITE_ATTACHMENT_BASE_URL?: string;
   VITE_REFRESH_INTERVAL?: string;
+  VITE_S3_ENDPOINT?: string;
+  VITE_AWS_ACCESS_KEY_ID?: string;
+  VITE_AWS_SECRET_ACCESS_KEY?: string;
+  VITE_S3_BUCKET_NAME?: string;
 }
 
 const REQUIRED_ENV_VARS = [
@@ -15,6 +19,10 @@ const OPTIONAL_ENV_VARS = {
   VITE_S3_URL: '',
   VITE_ATTACHMENT_BASE_URL: '',
   VITE_REFRESH_INTERVAL: '3600000',
+  VITE_S3_ENDPOINT: '',
+  VITE_AWS_ACCESS_KEY_ID: '',
+  VITE_AWS_SECRET_ACCESS_KEY: '',
+  VITE_S3_BUCKET_NAME: '',
 } as const;
 
 function validateEnv(): EnvConfig {
@@ -31,8 +39,17 @@ function validateEnv(): EnvConfig {
   }
 
   for (const [varName, defaultValue] of Object.entries(OPTIONAL_ENV_VARS)) {
-    const value = import.meta.env[varName] || defaultValue;
+    const rawValue = import.meta.env[varName];
+    const value = rawValue || defaultValue;
     config[varName as keyof EnvConfig] = value;
+    
+    if (varName.includes('S3') || varName.includes('AWS')) {
+      console.debug(`[Env] ${varName}:`, {
+        raw: rawValue || 'undefined',
+        final: value || 'empty',
+        hasValue: !!rawValue,
+      });
+    }
   }
 
   if (missingVars.length > 0) {
@@ -69,6 +86,9 @@ if (import.meta.env.DEV) {
     S3_URL: env.VITE_S3_URL || 'Not set',
     ATTACHMENT_BASE_URL: env.VITE_ATTACHMENT_BASE_URL || 'Not set',
     REFRESH_INTERVAL: getRefreshInterval(),
+    S3_ENDPOINT: env.VITE_S3_ENDPOINT || 'Not set',
+    S3_BUCKET: env.VITE_S3_BUCKET_NAME || 'Not set',
+    AWS_ACCESS_KEY_ID: env.VITE_AWS_ACCESS_KEY_ID ? '***' : 'Not set',
   });
 }
 
