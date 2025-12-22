@@ -226,6 +226,14 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
             qrCodePollAttemptsRef.current = 0;
           }
           
+          // Cancel the failed order
+          try {
+            await cancelOrder(orderId);
+            logger.info(`[${paymentMethod}] Cancelled failed order`, { orderId });
+          } catch (cancelErr) {
+            logger.error(`[${paymentMethod}] Error cancelling failed order`, cancelErr);
+          }
+          
           // Stop loading
           setIsLoading(false);
           
