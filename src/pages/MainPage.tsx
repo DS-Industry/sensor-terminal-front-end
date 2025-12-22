@@ -40,15 +40,15 @@ export default function MainPage() {
       // Get current order from store to check if it exists
       const currentOrder = useStore.getState().order;
       
-      // Cancel existing order if any
-      if (currentOrder?.id) {
-        try {
-          await cancelOrder(currentOrder.id);
-          logger.info('[MainPage] Order cancelled on mount', { orderId: currentOrder.id });
-        } catch (error) {
-          logger.error('[MainPage] Error cancelling order on mount', error);
-        }
-      }
+      // // Cancel existing order if any
+      // if (currentOrder?.id) {
+      //   try {
+      //     await cancelOrder(currentOrder.id);
+      //     logger.info('[MainPage] Order cancelled on mount', { orderId: currentOrder.id });
+      //   } catch (error) {
+      //     logger.error('[MainPage] Error cancelling order on mount', error);
+      //   }
+      // }
 
       // Close all modals
       closeBackConfirmationModal();

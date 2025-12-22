@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getOrderById, cancelOrder } from '../../api/services/payment';
 import { EOrderStatus, EPaymentMethod } from '../../components/state/order/orderSlice';
 import { PaymentState } from '../../state/paymentStateMachine';
@@ -7,6 +8,7 @@ import { logger } from '../../util/logger';
 import useStore from '../../components/state/store';
 import { globalWebSocketManager, type WebSocketMessage } from '../../util/websocketManager';
 import { IProgram } from '../../api/types/program';
+import { navigateToError } from '../../utils/navigation';
 
 interface UsePaymentWebSocketOptions {
   orderId: string | undefined;
@@ -16,6 +18,7 @@ interface UsePaymentWebSocketOptions {
 }
 
 export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, onOrderCanceled }: UsePaymentWebSocketOptions) {
+  const navigate = useNavigate();
   const {
     order,
     setOrder,
@@ -204,6 +207,34 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
           depositTimeoutRef.current = null;
         }
         setIsLoading(false);
+      } else if (orderStatus === EOrderStatus.FAILED) {
+        logger.error(`[${paymentMethod}] Order failed`, { orderId });
+        
+        if (isMountedRef.current) {
+          // Clean up all intervals/timeouts
+          if (depositTimeoutRef.current) {
+            clearTimeout(depositTimeoutRef.current);
+            depositTimeoutRef.current = null;
+          }
+          if (checkAmountIntervalRef.current) {
+            clearInterval(checkAmountIntervalRef.current);
+            checkAmountIntervalRef.current = null;
+          }
+          if (qrCodePollIntervalRef.current) {
+            clearInterval(qrCodePollIntervalRef.current);
+            qrCodePollIntervalRef.current = null;
+            qrCodePollAttemptsRef.current = 0;
+          }
+          
+          // Stop loading
+          setIsLoading(false);
+          
+          // Set error state
+          setPaymentState(PaymentState.PAYMENT_ERROR);
+          
+          // Navigate to error page
+          navigateToError(navigate);
+        }
       } else if (orderStatus === EOrderStatus.WAITING_PAYMENT) {
         if (checkAmountIntervalRef.current) {
           clearInterval(checkAmountIntervalRef.current);
