@@ -4,6 +4,7 @@ import MainPage from "./pages/MainPage.tsx";
 import "./index.css";
 import "./styles/styles.css";
 import "./config/env";
+import "./util/logger"; // Ensure logger initializes and sets window.appLogger early
 import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { ThemeProvider } from "@gravity-ui/uikit";
 import SingleProgramPage from "./pages/SingleProgramPage.tsx";

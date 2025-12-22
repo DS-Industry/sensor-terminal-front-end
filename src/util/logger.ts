@@ -372,6 +372,17 @@ class Logger {
 
 export const logger = new Logger();
 
+// Ensure window.appLogger is always available
 if (typeof window !== 'undefined') {
-  (window as unknown as { appLogger: Logger }).appLogger = logger;
+  // Use defineProperty to make it non-configurable and ensure it's set
+  if (!(window as any).appLogger) {
+    Object.defineProperty(window, 'appLogger', {
+      value: logger,
+      writable: false,
+      configurable: false,
+    });
+  } else {
+    // If it already exists, update it (shouldn't happen, but safety check)
+    (window as any).appLogger = logger;
+  }
 }
