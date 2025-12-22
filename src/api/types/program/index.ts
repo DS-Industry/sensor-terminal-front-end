@@ -5,4 +5,4 @@ export interface IProgram {
   description: string;
   duration: number;
   functions: string;
-};
+}

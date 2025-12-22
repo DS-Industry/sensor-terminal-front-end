@@ -1,22 +1,23 @@
 import { AxiosError, AxiosInstance, AxiosResponse } from "axios";
+import { logger } from "../../util/logger";
 
 export function setupInterceptors(axiosInstance: AxiosInstance) {
   axiosInstance.interceptors.request.use(
     (config) => {
-      console.log(`Request: ${config.method?.toUpperCase()} ${config.url}`);
+      logger.debug(`Request: ${config.method?.toUpperCase()} ${config.url}`);
 
       return config;
     },
     (error) => {
-      console.error('Request error:', error);
+      logger.error('Request error:', error);
       return Promise.reject(error);
     }
   );
 
   axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => {
-      console.log(`Response: ${response.status} ${response.config.url}`);
-      console.log(`${response.config.baseURL}${response.config.url}`);
+      logger.debug(`Response: ${response.status} ${response.config.url}`);
+      logger.debug(`${response.config.baseURL}${response.config.url}`);
       
       return response;
     },
@@ -25,7 +26,7 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
       const method = error.config?.method;
       const status = error.response?.status;
 
-      console.error('API Error:', {
+      logger.error('API Error:', {
         url,
         method,
         status,

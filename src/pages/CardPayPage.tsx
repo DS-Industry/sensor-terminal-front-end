@@ -1,22 +1,17 @@
 import Wifi from "./../assets/wifi.svg";
 import Card from "./../assets/card-big.svg";
-import Mir from "./../assets/mir-logo 1.svg";
-import { FaApplePay, FaGooglePay } from "react-icons/fa6";
-import { RiMastercardLine, RiVisaLine } from "react-icons/ri";
-import { useTranslation } from "react-i18next";
 import { CreditCard } from "@gravity-ui/icons";
 import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import PaymentTitleSection from "../components/paymentTitleSection/PaymentTitleSection";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import { EPaymentMethod } from "../components/state/order/orderSlice";
-import { usePaymentProcessing } from "../hooks/usePaymentProcessing";
+import { usePaymentFlow } from "../hooks/payment/usePaymentFlow";
 import SuccessPayment from "../components/successPayment/SuccessPayment";
 
 const CARD_PAGE_URL = "CardPage.webp";
 
 export default function CardPayPage() {
-  const { t } = useTranslation();
   const { attachemntUrl, mediaStatus } = useMediaCampaign(CARD_PAGE_URL);
 
   const { 
@@ -25,7 +20,7 @@ export default function CardPayPage() {
     paymentSuccess,
     handleStartRobot,
     timeUntilRobotStart 
-  } = usePaymentProcessing(EPaymentMethod.CARD);
+  } = usePaymentFlow(EPaymentMethod.CARD);
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">
@@ -53,21 +48,32 @@ export default function CardPayPage() {
             {paymentSuccess
               ? <SuccessPayment />
               : (
-                <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+                <div className="flex-1 flex flex-col items-center justify-center bg-[#EEEEEE]">
                   <div className="relative mb-12">
-                    <img src={Wifi} alt="wifi" className="w-80 h-80 object-contain" />
+                    <img 
+                      src={Wifi} 
+                      alt="wifi" 
+                      className="w-68 h-68 object-contain"
+                      loading="lazy"
+                      decoding="async"
+                    />
                     <img
                       src={Card}
                       alt="card"
                       className="absolute -bottom-12 -right-12 w-96 h-60 object-contain"
+                      style={{
+                        animation: 'cardEnter 5s ease-in-out infinite'
+                      }}
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                   <div className="text-center max-w-md">
                     <div className="text-gray-800 text-2xl font-semibold mb-4">
-                      {t("Поднесите карту к терминалу")}
+                      Поднесите карту к терминалу
                     </div>
                     <div className="text-gray-600 text-lg">
-                      {t("Дождитесь подтверждения оплаты")}
+                      Дождитесь подтверждения оплаты
                     </div>
                   </div>
                 </div>
@@ -76,29 +82,18 @@ export default function CardPayPage() {
             {/* Right Side - Payment Details */}
             <div className="w-96 bg-gradient-to-br from-blue-500 to-blue-600 text-white flex flex-col">
               <div className="p-8 h-full flex flex-col justify-start gap-6">
-                {/* Payment Methods */}
-                <div className="flex flex-col items-center mb-12">
-                  <div className="text-white/80 text-sm mb-6 font-medium">{t("Поддерживаемые карты")}</div>
-                  <div className="flex flex-wrap justify-center gap-6">
-                    <RiMastercardLine className="text-white text-5xl" />
-                    <RiVisaLine className="text-white text-5xl" />
-                    <img src={Mir} alt="mir" className="w-16 h-16 object-contain" />
-                    <FaGooglePay className="text-white text-5xl" />
-                    <FaApplePay className="text-white text-5xl" />
-                  </div>
-                </div>
 
                 {/* Payment Details */}
                 <div className="space-y-6">
                   <div className="bg-white/10 p-4 rounded-2xl">
-                    <div className="text-white/80 text-sm mb-2">{t("Программа")}</div>
-                    <div className="text-white font-semibold text-lg">{t(`${selectedProgram?.name}`)}</div>
+                    <div className="text-white/80 text-sm mb-2">Программа</div>
+                    <div className="text-white font-semibold text-lg">{selectedProgram?.name}</div>
                   </div>
 
-                  <div className="bg-white/10 p-6 rounded-2xl">
-                    <div className="text-white/80 text-sm mb-3">{paymentSuccess ? t("Оплачено") : t("К оплате")}</div>
+                  <div className="bg-white/10 p-6 rounded-2xl mt-12">
+                    <div className="text-white/80 text-sm mb-3">{paymentSuccess ? "Оплачено" : "К оплате"}</div>
                     <div className="text-white font-bold text-5xl">
-                      {selectedProgram?.price} {t("р.")}
+                      {selectedProgram?.price} р.
                     </div>
                   </div>
 
@@ -111,21 +106,21 @@ export default function CardPayPage() {
                           style={{ backgroundColor: "white" }}
                         >
                           <div className="flex items-center justify-center gap-2">
-                            {t("Запустить")}
+                            Запустить
                           </div>
                         </button>
                         {timeUntilRobotStart > 0 && (
                           <div className="text-white/80 text-l">
-                            {t("Автоматический запуск через")} {timeUntilRobotStart} {t("сек.")}
+                            Автоматический запуск через {timeUntilRobotStart} сек.
                           </div>
                         )}
                       </div>
                     )
                     : (
-                      <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+                      <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full  w-full flex justify-center">
                         <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
                         <div className="text-white/90 text-sm font-medium">
-                          {t("Ожидание карты...")}
+                          Ожидание карты...
                         </div>
                       </div>
                     )}

@@ -12,6 +12,10 @@ export interface AppSlice {
   navigationTarget: string | null;
   errorCode: number | null;
   backConfirmationCallback: (() => void) | null;
+  queuePosition: number | null;
+  queueNumber: number | null;
+  car_wash_id: number | null;
+  bannerUrl: string | null;
   setIsLoyalty: (loyalty: boolean) => void;
   setPrograms: (programs: IProgram[]) => void;
   setSelectedProgram: (program: IProgram | null) => void;
@@ -22,6 +26,10 @@ export interface AppSlice {
   clearNavigation: () => void;
   setErrorCode: (code: number | null) => void;
   setBackConfirmationCallback: (callback: (() => void) | null) => void;
+  setQueuePosition: (position: number | null) => void;
+  setQueueNumber: (number: number | null) => void;
+  setCarWashId: (car_wash_id: number | null) => void;
+  setBannerUrl: (bannerUrl: string | null) => void;
 }
 
 export const createAppSlice: StoreSlice<AppSlice> = (set) => ({
@@ -35,6 +43,10 @@ export const createAppSlice: StoreSlice<AppSlice> = (set) => ({
   navigationTarget: null,
   errorCode: null,
   backConfirmationCallback: null,
+  queuePosition: null,
+  queueNumber: null,
+  car_wash_id: null,
+  bannerUrl: null,
 
   setPrograms: (programs) => {
     set(state => ({...state, programs}));
@@ -74,5 +86,21 @@ export const createAppSlice: StoreSlice<AppSlice> = (set) => ({
 
   setBackConfirmationCallback: (callback) => {
     set(state => ({...state, backConfirmationCallback: callback}));
+  },
+
+  setQueuePosition: (position) => {
+    set(state => ({...state, queuePosition: position}));
+  },
+
+  setQueueNumber: (number) => {
+    set(state => ({...state, queueNumber: number}));
+  },
+
+  setCarWashId: (car_wash_id) => {
+    set(state => ({...state, car_wash_id}));
+  },
+
+  setBannerUrl: (bannerUrl) => {
+    set(state => ({...state, bannerUrl}));
   }
 });

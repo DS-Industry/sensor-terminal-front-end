@@ -1,5 +1,6 @@
 import { axiosInstance } from "../../axiosConfig";
-import { ICreateOrderRequest, IGetMobileQr, IGetOrderByIdResponse, ILoyaltyCheckResponse, IUcnCheckResponse } from "../../types/payment";
+import { ICreateOrderRequest, IGetMobileQr, IGetOrderByIdResponse, ILoyaltyCheckResponse, IUcnCheckResponse, ITerminalDataResponse } from "../../types/payment";
+import { logger } from "../../../util/logger";
 
 enum PAYMENT {
   PAY = 'pay/',
@@ -10,16 +11,14 @@ enum PAYMENT {
   OPEN_READER = 'open-reader/',
   MOBILE_QR = 'mobile-qr',
   START = 'start',
-};
+  TERMINAL_DATA = 'terminal-data/',
+}
 
 export async function createOrder(
   body: ICreateOrderRequest,
+  signal?: AbortSignal
 ): Promise<void> {  
-
-  console.log(body);
-  
-  
-  await axiosInstance.post(PAYMENT.PAY, body);
+  await axiosInstance.post(PAYMENT.PAY, body, { signal });
 }
 
 export async function getOrderById(
@@ -35,7 +34,7 @@ export async function cancelOrder(
 ): Promise<void> {  
   
   await axiosInstance.post(PAYMENT.CANCELLATION + `/${order_id}/`);
-  console.log("отменили заказ",  order_id);
+  logger.info("отменили заказ",  order_id);
   
 }
 
@@ -51,8 +50,8 @@ export async function ucnCheck(): Promise<IUcnCheckResponse> {
   return response.data;
 }
 
-export async function openLoyaltyCardReader(signal?: AbortSignal): Promise<any> {  
-  const response = await axiosInstance.post(PAYMENT.OPEN_READER, {}, { 
+export async function openLoyaltyCardReader(signal?: AbortSignal): Promise<IUcnCheckResponse> {  
+  const response = await axiosInstance.post<IUcnCheckResponse>(PAYMENT.OPEN_READER, {}, { 
     signal 
   });
   return response.data;
@@ -64,7 +63,12 @@ export async function getMobileQr(): Promise<IGetMobileQr> {
   return response.data;
 }
 
-export async function startRobot(order_id: string): Promise<void> {  
-  
-  await axiosInstance.post(PAYMENT.START + `/${order_id}/`);
+export async function startRobot(order_id: string): Promise<{ message?: string }> {  
+  const response = await axiosInstance.post(PAYMENT.START + `/${order_id}/`);
+  return response.data || {};
+}
+
+export async function getTerminalData(): Promise<ITerminalDataResponse> {
+  const response = await axiosInstance.get<ITerminalDataResponse>(PAYMENT.TERMINAL_DATA);
+  return response.data;
 }

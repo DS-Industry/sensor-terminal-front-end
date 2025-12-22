@@ -1,6 +1,5 @@
 import "./../App.css";
 import ProgramCard from "../components/cards/ProgramCard";
-import { useTranslation } from "react-i18next";
 import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
@@ -8,27 +7,93 @@ import { usePrograms } from "../hooks/usePrograms";
 import { useEffect } from "react";
 import useStore from "../components/state/store";
 import { EOrderStatus } from "../components/state/order/orderSlice";
-import { startRobot } from "../api/services/payment";
+import { startRobot, cancelOrder, getTerminalData } from "../api/services/payment";
 import { useNavigate } from "react-router-dom";
+import { logger } from "../util/logger";
 
 const MAIN_PAGE_URL = "MainPage.webp";
 
 export default function MainPage() {
-  const { t } = useTranslation();
   const { programs } = usePrograms();
   const { attachemntUrl, mediaStatus } = useMediaCampaign(MAIN_PAGE_URL);
-  const { order, clearOrder, setInsertedAmount, setIsLoading } = useStore();
+  const { 
+    order, 
+    clearOrder, 
+    setInsertedAmount, 
+    setIsLoading,
+    resetPayment,
+    setSelectedProgram,
+    setBankCheck,
+    setQueuePosition,
+    setQueueNumber,
+    setErrorCode,
+    closeBackConfirmationModal,
+    closeLoyaltyCardModal,
+    setCarWashId,
+  } = useStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    clearOrder();
-    setInsertedAmount(0);
-    setIsLoading(false);
+    const resetAllStates = async () => {
+      logger.info('[MainPage] Resetting all states on mount');
+      
+      // Get current order from store to check if it exists
+      const currentOrder = useStore.getState().order;
+      
+      // Cancel existing order if any
+      if (currentOrder?.id) {
+        try {
+          await cancelOrder(currentOrder.id);
+          logger.info('[MainPage] Order cancelled on mount', { orderId: currentOrder.id });
+        } catch (error) {
+          logger.error('[MainPage] Error cancelling order on mount', error);
+        }
+      }
+
+      // Close all modals
+      closeBackConfirmationModal();
+      closeLoyaltyCardModal();
+
+      // Reset payment state
+      resetPayment();
+
+      // Clear order
+      clearOrder();
+
+      // Reset all app states
+      setSelectedProgram(null);
+      setBankCheck("");
+      setInsertedAmount(0);
+      setQueuePosition(null);
+      setQueueNumber(null);
+      setErrorCode(null);
+      setIsLoading(false);
+
+      logger.info('[MainPage] All states reset successfully');
+    };
+
+    const fetchTerminalData = async () => {
+      try {
+        logger.info('[MainPage] Fetching terminal data');
+        const terminalData = await getTerminalData();
+        logger.info('[MainPage] Terminal data fetched successfully', terminalData);
+        if (terminalData?.car_wash_id) {
+          setCarWashId(terminalData.car_wash_id);
+          logger.info('[MainPage] Saved car_wash_id', { car_wash_id: terminalData.car_wash_id });
+        }
+      } catch (error) {
+        logger.error('[MainPage] Error fetching terminal data', error);
+      }
+    };
+
+    resetAllStates();
+    fetchTerminalData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     if (order?.status === EOrderStatus.PAYED) {
-      console.log("Оплата мобильным приложением", order);
+      logger.info("Оплата мобильным приложением", order);
 
       if (order.id) {
         startRobot(order.id);
@@ -38,29 +103,21 @@ export default function MainPage() {
   }, [order])
 
   return (
-    <div className="flex flex-col min-h-screen w-screen bg-gray-200">
+    <div className="flex flex-col min-h-screen w-screen bg-[#EEEEEE]">
       {/* Video Section - 40% of screen height */}
       <MediaCampaign attachemntUrl={attachemntUrl} mediaStatus={mediaStatus}/>
       
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">
         {/* Header with Logo and Controls */}
-        <HeaderWithLogo isMainPage={true}/> 
+        <HeaderWithLogo isMainPage={true} title="Выберите программу" /> 
 
         {/* Main Content Area */}
         <div className="flex-1 px-7 pb-7">
           <div className="flex flex-col h-full">
-            
-            {/* Title Section */}
-            <div className="mb-8">
-              <div className="text-gray-900 font-bold text-4xl text-center">
-                {t("Выберите программу")}
-              </div>
-            </div>
 
-            {/* Program Cards Section */}
             {programs && (
-              <div className="flex-1 flex flex-col justify-center">
+              <div className="flex-1 flex flex-col justify-center mt-10">
                 <div
                   className={`w-full snap-x`}
                 >
@@ -69,6 +126,7 @@ export default function MainPage() {
                   >
                     {programs.map((item) => (
                       <ProgramCard
+                        key={`program-card-${item.id}`}
                         id={item.id}
                         name={item.name}
                         price={item.price}

@@ -5,7 +5,7 @@ export interface IPaymentMethod {
   imgUrl: string;
   type: EPaymentMethod;
   endPoint: string;
-};
+}
 
 export interface ICreateOrderRequest {
   program_id: number,
@@ -40,4 +40,9 @@ export interface IUcnCheckResponse {
 
 export interface IGetMobileQr {
   qr_code: string;
+}
+
+export interface ITerminalDataResponse {
+  car_wash_id: number;
+  device_id: number;
 }

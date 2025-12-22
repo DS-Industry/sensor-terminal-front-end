@@ -1,83 +1,83 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { env } from '../config/env';
+import useStore from '../components/state/store';
 
-export const useMediaCampaign = (programUrl?: string) => {
-  const [attachemntUrl, setAttachemntUrl] = useState<{
-    baseUrl: string;
-    programUrl: string;
-  }>({
-    baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
-    programUrl: "",
-  });
-  
-  const [mediaStatus, setMediaStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
+export const useMediaCampaign = (_programUrl?: string) => {
+  const car_wash_id = useStore((state) => state.car_wash_id);
+  const cachedBannerUrl = useStore((state) => state.bannerUrl);
+  const setBannerUrl = useStore((state) => state.setBannerUrl);
+  const [bannerUrl, setLocalBannerUrl] = useState<string>(cachedBannerUrl || '');
+  const [mediaStatus, setMediaStatus] = useState<'loading' | 'loaded' | 'error'>(
+    cachedBannerUrl ? 'loaded' : 'loading'
+  );
+  const isLoadingRef = useRef(false);
 
   useEffect(() => {
-    if (programUrl) {
-      const fullProgramUrl = `${import.meta.env.VITE_S3_URL}/${programUrl}`;
+    // Если есть car_wash_id, сначала пробуем car_wash_id/banner.webp, затем fallback на /banner.webp
+    if (car_wash_id) {
+      const carWashBannerUrl = `${env.VITE_S3_URL}/${car_wash_id}/banner.webp`;
+      const fallbackBannerUrl = `${env.VITE_S3_URL}/banner.webp`;
       
-      // Сбрасываем статус при смене URL
-      setMediaStatus('loading');
+      // Если уже есть закешированный URL и он соответствует текущему car_wash_id, используем его сразу
+      if (cachedBannerUrl === carWashBannerUrl || cachedBannerUrl === fallbackBannerUrl) {
+        setLocalBannerUrl(cachedBannerUrl);
+        setMediaStatus('loaded');
+        return;
+      }
 
-      // Проверяем загружается ли персональное изображение
+      // Если уже загружаем, не начинаем заново
+      if (isLoadingRef.current) {
+        return;
+      }
+
+      isLoadingRef.current = true;
+      setMediaStatus('loading');
+      
+      // Пробуем загрузить car_wash_id специфичный banner
       const img = new Image();
       
       img.onload = () => {
+        setLocalBannerUrl(carWashBannerUrl);
+        setBannerUrl(carWashBannerUrl); // Сохраняем в store для кеширования
         setMediaStatus('loaded');
-        setAttachemntUrl({
-          baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
-          programUrl: fullProgramUrl,
-        });
+        isLoadingRef.current = false;
       };
       
       img.onerror = () => {
-        // Если персональное изображение не загрузилось, пробуем baseUrl
-        const baseImage = new Image();
-        baseImage.onload = () => {
+        // Если не загрузился, пробуем fallback banner
+        const fallbackImg = new Image();
+        
+        fallbackImg.onload = () => {
+          setLocalBannerUrl(fallbackBannerUrl);
+          setBannerUrl(fallbackBannerUrl); // Сохраняем в store для кеширования
           setMediaStatus('loaded');
-          setAttachemntUrl({
-            baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
-            programUrl: "", // Очищаем programUrl, будем использовать baseUrl
-          });
+          isLoadingRef.current = false;
         };
         
-        baseImage.onerror = () => {
-          // Если baseUrl тоже не загрузился, устанавливаем ошибку
+        fallbackImg.onerror = () => {
+          setLocalBannerUrl('');
           setMediaStatus('error');
-          setAttachemntUrl({
-            baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
-            programUrl: "",
-          });
+          isLoadingRef.current = false;
         };
         
-        baseImage.src = `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`;
-      };
-
-      img.src = fullProgramUrl;
-    } else {
-      // Если нет programUrl, пробуем загрузить baseUrl
-      const baseImage = new Image();
-      baseImage.onload = () => {
-        setMediaStatus('loaded');
-        setAttachemntUrl({
-          baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
-          programUrl: "",
-        });
+        fallbackImg.src = fallbackBannerUrl;
       };
       
-      baseImage.onerror = () => {
-        setMediaStatus('error');
-        setAttachemntUrl({
-          baseUrl: `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`,
-          programUrl: "",
-        });
-      };
-      
-      baseImage.src = `${import.meta.env.VITE_ATTACHMENT_BASE_URL}`;
+      img.src = carWashBannerUrl;
+      return;
     }
-  }, [programUrl]);
+
+    // Если нет car_wash_id, используем дефолтное изображение
+    setLocalBannerUrl('');
+    setMediaStatus('loaded');
+    isLoadingRef.current = false;
+  }, [car_wash_id, cachedBannerUrl, setBannerUrl]);
 
   return { 
-    attachemntUrl,
+    attachemntUrl: {
+      baseUrl: '', // Не используем baseUrl, чтобы избежать fallback на media-campaign.webp
+      programUrl: bannerUrl,
+    },
     mediaStatus
   };
 };

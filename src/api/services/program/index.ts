@@ -3,7 +3,7 @@ import { IProgram } from "../../types/program";
 
 enum PROGRAM {
   PROGRAM = 'wash-programs/',
-};
+}
 
 export async function getPrograms(): Promise<IProgram[]> {
   const response = await axiosInstance.get<IProgram[]>(PROGRAM.PROGRAM);  

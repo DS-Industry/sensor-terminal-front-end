@@ -1,6 +1,7 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { VIDEO_TYPES } from '../hard-data';
-import SpareMedia from '../../assets/spare-media.jpg';
+import { env } from '../../config/env';
+import { logger } from '../../util/logger';
 
 interface IMediaCampaign {
   attachemntUrl: {
@@ -29,36 +30,41 @@ export default function MediaCampaign(props: IMediaCampaign) {
   } = props;
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [hasPlaybackError, setHasPlaybackError] = useState(false);
+  const { programUrl, baseUrl } = attachemntUrl || { programUrl: '', baseUrl: '' };
+  const mediaUrl = programUrl || baseUrl;
+
+  // Сбрасываем ошибку при смене URL медиа
+  useEffect(() => {
+    setHasPlaybackError(false);
+  }, [mediaUrl]);
 
   if (!attachemntUrl) {
     return null;
   }
 
   const handleMediaError = () => {
-    console.error('Media failed to load during playback');
+    logger.error('Media failed to load during playback');
+    setHasPlaybackError(true);
   };
 
   const renderMedia = () => {
-    const { programUrl, baseUrl } = attachemntUrl;
     
-    // Определяем какой URL использовать в приоритете
-    let mediaUrl = programUrl || baseUrl;
-    
-    // Если статус ошибки - используем запасное изображение
-    if (mediaStatus === 'error') {
+    // Если статус ошибки или произошла ошибка во время воспроизведения - используем запасное изображение
+    if (mediaStatus === 'error' || hasPlaybackError) {
       return (
         <img
-          src={SpareMedia}
+          src={env.VITE_ATTACHMENT_BASE_URL}
           alt="Default media"
-          className="w-full h-full object-cover"
+          className="w-full h-[890px] object-cover"
         />
       );
     }
 
-    // Если еще загружается - показываем пустой div
-    if (mediaStatus === 'loading') {
+    // Если еще загружается и нет URL - показываем пустой div
+    if (mediaStatus === 'loading' && !mediaUrl) {
       return (
-        <div className="w-full h-full bg-transparent" />
+        <div className="w-full h-[890px] bg-transparent" />
       );
     }
 
@@ -69,7 +75,7 @@ export default function MediaCampaign(props: IMediaCampaign) {
       return (
         <video
           ref={videoRef}
-          className="w-full h-full object-cover"
+          className="w-full h-[890px] object-cover"
           autoPlay={autoPlay}
           loop={loop}
           muted={muted}
@@ -86,9 +92,10 @@ export default function MediaCampaign(props: IMediaCampaign) {
     } else {
       return (
         <img
+          key={mediaUrl}
           src={mediaUrl}
           alt={programUrl ? "Program Image" : "Promotion Image"}
-          className="w-full h-full object-cover"
+          className="w-full h-[890px] object-cover"
           loading={loading}
           onError={handleMediaError}
         />
@@ -97,7 +104,7 @@ export default function MediaCampaign(props: IMediaCampaign) {
   };
 
   return (
-    <div className="h-[40vh] w-full flex justify-center items-center relative overflow-hidden">
+    <div className="h-[890px] w-full flex justify-center items-center relative overflow-hidden">
       {renderMedia()}
     </div>
   );
