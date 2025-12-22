@@ -32,13 +32,11 @@ class Logger {
   private pendingLogs: ActivityLog[] = [];
   private isFlushing: boolean = false;
   private consecutiveFailures: number = 0;
-  private lastS3UploadTime: number = 0;
   private enableIndexedDB: boolean = true;
   private enableS3Upload: boolean = true;
   
   private flushIntervalId: ReturnType<typeof setInterval> | null = null;
   private s3UploadIntervalId: ReturnType<typeof setInterval> | null = null;
-  private initialS3UploadTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private reenableTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private flushTimeoutId: ReturnType<typeof setTimeout> | null = null;
   
@@ -101,7 +99,6 @@ class Logger {
   private setupIntervals(): void {
     this.flushIntervalId = setInterval(() => this.flushToIndexedDB(), this.CONFIG.FLUSH_INTERVAL);
     this.s3UploadIntervalId = setInterval(() => this.checkAndPerformS3Upload(), this.CONFIG.S3_UPLOAD_INTERVAL);
-    this.initialS3UploadTimeoutId = setTimeout(() => this.checkAndPerformS3Upload(), this.CONFIG.S3_UPLOAD_INTERVAL);
   }
 
   private async flushToIndexedDB(sync = false): Promise<void> {
@@ -165,13 +162,8 @@ class Logger {
 
   private async checkAndPerformS3Upload(): Promise<void> {
     if (!this.enableS3Upload || !this.storage.isReady) return;
-
-    const now = Date.now();
-    if (now - this.lastS3UploadTime < this.CONFIG.S3_UPLOAD_INTERVAL) return;
-
     try {
       await this.exportAndCleanupAllLogs();
-      this.lastS3UploadTime = now;
     } catch (error) {
       console.error('[Logger] Failed to perform S3 upload:', error);
     }
@@ -353,7 +345,6 @@ class Logger {
 
   async performS3Upload(): Promise<void> {
     await this.exportAndCleanupAllLogs();
-    this.lastS3UploadTime = Date.now();
   }
 
   async clearLogs(): Promise<void> {
@@ -366,7 +357,6 @@ class Logger {
   cleanup(): void {
     if (this.flushIntervalId) clearInterval(this.flushIntervalId);
     if (this.s3UploadIntervalId) clearInterval(this.s3UploadIntervalId);
-    if (this.initialS3UploadTimeoutId) clearTimeout(this.initialS3UploadTimeoutId);
     if (this.reenableTimeoutId) clearTimeout(this.reenableTimeoutId);
     if (this.flushTimeoutId) clearTimeout(this.flushTimeoutId);
     
