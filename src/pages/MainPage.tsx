@@ -7,7 +7,7 @@ import { usePrograms } from "../hooks/usePrograms";
 import { useEffect } from "react";
 import useStore from "../components/state/store";
 import { EOrderStatus } from "../components/state/order/orderSlice";
-import { startRobot, cancelOrder, getTerminalData } from "../api/services/payment";
+import { startRobot, getTerminalData } from "../api/services/payment";
 import { useNavigate } from "react-router-dom";
 import { logger } from "../util/logger";
 
@@ -36,19 +36,6 @@ export default function MainPage() {
   useEffect(() => {
     const resetAllStates = async () => {
       logger.info('[MainPage] Resetting all states on mount');
-      
-      // Get current order from store to check if it exists
-      const currentOrder = useStore.getState().order;
-      
-      // // Cancel existing order if any
-      // if (currentOrder?.id) {
-      //   try {
-      //     await cancelOrder(currentOrder.id);
-      //     logger.info('[MainPage] Order cancelled on mount', { orderId: currentOrder.id });
-      //   } catch (error) {
-      //     logger.error('[MainPage] Error cancelling order on mount', error);
-      //   }
-      // }
 
       // Close all modals
       closeBackConfirmationModal();
