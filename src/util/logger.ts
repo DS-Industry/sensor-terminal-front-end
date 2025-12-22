@@ -22,7 +22,7 @@ class Logger {
   
   private readonly CONFIG = {
     FLUSH_INTERVAL: 5000,          
-    S3_UPLOAD_INTERVAL: 10000,   
+    S3_UPLOAD_INTERVAL: 600000,   
     MAX_PENDING_LOGS: 1000,     
     MAX_LOGS_IN_STORAGE: 50000,  
     BATCH_SIZE: 100,          
