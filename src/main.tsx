@@ -22,13 +22,29 @@ import { WebSocketService } from "./services/websocketService.ts";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { PaymentGuard } from "./components/guards/PaymentGuard.tsx";
 import { AppHealthMonitor } from "./components/appHealth/AppHealthMonitor.tsx";
+import { useUserActivityTracking } from './hooks/useUserActivityTracking';
+import { setupGlobalActivityTracking } from './util/activityTracker';
+import { useEffect } from 'react';
 
 WebSocketService.initialize();
 
 // eslint-disable-next-line react-refresh/only-export-components
+function NavigationTracker() {
+  useUserActivityTracking();
+  return null;
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
 function Root() {
+  useEffect(() => {
+    // Setup global click/activity tracking
+    const cleanup = setupGlobalActivityTracking();
+    return cleanup;
+  }, []);
+
   return (
     <>
+      <NavigationTracker />
       <ModalProvider />
       <AppHealthMonitor />
       <Outlet />
