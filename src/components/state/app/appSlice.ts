@@ -15,6 +15,7 @@ export interface AppSlice {
   queuePosition: number | null;
   queueNumber: number | null;
   car_wash_id: number | null;
+  device_id: number | null;
   bannerUrl: string | null;
   setIsLoyalty: (loyalty: boolean) => void;
   setPrograms: (programs: IProgram[]) => void;
@@ -29,6 +30,7 @@ export interface AppSlice {
   setQueuePosition: (position: number | null) => void;
   setQueueNumber: (number: number | null) => void;
   setCarWashId: (car_wash_id: number | null) => void;
+  setDeviceId: (device_id: number | null) => void;
   setBannerUrl: (bannerUrl: string | null) => void;
 }
 
@@ -46,6 +48,7 @@ export const createAppSlice: StoreSlice<AppSlice> = (set) => ({
   queuePosition: null,
   queueNumber: null,
   car_wash_id: null,
+  device_id: null,
   bannerUrl: null,
 
   setPrograms: (programs) => {
@@ -98,6 +101,10 @@ export const createAppSlice: StoreSlice<AppSlice> = (set) => ({
 
   setCarWashId: (car_wash_id) => {
     set(state => ({...state, car_wash_id}));
+  },
+
+  setDeviceId: (device_id) => {
+    set(state => ({...state, device_id}));
   },
 
   setBannerUrl: (bannerUrl) => {
