@@ -7,10 +7,17 @@ export function setupGlobalActivityTracking(): () => void {
     const target = event.target as HTMLElement;
     if (!target) return;
 
+    const className = target.className;
+    const classNameStr = typeof className === 'string' 
+      ? className 
+      : (className && typeof className === 'object' && 'baseVal' in className 
+          ? String((className as { baseVal: string }).baseVal) 
+          : undefined);
+
     const elementInfo = {
       tagName: target.tagName.toLowerCase(),
       id: target.id || undefined,
-      className: target.className || undefined,
+      className: classNameStr || undefined,
       text: target.textContent?.trim().substring(0, 50) || undefined,
       role: target.getAttribute('role') || undefined,
       ariaLabel: target.getAttribute('aria-label') || undefined,
