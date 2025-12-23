@@ -58,7 +58,8 @@ function getS3Client(): S3Client | null {
 
 export async function uploadLogsToS3(
   logContent: string,
-  robotId: string | number | null,
+  carwashId: string | number | null,
+  deviceId: string | number | null,
   date: Date
 ): Promise<string> {
   const client = getS3Client();
@@ -83,8 +84,9 @@ export async function uploadLogsToS3(
     const minutes = date.getMinutes().toString().padStart(2, '0');
     const timeStr = `${hours}-${minutes}`;
     
-    const robotIdStr = robotId ? String(robotId) : 'unknown';
-    const key = `logs/robot/${robotIdStr}/${dateStr}/${timeStr}.txt`;
+    const carWashIdStr = carwashId ? String(carwashId) : 'unknown';
+    const deviceIdStr = deviceId ? String(deviceId) : 'unknown';
+    const key = `logs/pos/${carWashIdStr}/robot/${deviceIdStr}/${dateStr}/${timeStr}.txt`;
     
     const encoder = new TextEncoder();
     const body = encoder.encode(logContent);
@@ -93,7 +95,8 @@ export async function uploadLogsToS3(
       bucket: env.VITE_S3_BUCKET_NAME,
       key,
       size: body.length,
-      robotId: robotIdStr,
+      carWashIdStr: carWashIdStr,
+      deviceIdStr: deviceIdStr,
     });
     
     const command = new PutObjectCommand({
@@ -152,7 +155,7 @@ export async function testS3Upload(): Promise<boolean> {
 
     const testContent = `Test log entry - ${new Date().toISOString()}\nThis is a test upload to verify S3 connectivity.`;
     const testDate = new Date();
-    const testKey = await uploadLogsToS3(testContent, 'test', testDate);
+    const testKey = await uploadLogsToS3(testContent, 'test', 'test', testDate);
     console.info('[S3] ✅ Test upload successful:', testKey);
     return true;
   } catch (error: any) {

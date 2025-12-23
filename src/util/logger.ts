@@ -184,17 +184,19 @@ class Logger {
     if (this.enableS3Upload) {
       try {
         const logContent = this.formatLogsAsText(logs);
-        let robotId: string | number | null = null;
+        let carwashId: string | number | null = null;
+        let deviceId: string | number | null = null;
         const uploadDate = new Date();
         
         try {
           const storeModule = await import('../components/state/store');
-          robotId = storeModule.default.getState().car_wash_id;
+          carwashId = storeModule.default.getState().car_wash_id;
+          deviceId = storeModule.default.getState().device_id;
         } catch (err) {
           console.warn('[Logger] Could not get robot_id from store:', err);
         }
 
-        const s3Key = await uploadLogsToS3(logContent, robotId, uploadDate);
+        const s3Key = await uploadLogsToS3(logContent, carwashId, deviceId, uploadDate);
         console.info(`[Logger] Successfully uploaded ${logs.length} logs to S3: ${s3Key}`);
         this.circuitBreaker.recordSuccess();
         this.logActivity('system', 'info', 'Logs uploaded to S3', {
