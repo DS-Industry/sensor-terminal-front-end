@@ -39,6 +39,8 @@ class Logger {
   private s3UploadIntervalId: ReturnType<typeof setInterval> | null = null;
   private reenableTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private flushTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private healthCheckIntervalId: ReturnType<typeof setInterval> | null = null;
+  private lastHealthStatusLogTime: number = 0;
   
   private errorHandler: ((event: ErrorEvent) => void) | null = null;
   private rejectionHandler: ((event: PromiseRejectionEvent) => void) | null = null;
@@ -49,6 +51,7 @@ class Logger {
     this.sessionId = this.generateSessionId();
     this.storage = new IndexedDBStorage('ActivityLogsDB', 'logs');
     this.circuitBreaker = new S3CircuitBreaker();
+    this.lastHealthStatusLogTime = Date.now(); // Initialize to current time to avoid immediate logging
     
     if (this.enableIndexedDB && typeof window !== 'undefined' && 'indexedDB' in window) {
       this.storage.init().catch(err => {
@@ -71,24 +74,24 @@ class Logger {
 
   private setupEventHandlers(): void {
     this.errorHandler = (event) => {
-      this.logActivity('error', 'error', 'JavaScript error', {
-        message: event.message,
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno,
-        stack: event.error?.stack,
-      });
+        this.logActivity('error', 'error', 'JavaScript error', {
+          message: event.message,
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+          stack: event.error?.stack,
+        });
     };
-    
+
     this.rejectionHandler = (event) => {
-      this.logActivity('error', 'error', 'Unhandled promise rejection', {
-        reason: event.reason,
-        stack: event.reason?.stack,
-      });
+        this.logActivity('error', 'error', 'Unhandled promise rejection', {
+          reason: event.reason,
+          stack: event.reason?.stack,
+        });
     };
-    
+
     this.beforeUnloadHandler = () => {
-      this.flushToIndexedDB(true);
+        this.flushToIndexedDB(true);
     };
     
     window.addEventListener('error', this.errorHandler);
@@ -99,11 +102,65 @@ class Logger {
   private setupIntervals(): void {
     this.flushIntervalId = setInterval(() => this.flushToIndexedDB(), this.CONFIG.FLUSH_INTERVAL);
     this.s3UploadIntervalId = setInterval(() => this.checkAndPerformS3Upload(), this.CONFIG.S3_UPLOAD_INTERVAL);
+    this.healthCheckIntervalId = setInterval(() => this.performHealthCheck(), 300000);
+  }
+
+  private async performHealthCheck(): Promise<void> {
+    try {
+      if (this.enableIndexedDB && !this.storage.isReady) {
+        console.warn('[Logger] Health check: IndexedDB not ready, attempting reconnection');
+        try {
+          await this.storage.init();
+          this.consecutiveFailures = 0;
+          console.info('[Logger] Health check: IndexedDB reconnected successfully');
+        } catch (err) {
+          console.warn('[Logger] Health check: Failed to reconnect IndexedDB:', err);
+        }
+      }
+
+      const now = Date.now();
+      const timeSinceLastLog = now - this.lastHealthStatusLogTime;
+      const HEALTH_STATUS_LOG_INTERVAL = 1800000;
+      
+      if (timeSinceLastLog >= HEALTH_STATUS_LOG_INTERVAL) {
+        const sessionStart = parseInt(this.sessionId.split('-')[1]) || now;
+        const sessionDuration = now - sessionStart;
+        const logCount = await this.getLogCount();
+        const pendingCount = this.pendingLogs.length;
+        console.info('[Logger] Health check status:', {
+          sessionDuration: Math.floor(sessionDuration / 1000 / 60) + ' minutes',
+          indexedDBReady: this.storage.isReady,
+          enabled: this.enableIndexedDB,
+          logsInStorage: logCount,
+          pendingLogs: pendingCount,
+          consecutiveFailures: this.consecutiveFailures,
+          s3UploadEnabled: this.enableS3Upload,
+          circuitBreakerOpen: !this.circuitBreaker.canAttempt(),
+        });
+        this.lastHealthStatusLogTime = now;
+      }
+    } catch (error) {
+      console.error('[Logger] Health check error:', error);
+    }
   }
 
   private async flushToIndexedDB(sync = false): Promise<void> {
-    if (!this.enableIndexedDB || !this.storage.isReady || this.pendingLogs.length === 0 || this.isFlushing) {
+    if (!this.enableIndexedDB || this.pendingLogs.length === 0 || this.isFlushing) {
       return;
+    }
+
+    if (!this.storage.isReady) {
+      try {
+        await this.storage.init();
+        this.consecutiveFailures = 0;
+      } catch (err) {
+        console.warn('[Logger] Failed to reinitialize IndexedDB:', err);
+        this.consecutiveFailures++;
+        if (this.consecutiveFailures >= this.CONFIG.MAX_CONSECUTIVE_FAILURES) {
+          this.handleIndexedDBFailure();
+        }
+        return;
+      }
     }
 
     if (this.pendingLogs.length > this.CONFIG.MAX_PENDING_LOGS) {
@@ -113,17 +170,7 @@ class Logger {
     }
 
     if (this.consecutiveFailures >= this.CONFIG.MAX_CONSECUTIVE_FAILURES) {
-      console.warn('[Logger] Too many IndexedDB failures, disabling storage temporarily');
-      this.enableIndexedDB = false;
-      if (this.reenableTimeoutId) clearTimeout(this.reenableTimeoutId);
-      this.reenableTimeoutId = setTimeout(() => {
-        this.enableIndexedDB = true;
-        this.consecutiveFailures = 0;
-        this.reenableTimeoutId = null;
-        this.storage.init().catch(() => {
-          this.enableIndexedDB = false;
-        });
-      }, 60000);
+      this.handleIndexedDBFailure();
       return;
     }
 
@@ -145,23 +192,83 @@ class Logger {
           }, 100);
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       this.consecutiveFailures++;
-      console.warn(`[Logger] Failed to flush logs (attempt ${this.consecutiveFailures}):`, err);
+      const errorMessage = err?.message || String(err);
+      const isQuotaError = err?.name === 'QuotaExceededError' || errorMessage.includes('quota') || errorMessage.includes('QuotaExceeded');
+      
+      console.warn(`[Logger] Failed to flush logs (attempt ${this.consecutiveFailures}/${this.CONFIG.MAX_CONSECUTIVE_FAILURES}):`, {
+        error: errorMessage,
+        isQuotaError,
+        pendingLogsCount: this.pendingLogs.length,
+      });
+      
+      if (isQuotaError && this.consecutiveFailures < this.CONFIG.MAX_CONSECUTIVE_FAILURES) {
+        try {
+          const logCount = await this.storage.count();
+          if (logCount > this.CONFIG.MAX_LOGS_IN_STORAGE) {
+            console.warn(`[Logger] Storage quota exceeded (${logCount} logs), attempting to clear old logs`);
+            const allLogs = await this.storage.getAll(this.CONFIG.MAX_LOGS_IN_STORAGE);
+            if (allLogs.length > 0) {
+              const oldestLog = allLogs[allLogs.length - 1];
+              const oldestDate = new Date(oldestLog.timestamp);
+              await this.storage.deleteOldLogs(this.CONFIG.MAX_LOGS_IN_STORAGE, oldestDate);
+              console.info('[Logger] Cleared old logs, retrying flush');
+              // Retry the flush
+              this.pendingLogs.unshift(...logsToFlush);
+              this.consecutiveFailures = Math.max(0, this.consecutiveFailures - 1);
+            }
+          }
+        } catch (clearErr) {
+          console.error('[Logger] Failed to clear old logs:', clearErr);
+        }
+      }
       
       if (this.pendingLogs.length < this.CONFIG.MAX_PENDING_LOGS) {
         this.pendingLogs.unshift(...logsToFlush);
       } else {
         console.warn('[Logger] Dropped logs due to memory limit');
       }
+      
+      if (this.consecutiveFailures >= this.CONFIG.MAX_CONSECUTIVE_FAILURES) {
+        this.handleIndexedDBFailure();
+      }
     } finally {
       this.isFlushing = false;
     }
   }
 
+  private handleIndexedDBFailure(): void {
+    console.warn('[Logger] Too many IndexedDB failures, disabling storage temporarily');
+    this.enableIndexedDB = false;
+    if (this.reenableTimeoutId) clearTimeout(this.reenableTimeoutId);
+    this.reenableTimeoutId = setTimeout(() => {
+      this.enableIndexedDB = true;
+      this.consecutiveFailures = 0;
+      this.reenableTimeoutId = null;
+      
+      this.storage.init().then(() => {
+        console.info('[Logger] IndexedDB reinitialized successfully');
+      }).catch((err) => {
+        console.warn('[Logger] Failed to reinitialize IndexedDB:', err);
+        this.enableIndexedDB = false;
+      });
+    }, 60000);
+  }
+
 
   private async checkAndPerformS3Upload(): Promise<void> {
-    if (!this.enableS3Upload || !this.storage.isReady) return;
+    if (!this.enableS3Upload) return;
+    
+    if (!this.storage.isReady) {
+      try {
+        await this.storage.init();
+      } catch (err) {
+        console.warn('[Logger] Cannot perform S3 upload - IndexedDB not ready:', err);
+        return;
+      }
+    }
+    
     try {
       await this.exportAndCleanupAllLogs();
     } catch (error) {
@@ -170,7 +277,14 @@ class Logger {
   }
 
   private async exportAndCleanupAllLogs(): Promise<void> {
-    if (!this.storage.isReady) return;
+    if (!this.storage.isReady) {
+      try {
+        await this.storage.init();
+      } catch (err) {
+        console.warn('[Logger] Cannot export logs - IndexedDB not ready:', err);
+        return;
+      }
+    }
 
     const logs = await this.storage.getAll(this.CONFIG.MAX_LOGS_IN_STORAGE);
     if (logs.length === 0) return;
@@ -220,6 +334,91 @@ class Logger {
     }
   }
 
+  private sanitizeForIndexedDB(value: unknown, visited = new WeakSet()): unknown {
+    if (value === null || value === undefined) {
+      return value;
+    }
+
+    if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
+      return value;
+    }
+
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+
+    if (value instanceof Error) {
+      return {
+        name: value.name,
+        message: value.message,
+        stack: value.stack,
+      };
+    }
+
+    if (value && typeof value === 'object' && 'baseVal' in value && 'animVal' in value) {
+      return String((value as { baseVal: string }).baseVal);
+    }
+
+    if (value instanceof Element) {
+      const className = value.className;
+      const classNameStr = typeof className === 'string' 
+        ? className 
+        : (className && typeof className === 'object' && 'baseVal' in className 
+            ? String((className as { baseVal: string }).baseVal) 
+            : undefined);
+      
+      return {
+        tagName: value.tagName,
+        id: value.id || undefined,
+        className: classNameStr || undefined,
+        textContent: value.textContent?.substring(0, 100) || undefined,
+      };
+    }
+    
+    if (value instanceof Node) {
+      return {
+        nodeName: value.nodeName,
+        nodeType: value.nodeType,
+        textContent: value.textContent?.substring(0, 100) || undefined,
+      };
+    }
+
+    if (typeof value === 'function') {
+      return `[Function: ${value.name || 'anonymous'}]`;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map(item => this.sanitizeForIndexedDB(item, visited));
+    }
+
+    if (typeof value === 'object') {
+      if (visited.has(value as object)) {
+        return '[Circular Reference]';
+      }
+      visited.add(value as object);
+
+      try {
+        const sanitized: Record<string, unknown> = {};
+        for (const [key, val] of Object.entries(value)) {
+          try {
+            sanitized[key] = this.sanitizeForIndexedDB(val, visited);
+          } catch (err) {
+            sanitized[key] = `[Error sanitizing: ${err instanceof Error ? err.message : String(err)}]`;
+          }
+        }
+        return sanitized;
+      } catch (err) {
+        return `[Error sanitizing object: ${err instanceof Error ? err.message : String(err)}]`;
+      }
+    }
+
+    try {
+      return String(value);
+    } catch {
+      return '[Unable to serialize]';
+    }
+  }
+
   private logActivity(
     category: ActivityCategory,
     level: LogLevel,
@@ -232,7 +431,7 @@ class Logger {
       category,
       message,
       page: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
-      details,
+      details: details ? (this.sanitizeForIndexedDB(details) as Record<string, unknown>) : undefined,
     };
 
     this.pendingLogs.push(log);
@@ -359,6 +558,7 @@ class Logger {
   cleanup(): void {
     if (this.flushIntervalId) clearInterval(this.flushIntervalId);
     if (this.s3UploadIntervalId) clearInterval(this.s3UploadIntervalId);
+    if (this.healthCheckIntervalId) clearInterval(this.healthCheckIntervalId);
     if (this.reenableTimeoutId) clearTimeout(this.reenableTimeoutId);
     if (this.flushTimeoutId) clearTimeout(this.flushTimeoutId);
     
