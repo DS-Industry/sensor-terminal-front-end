@@ -171,10 +171,14 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
     
     cancelOrderCreation();
     
-    if (order?.id && isMountedRef.current) {
+    // Get the current order from store to ensure we have the latest order ID
+    const currentOrder = useStore.getState().order;
+    const orderIdToCancel = currentOrder?.id;
+    
+    if (orderIdToCancel && isMountedRef.current) {
       try {
-        await cancelOrder(order.id);
-        logger.info(`[${paymentMethod}] Order cancelled on back button`);
+        await cancelOrder(orderIdToCancel);
+        logger.info(`[${paymentMethod}] Order cancelled on back button`, { orderId: orderIdToCancel });
       } catch (error) {
         logger.error(`[${paymentMethod}] Error cancelling order on back`, error);
       }

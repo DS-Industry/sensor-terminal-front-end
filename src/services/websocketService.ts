@@ -24,12 +24,20 @@ class WebSocketService {
     const handleStatusUpdate = (data: WebSocketMessage) => {
       if (data.type === 'status_update' && data.order_id) {
         const currentOrder = useStore.getState().order;
+        const orderStatus = data.status as EOrderStatus | undefined;
         
-        if (!currentOrder?.id || currentOrder.id === data.order_id) {
-          logger.debug(`Updating order status globally: ${data.status} for order ${data.order_id}`);
-          
-          const orderStatus = data.status as EOrderStatus | undefined;
-
+        if (!currentOrder?.id) {
+          logger.debug(`Updating order status globally: ${orderStatus} for order ${data.order_id}`);
+          useStore.getState().setOrder({
+            id: data.order_id,
+            status: orderStatus,
+            transactionId: data.transaction_id,
+          });
+          return;
+        }
+        
+        if (currentOrder.id === data.order_id) {
+          logger.debug(`Updating order status globally: ${orderStatus} for order ${data.order_id}`);
           useStore.getState().setOrder({
             ...currentOrder,
             id: data.order_id,
@@ -40,8 +48,24 @@ class WebSocketService {
           if (orderStatus === EOrderStatus.COMPLETED) {
             logger.info(`Order ${data.order_id} completed`);
           }
+          return;
+        }
+        
+        const isOldOrderCompleted = currentOrder.status === EOrderStatus.COMPLETED;
+        const isNewOrderStarting = orderStatus === EOrderStatus.CREATED || orderStatus === EOrderStatus.WAITING_PAYMENT;
+        
+        if (isOldOrderCompleted || isNewOrderStarting) {
+          logger.debug(`Updating order status globally: ${orderStatus} for new order ${data.order_id} (replacing order ${currentOrder.id})`);
+          useStore.getState().setOrder({
+            id: data.order_id,
+            status: orderStatus,
+            transactionId: data.transaction_id,
+            programId: currentOrder.programId,
+            paymentMethod: currentOrder.paymentMethod,
+            createdAt: new Date().toISOString(),
+          });
         } else {
-          logger.debug(`Ignoring status update for different order: ${data.order_id} (current order: ${currentOrder.id})`);
+          logger.debug(`Ignoring status update for different order: ${data.order_id} (current order: ${currentOrder.id}, status: ${currentOrder.status})`);
         }
       }
     };

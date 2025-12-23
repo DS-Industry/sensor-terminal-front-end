@@ -48,8 +48,8 @@ export default function QueueWaitingPage() {
 
 
   return (
-    <div className="flex flex-col h-[1024px] w-[1280px] bg-[#0045FF] overflow-hidden">
-      <div className="w-full flex-shrink-0 h-64">
+    <div className="flex flex-col h-screen w-screen bg-[#0045FF] overflow-hidden">
+      <div className="w-full flex-shrink-0" style={{ height: '25%' }}>
         <img 
           src={gazpromHeader} 
           alt="Header" 
@@ -57,16 +57,16 @@ export default function QueueWaitingPage() {
           decoding="async"
         />
       </div>
-      <div className="flex-1 flex flex-col items-center justify-center bg-[#0045FF] relative overflow-hidden" style={{ height: 'calc(1024px - 256px)' }}>
+      <div className="flex-1 flex flex-col items-center justify-center bg-[#0045FF] relative overflow-hidden min-h-0">
         <div className="flex flex-col items-center justify-center max-w-4xl px-8 text-center z-10">
-          <div className="flex items-center justify-center gap-3 mb-6 bg-[#89BAFB4D] rounded-2xl  text-center justify-center py-3 px-4">
+          <div className="flex items-center justify-center gap-3 mb-6 bg-[#89BAFB4D] rounded-2xl text-center justify-center py-3 px-4">
             <div className="w-4 h-4 bg-[#15FF00] rounded-full"></div>
-            <p className="text-white text-3xl font-semibold ">
+            <p className="text-white text-3xl font-semibold">
               Оплата успешна!
             </p>
           </div>
 
-          <h1 className="text-white text-5xl font-bold mb-6 p-3 bg-[#89BAFB4D] rounded-2xl w-[727px] text-center justify-center">
+          <h1 className="text-white text-5xl font-bold mb-6 p-3 bg-[#89BAFB4D] rounded-2xl w-full max-w-[727px] text-center justify-center">
             Ожидайте окончания мойки...
           </h1>
 
@@ -75,12 +75,12 @@ export default function QueueWaitingPage() {
           </p>
         </div>
 
-        <div className="relative w-full h-[400px] flex items-end justify-end pr-0 overflow-hidden">
+        <div className="relative w-full flex-1 flex items-end justify-end pr-0 overflow-hidden min-h-0">
           <div className="absolute -bottom-8 left-0 z-20 car-drive-animation-success">
             <img
               src={CarImage}
               alt="Car"
-              className="w-auto h-[600px] md:h-[600px] object-contain"
+              className="w-auto h-full max-h-[600px] object-contain"
               loading="lazy"
               decoding="async"
             />
