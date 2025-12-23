@@ -1,10 +1,12 @@
 import { useCallback, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createOrder } from '../../api/services/payment';
 import { EPaymentMethod } from '../../components/state/order/orderSlice';
 import { PaymentState } from '../../state/paymentStateMachine';
 import { logger } from '../../util/logger';
 import useStore from '../../components/state/store';
 import { IProgram } from '../../api/types/program';
+import { navigateToError } from '../../utils/navigation';
 
 interface UseOrderCreationOptions {
   selectedProgram: IProgram | null;
@@ -12,9 +14,11 @@ interface UseOrderCreationOptions {
 }
 
 export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCreationOptions) {
+  const navigate = useNavigate();
   const { setIsLoading, setOrder, setPaymentState, setPaymentError, order } = useStore();
   const isCreatingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
 
   const createOrderAsync = useCallback(async () => {
     if (!selectedProgram) {
@@ -66,6 +70,11 @@ export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCre
 
       logger.error(`[${paymentMethod}] Error creating order`, err);
       
+      if (!isMountedRef.current) {
+        isCreatingRef.current = false;
+        return;
+      }
+      
       setIsLoading(false);
       setPaymentState(PaymentState.PAYMENT_ERROR);
       
@@ -79,6 +88,9 @@ export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCre
       
       setPaymentError(errorMessage);
       isCreatingRef.current = false;
+      
+      // Navigate to error page
+      navigateToError(navigate);
     }
   }, [selectedProgram, paymentMethod, setIsLoading, setOrder, setPaymentState, setPaymentError]);
 
@@ -97,6 +109,13 @@ export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCre
       isCreatingRef.current = false;
     }
   }, [order?.id, paymentMethod]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   return {
     createOrder: createOrderAsync,
