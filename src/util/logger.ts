@@ -509,6 +509,10 @@ class Logger {
     this.logActivity('user_action', 'info', `Payment flow: ${step}`, { action: 'payment_flow', step, orderId, paymentMethod, ...details });
   }
 
+  trackApiCall(method: string, url: string, level: LogLevel, details?: Record<string, unknown>): void {
+    this.logActivity('api_call', level, `API ${level === 'error' ? 'Error' : 'Call'}: ${method} ${url}`, { method, url, ...details });
+  }
+
   trackError(error: Error | unknown, context?: Record<string, unknown>): void {
     const message = error instanceof Error ? error.message : 'Unknown error';
     this.logActivity('error', 'error', `User error: ${message}`, {
