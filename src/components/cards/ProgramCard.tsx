@@ -12,11 +12,17 @@ export default function ProgramCard(program: IProgram) {
   const { setOrderProgramId, setSelectedProgram } = useStore.getState();
 
   return (
-    <Card type="action" className="w-80 bg-white rounded-[20px] shadow-xl overflow-hidden flex flex-col border-0" 
-      style={{
-        boxShadow: "0 4px 4px 0 rgba(0, 0, 0, 0.25)",
-        borderRadius: "20px"
-      }}
+    <div className="w-80" style={{ display: 'flex', alignSelf: 'stretch' }}>
+      <Card 
+        type="action" 
+        className="w-full bg-white rounded-[20px] shadow-xl overflow-hidden flex flex-col border-0" 
+        style={{
+          boxShadow: "0 4px 4px 0 rgba(0, 0, 0, 0.25)",
+          borderRadius: "20px",
+          flex: '1 1 auto',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
       onClick={() => {
         logger.debug(`ProgramCard: Selected program ${program.id}`);
         setOrderProgramId(program.id);
@@ -36,7 +42,7 @@ export default function ProgramCard(program: IProgram) {
       }}
     >
       <div 
-        className="flex-shrink-0 h-96 p-4 relative flex flex-col overflow-hidden"
+        className="flex-1 min-h-96 p-4 relative flex flex-col"
         style={{
           background: 'linear-gradient(to right, #0967E1, #D632EC)'
         }}
@@ -67,7 +73,7 @@ export default function ProgramCard(program: IProgram) {
           }}
         />
         
-        <div className="relative z-10">
+        <div className="relative z-10 flex flex-col flex-1">
           <div className="flex justify-start mb-6">
             <div className="shadow-[0_4px_4px_0_rgba(0,0,0,0.25)] inline-flex items-center gap-2 rounded-full px-3 py-1.5 bg-[#5292FF]">
               <Clock className="w-4 h-4 text-white" />
@@ -77,7 +83,7 @@ export default function ProgramCard(program: IProgram) {
 
           <h2 className="text-3xl font-bold mb-5 text-balance leading-tight text-white whitespace-nowrap text-center">{program.name}</h2>
 
-          <div className="flex-1">
+          <div className="flex-1 min-h-0">
             <ul className="space-y-2">
               {program.functions && program.functions.split(", ").map((service, index) => (
                 <li key={index} className="flex items-center gap-3">
@@ -107,5 +113,6 @@ export default function ProgramCard(program: IProgram) {
         </div>
       </div>
     </Card>
+    </div>
   )
 }

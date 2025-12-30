@@ -110,12 +110,8 @@ export default function MainPage() {
 
             {programs && (
               <div className="flex-1 flex flex-col justify-center mt-10">
-                <div
-                  className={`w-full snap-x`}
-                >
-                  <div
-                    className={`flex flex-row justify-center gap-6 w-full`}
-                  >
+                <div className="w-full snap-x">
+                  <div className="flex flex-row justify-center items-stretch gap-6 w-full">
                     {programs.map((item) => (
                       <ProgramCard
                         key={`program-card-${item.id}`}
