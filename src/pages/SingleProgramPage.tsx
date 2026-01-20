@@ -1,11 +1,10 @@
 import { PAYS } from "../pays-data";
 import PayCard from "../components/cards/PayCard";
-import { Clock } from "@gravity-ui/icons";
-import { Check } from "lucide-react";
+import { Check, Clock } from "lucide-react";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
-import { Icon, Text, Card } from "@gravity-ui/uikit";
+import { Text, Card } from "@gravity-ui/uikit";
 import useStore from "../components/state/store";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { loyaltyCheck } from "../api/services/payment";
@@ -76,29 +75,31 @@ export default function SingleProgramPage() {
   logger.debug("filteredPays", filteredPays);
 
   return (
-    <div className="flex flex-col h-[1920px] w-[1080px] bg-[#EEEEEE] overflow-hidden">
-       {/* Video Section - 40% of screen height */}
-       <MediaCampaign attachemntUrl={attachemntUrl} mediaStatus={mediaStatus}/>
-
-
-
-      <div className="flex-1 flex flex-col bg-gray-200 overflow-hidden" style={{ height: 'calc(1024px - 256px)' }}>
-
+    <div className="flex flex-col min-h-screen w-screen bg-[#EEEEEE]">
+      <MediaCampaign attachemntUrl={attachemntUrl} mediaStatus={mediaStatus}/>
+      
+      <div className="flex-1 flex flex-col">
         <HeaderWithLogo title="Выберите способ оплаты" />
 
-        <div className="flex-1 px-7 pb-7 overflow-hidden">
+        <div className="flex-1 px-7 pb-7">
+          <div className="flex flex-col h-full">
           {selectedProgram && (
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full  mt-10">
 
               <div className="flex flex-row gap-6 justify-center items-center">
-                <div className="w-80 flex-shrink-0">
-                  <Card className="bg-white rounded-3xl shadow-xl overflow-hidden border-0 h-full"  style={{
-                      borderRadius: "20px",
+                <div className="w-80 flex-shrink-0" style={{ display: 'flex', alignSelf: 'stretch' }}>
+                  <Card 
+                    className="w-full bg-white rounded-[20px] shadow-xl overflow-hidden flex flex-col border-0 h-full" 
+                    style={{
                       boxShadow: "0 4px 4px 0 rgba(0, 0, 0, 0.25)",
+                      borderRadius: "20px",
+                      flex: '1 1 auto',
+                      display: 'flex',
+                      flexDirection: 'column'
                     }}
                   >
                     <div 
-                      className="p-6 pb-8 relative min-h-[280px] overflow-hidden"
+                      className="flex-1 min-h-96 p-4 relative flex flex-col"
                       style={{
                         background: 'linear-gradient(to right, #0967E1, #D632EC)'
                       }}
@@ -128,44 +129,42 @@ export default function SingleProgramPage() {
                         }}
                       />
                       
-                      <div className="relative z-10">
-                        <div className="flex">
-                        <div className="shadow-[0_4px_4px_0_rgba(0,0,0,0.25)] inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-6 self-start bg-[#5292FF]">
-                            <Icon data={Clock} size={18} className="text-white" />
-                            <Text className="text-white font-semibold text-sm">
-                              {selectedProgram.duration} мин.
-                            </Text>
+                      <div className="relative z-10 flex flex-col flex-1">
+                        <div className="flex justify-start mb-6">
+                          <div className="shadow-[0_4px_4px_0_rgba(0,0,0,0.25)] inline-flex items-center gap-2 rounded-full px-3 py-1.5 bg-[#5292FF]">
+                            <Clock className="w-4 h-4 text-white" />
+                            <span className="text-sm font-medium text-white">{selectedProgram.duration} мин.</span>
                           </div>
                         </div>
 
-                        <h2 className="text-3xl font-bold mb-5 text-white leading-tight text-center">
-                          {selectedProgram.name}
-                        </h2>
+                        <h2 className="text-3xl font-bold mb-5 text-balance leading-tight text-white whitespace-nowrap text-center">{selectedProgram.name}</h2>
 
-                        <div className="space-y-2.5 mt-4">
-                          {selectedProgram.functions && selectedProgram.functions.split(", ").map((service, index) => (
-                            <div key={index} className="flex items-center gap-2.5">
-                              <Check size={18} className="text-white flex-shrink-0 stroke-[3]" />
-                              <Text className="text-white font-medium text-sm leading-relaxed">
-                                {service}
-                              </Text>
-                            </div>
-                          ))}
+                        <div className="flex-1 min-h-0">
+                          <ul className="space-y-2">
+                            {selectedProgram.functions && selectedProgram.functions.split(", ").map((service, index) => (
+                              <li key={index} className="flex items-center gap-3">
+                                <Check className="w-4 h-4 text-white flex-shrink-0" strokeWidth={3} />
+                                <span className="text-sm font-medium text-white text-start">{service}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
+                      </div>
+
+                      <div className="absolute top-6 right-6 flex gap-1.5 z-10">
+                        <div className="w-1.5 h-1.5 rounded-full bg-white/60" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-white/60" />
                       </div>
                     </div>
 
-                    <div className="p-9 bg-white text-center">
-                      <div className="mb-4">
-                        <span className="text-6xl font-bold text-gray-900 tracking-tight">
-                          {Number(selectedProgram.price)}
-                        </span>
-                        <span className="text-2xl text-gray-500 ml-1 font-semibold">
-                          ₽
-                        </span>
+                    <div className="flex-shrink-0 p-6 bg-white text-center">
+                      <div className="mb-6">
+                        <span className="text-6xl font-bold text-gray-900 tracking-tight">{Number(selectedProgram.price)}</span>
+                        <span className="text-2xl text-gray-500 ml-1">₽</span>
                       </div>
+
                       <div className="flex items-center justify-center gap-2">
-                        <Check size={18} className="text-green-500 flex-shrink-0 stroke-[3]" />
+                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" strokeWidth={3} />
                         <Text className="text-[#008618] font-semibold text-sm">
                           Выбранная программа
                         </Text>
@@ -194,6 +193,7 @@ export default function SingleProgramPage() {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

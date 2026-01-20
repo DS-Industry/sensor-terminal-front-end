@@ -88,7 +88,7 @@ export default function ProgramCard(program: IProgram) {
               {program.functions && program.functions.split(", ").map((service, index) => (
                 <li key={index} className="flex items-center gap-3">
                   <Check className="w-4 h-4 text-white flex-shrink-0" strokeWidth={3} />
-                  <span className="text-sm font-medium text-white">{service}</span>
+                  <span className="text-sm font-medium text-white text-start">{service}</span>
                 </li>
               ))}
             </ul>
