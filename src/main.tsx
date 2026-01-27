@@ -29,6 +29,11 @@ import { useEffect } from 'react';
 
 WebSocketService.initialize();
 
+document.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  return false;
+});
+
 // eslint-disable-next-line react-refresh/only-export-components
 function NavigationTracker() {
   useUserActivityTracking();

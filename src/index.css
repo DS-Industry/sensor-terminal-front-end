@@ -1,3 +1,18 @@
+body {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+img {
+  pointer-events: none;
+  user-drag: none;
+  -webkit-user-drag: none;
+  -moz-user-drag: none; 
+  -ms-user-drag: none; 
+}
+
 @keyframes blobMove1 {
   0% {
     transform: translate(0, 0) scale(1) rotate(0deg);
