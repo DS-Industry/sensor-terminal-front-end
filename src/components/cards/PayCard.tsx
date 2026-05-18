@@ -79,7 +79,7 @@ export default function PayCard({
           {payType === EPaymentMethod.CASH && (
             <div className="bg-white/20 p-2 rounded-2xl text-center w-full h-full flex flex-col justify-center">
               <div className="text-white/80 text-sm mb-1">Купюры</div>
-              <div className="text-white font-semibold text-base h-6 flex items-center justify-center">50, 100, 200</div>
+              <div className="text-white font-semibold text-base h-6 flex items-center justify-center">50, 100, 200, 500, 1000</div>
             </div>
           )}
 

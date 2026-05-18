@@ -71,7 +71,7 @@ export default function CashPayPage() {
                       Принимаются купюры номиналом:
                     </div>
                     <div className="inline-flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-2xl font-bold text-xl">
-                      50 / 100 / 200
+                      50 / 100 / 200 / 500 / 1000
                     </div>
                   </div>
                 </div>
