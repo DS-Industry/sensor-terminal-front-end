@@ -3,7 +3,7 @@ import { IndexedDBStorage } from './logger/indexedDB';
 import { S3CircuitBreaker } from './logger/s3CircuitBreaker';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-type ActivityCategory = 'user_action' | 'page_view' | 'socket_event' | 'api_call' | 'error' | 'system';
+type ActivityCategory = 'user_action' | 'page_view' | 'socket_event' | 'api_call' | 'error' | 'system' | 'logs';
 
 interface ActivityLog {
   timestamp: string;
@@ -507,6 +507,11 @@ class Logger {
 
   trackPaymentFlow(step: string, orderId?: string, paymentMethod?: string, details?: Record<string, unknown>): void {
     this.logActivity('user_action', 'info', `Payment flow: ${step}`, { action: 'payment_flow', step, orderId, paymentMethod, ...details });
+  }
+
+  trackLog(source: string, level: LogLevel, message: string, details?: Record<string, unknown>): void {
+    const payload = details !== undefined ? { source, ...details } : { source };
+    this.logActivity('logs', level, `[${source}] ${message}`, payload);
   }
 
   trackApiCall(method: string, url: string, level: LogLevel, details?: Record<string, unknown>): void {

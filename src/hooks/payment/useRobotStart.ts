@@ -25,24 +25,29 @@ export function useRobotStart({ orderId, navigate }: UseRobotStartOptions) {
 
   const handleStartRobot = useCallback(async () => {
     if (!orderId) {
-      logger.warn('[RobotStart] Cannot start robot: no order ID');
+      logger.trackLog('RobotStart', 'warn', 'Cannot start robot: no order ID');
       return;
     }
 
     const paymentState = useStore.getState().paymentState;
     if (paymentState !== PaymentState.PAYMENT_SUCCESS) {
-      logger.warn('[RobotStart] Cannot start robot: payment not confirmed');
+      logger.trackLog('RobotStart', 'warn', 'Cannot start robot: payment not confirmed', {
+        paymentState,
+      });
       return;
     }
 
     try {
-      logger.info('[RobotStart] Starting robot for order:', orderId);
+      logger.trackLog('RobotStart', 'info', 'Starting robot for order', { orderId });
       setIsLoading(true);
       setPaymentState(PaymentState.STARTING_ROBOT);
       
       const response = await startRobot(orderId);
 
-      logger.info('[RobotStart] Robot start API call successful', response);
+      logger.trackLog('RobotStart', 'info', 'Robot start API call successful', {
+        orderId,
+        response,
+      });
 
       // Check if order is in queue (checking for Cyrillic "очереди" or "queue" in message)
       const isInQueue = response.message && (
@@ -51,7 +56,7 @@ export function useRobotStart({ orderId, navigate }: UseRobotStartOptions) {
       );
       
       if (isInQueue) {
-        logger.info('[RobotStart] Order is in queue, fetching order details');
+        logger.trackLog('RobotStart', 'info', 'Order is in queue, fetching order details', { orderId });
         
         // Fetch order details to get queue position
         const orderDetails = await getOrderById(orderId);
@@ -59,7 +64,10 @@ export function useRobotStart({ orderId, navigate }: UseRobotStartOptions) {
         // Update queue position and number
         if (orderDetails.queue_position !== undefined) {
           setQueuePosition(orderDetails.queue_position);
-          logger.info(`[RobotStart] Queue position: ${orderDetails.queue_position}`);
+          logger.trackLog('RobotStart', 'info', 'Queue position updated', {
+            orderId,
+            queuePosition: orderDetails.queue_position,
+          });
         }
         
         if (orderDetails.queue_number !== undefined) {
@@ -84,7 +92,7 @@ export function useRobotStart({ orderId, navigate }: UseRobotStartOptions) {
         
         // Small delay to ensure state updates are processed
         setTimeout(() => {
-          logger.info('[RobotStart] Navigating to queue waiting page');
+          logger.trackLog('RobotStart', 'info', 'Navigating to queue waiting page', { orderId });
           navigateToQueueWaiting(navigate);
         }, 0);
         
@@ -92,8 +100,11 @@ export function useRobotStart({ orderId, navigate }: UseRobotStartOptions) {
       }
 
       // If not in queue, wait for WebSocket update with PROCESSING status
-      logger.info('[RobotStart] Order not in queue, waiting for WebSocket update');
+      logger.trackLog('RobotStart', 'info', 'Order not in queue, waiting for WebSocket update', {
+        orderId,
+      });
     } catch (error) {
+      logger.trackError(error, { source: 'RobotStart', phase: 'handleStartRobot', orderId });
       logger.error('[RobotStart] Error starting robot', error);
       setIsLoading(false);
       setPaymentState(PaymentState.PAYMENT_ERROR);
@@ -102,7 +113,9 @@ export function useRobotStart({ orderId, navigate }: UseRobotStartOptions) {
 
   useEffect(() => {
     if (order?.id === orderId && order?.status === EOrderStatus.PROCESSING) {
-      logger.info('[RobotStart] Order status updated to PROCESSING via WebSocket');
+      logger.trackLog('RobotStart', 'info', 'Order status updated to PROCESSING via WebSocket', {
+        orderId,
+      });
       setPaymentState(PaymentState.ROBOT_STARTED);
       setIsLoading(false);
       
