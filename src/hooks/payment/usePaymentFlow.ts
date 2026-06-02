@@ -11,6 +11,7 @@ import { usePaymentWebSocket } from './usePaymentWebSocket';
 import { useQueueManagement } from './useQueueManagement';
 import { useRobotStart } from './useRobotStart';
 import { navigateToMain } from '../../utils/navigation';
+import { logOrderCleared, logPaymentDiagnostic } from '../../util/paymentDiagnostics';
 
 export function usePaymentFlow(paymentMethod: EPaymentMethod) {
   const navigate = useNavigate();
@@ -59,6 +60,7 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
     setGlobalQueueNumber(null);
     
     if (isMountedRef.current) {
+      logOrderCleared('payment_timeout_cancel', order?.id);
       clearOrder();
       setSelectedProgram(null);
       setBankCheck("");
@@ -105,9 +107,16 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
     logger.debug(`[${paymentMethod}] Starting automatic robot start countdown`);
     const initialTime = PAYMENT_CONSTANTS.START_ROBOT_INTERVAL / 1000;
     useStore.getState().setTimeUntilRobotStart(initialTime);
+    logPaymentDiagnostic('info', 'countdown_started', 'H6', order?.id, {
+      paymentMethod,
+      countdownSeconds: initialTime,
+    });
 
     countdownTimeoutRef.current = setTimeout(() => {
       logger.info(`[${paymentMethod}] Automatic robot start triggered`);
+      logPaymentDiagnostic('info', 'countdown_fire_attempt', 'H6', order?.id, {
+        paymentMethod,
+      });
       handleStartRobot();
     }, PAYMENT_CONSTANTS.START_ROBOT_INTERVAL);
 
@@ -128,6 +137,11 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
   useEffect(() => {
     if (paymentState === PaymentState.PAYMENT_SUCCESS && !countdownTimeoutRef.current) {
       startCountdown();
+    } else if (paymentState !== PaymentState.PAYMENT_SUCCESS && countdownTimeoutRef.current) {
+      logPaymentDiagnostic('debug', 'countdown_cancelled', 'H6', order?.id, {
+        paymentState,
+        reason: 'payment_state_changed',
+      });
     }
   }, [paymentState, startCountdown]);
 
@@ -136,7 +150,16 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
     
     if (selectedProgram && paymentState === PaymentState.IDLE) {
       logger.debug(`[${paymentMethod}] Component mounted, creating order`);
+      logPaymentDiagnostic('info', 'flow_mount_autocreate_triggered', undefined, order?.id, {
+        selectedProgramId: selectedProgram.id,
+        paymentState,
+      });
       createOrder();
+    } else {
+      logPaymentDiagnostic('debug', 'flow_mount_autocreate_skipped', undefined, order?.id, {
+        hasSelectedProgram: Boolean(selectedProgram),
+        paymentState,
+      });
     }
     
     return () => {
@@ -190,6 +213,7 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
     setGlobalQueueNumber(null);
     
     if (isMountedRef.current) {
+      logOrderCleared('payment_back_button', orderIdToCancel);
       clearOrder();
       setSelectedProgram(null);
       setBankCheck("");

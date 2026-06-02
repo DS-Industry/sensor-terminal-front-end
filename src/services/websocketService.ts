@@ -2,6 +2,8 @@ import { globalWebSocketManager, type WebSocketMessage } from '../util/websocket
 import { EOrderStatus } from '../components/state/order/orderSlice';
 import { logger } from '../util/logger';
 import useStore from '../components/state/store';
+import { normalizeOrderId, orderIdsMatch } from '../util/orderId';
+import { logPaymentDiagnostic } from '../util/paymentDiagnostics';
 // Navigation is handled by pages watching order status
 
 class WebSocketService {
@@ -25,24 +27,34 @@ class WebSocketService {
       if (data.type === 'status_update' && data.order_id) {
         const currentOrder = useStore.getState().order;
         const orderStatus = data.status as EOrderStatus | undefined;
+        const messageOrderId = normalizeOrderId(data.order_id);
+        const currentOrderId = normalizeOrderId(currentOrder?.id);
         
         if (!currentOrder?.id) {
           logger.debug(`Updating order status globally: ${orderStatus} for order ${data.order_id}`);
           useStore.getState().setOrder({
-            id: data.order_id,
+            id: messageOrderId,
             status: orderStatus,
             transactionId: data.transaction_id,
+          });
+          logPaymentDiagnostic('info', 'ws_global_set_initial', 'H4', messageOrderId, {
+            messageOrderId,
+            orderStatus,
           });
           return;
         }
         
-        if (currentOrder.id === data.order_id) {
+        if (orderIdsMatch(currentOrderId, messageOrderId)) {
           logger.debug(`Updating order status globally: ${orderStatus} for order ${data.order_id}`);
           useStore.getState().setOrder({
             ...currentOrder,
-            id: data.order_id,
+            id: messageOrderId,
             status: orderStatus,
             transactionId: data.transaction_id,
+          });
+          logPaymentDiagnostic('info', 'ws_global_update_same', 'H4', messageOrderId, {
+            messageOrderId,
+            orderStatus,
           });
 
           if (orderStatus === EOrderStatus.COMPLETED) {
@@ -51,21 +63,33 @@ class WebSocketService {
           return;
         }
         
-        const isOldOrderCompleted = currentOrder.status === EOrderStatus.COMPLETED;
+        const isOldOrderCompleted = currentOrder.status === EOrderStatus.COMPLETED || currentOrder.status === EOrderStatus.PAYED || currentOrder.status === EOrderStatus.FAILED;
         const isNewOrderStarting = orderStatus === EOrderStatus.CREATED || orderStatus === EOrderStatus.WAITING_PAYMENT;
         
         if (isOldOrderCompleted || isNewOrderStarting) {
           logger.debug(`Updating order status globally: ${orderStatus} for new order ${data.order_id} (replacing order ${currentOrder.id})`);
           useStore.getState().setOrder({
-            id: data.order_id,
+            id: messageOrderId,
             status: orderStatus,
             transactionId: data.transaction_id,
             programId: currentOrder.programId,
             paymentMethod: currentOrder.paymentMethod,
             createdAt: new Date().toISOString(),
           });
+          logPaymentDiagnostic('info', 'ws_global_replace_stale', 'H4', messageOrderId, {
+            messageOrderId,
+            orderStatus,
+            previousOrderId: currentOrder?.id,
+            previousOrderStatus: currentOrder?.status,
+          });
         } else {
           logger.debug(`Ignoring status update for different order: ${data.order_id} (current order: ${currentOrder.id}, status: ${currentOrder.status})`);
+          logPaymentDiagnostic('warn', 'ws_global_ignored', 'H4', messageOrderId, {
+            messageOrderId,
+            orderStatus,
+            currentOrderId: currentOrder?.id,
+            currentOrderStatus: currentOrder?.status,
+          });
         }
       }
     };

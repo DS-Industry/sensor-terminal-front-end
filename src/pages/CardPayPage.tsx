@@ -8,6 +8,8 @@ import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import { EPaymentMethod } from "../components/state/order/orderSlice";
 import { usePaymentFlow } from "../hooks/payment/usePaymentFlow";
 import SuccessPayment from "../components/successPayment/SuccessPayment";
+import { useEffect } from "react";
+import { logPaymentDiagnostic } from "../util/paymentDiagnostics";
 
 const CARD_PAGE_URL = "CardPage.webp";
 
@@ -21,6 +23,14 @@ export default function CardPayPage() {
     handleStartRobot,
     timeUntilRobotStart 
   } = usePaymentFlow(EPaymentMethod.CARD);
+
+  useEffect(() => {
+    if (paymentSuccess) {
+      logPaymentDiagnostic('info', 'processing_navigate_success', 'H3', undefined, {
+        source: 'CardPayPage_success_ui_visible',
+      });
+    }
+  }, [paymentSuccess]);
 
   return (
     <div className="flex flex-col min-h-screen w-screen bg-gray-100">

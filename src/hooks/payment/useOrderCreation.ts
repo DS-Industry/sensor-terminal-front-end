@@ -7,6 +7,7 @@ import { logger } from '../../util/logger';
 import useStore from '../../components/state/store';
 import { IProgram } from '../../api/types/program';
 import { navigateToError } from '../../utils/navigation';
+import { logPaymentDiagnostic } from '../../util/paymentDiagnostics';
 
 interface UseOrderCreationOptions {
   selectedProgram: IProgram | null;
@@ -43,7 +44,12 @@ export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCre
     setPaymentState(PaymentState.CREATING_ORDER);
 
     try {
+      const requestStartedAt = Date.now();
       logger.debug(`[${paymentMethod}] Creating order for program: ${selectedProgram.id}`);
+      logPaymentDiagnostic('info', 'order_create_start', undefined, order?.id, {
+        programId: selectedProgram.id,
+        paymentMethod,
+      });
       
       await createOrder({
         program_id: selectedProgram.id,
@@ -54,6 +60,18 @@ export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCre
         logger.info(`[${paymentMethod}] Order creation aborted`);
         isCreatingRef.current = false;
         return;
+      }
+
+      const requestDurationMs = Date.now() - requestStartedAt;
+      logPaymentDiagnostic('info', 'order_create_response', undefined, order?.id, {
+        requestDurationMs,
+        programId: selectedProgram.id,
+      });
+      if (requestDurationMs > 3000) {
+        logPaymentDiagnostic('warn', 'order_create_slow_response', undefined, order?.id, {
+          requestDurationMs,
+          thresholdMs: 3000,
+        });
       }
 
       // logger.info(`[${paymentMethod}] Order creation API called successfully, waiting for order ID from WebSocket`);
@@ -106,6 +124,9 @@ export function useOrderCreation({ selectedProgram, paymentMethod }: UseOrderCre
   useEffect(() => {
     if (order?.id && isCreatingRef.current) {
       logger.debug(`[${paymentMethod}] Order ID received via WebSocket: ${order.id}, resetting creation flag`);
+      logPaymentDiagnostic('info', 'order_create_store_set', undefined, order?.id, {
+        orderIdFromStore: order.id,
+      });
       isCreatingRef.current = false;
     }
   }, [order?.id, paymentMethod]);

@@ -5,6 +5,7 @@ import { getRefreshInterval } from '../../config/env';
 import useStore from '../state/store';
 import { navigateToMain } from '../../utils/navigation';
 import { EOrderStatus } from '../state/order/orderSlice';
+import { logOrderCleared, logPaymentDiagnostic } from '../../util/paymentDiagnostics';
 
 export function AppHealthMonitor() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export function AppHealthMonitor() {
   const appStartTimeRef = useRef<number>(Date.now());
   const lastResetTimeRef = useRef<number>(Date.now());
   const skippedResetsRef = useRef<number>(0);
-  const { order, clearOrder, setSelectedProgram, setBankCheck, setInsertedAmount, setQueuePosition, setQueueNumber } = useStore();
+  const { order, clearOrder, resetPayment, setSelectedProgram, setBankCheck, setInsertedAmount, setQueuePosition, setQueueNumber } = useStore();
   const store = useStore; // Keep reference to store for accessing current state in callbacks
 
   const refreshInterval = getRefreshInterval();
@@ -52,6 +53,7 @@ export function AppHealthMonitor() {
 
   const shouldSkipHealthActions = (): boolean => {
     const activePaymentStatuses = [
+      EOrderStatus.CREATED,
       EOrderStatus.WAITING_PAYMENT,
       EOrderStatus.PAYED,
       EOrderStatus.PROCESSING,
@@ -67,6 +69,10 @@ export function AppHealthMonitor() {
         orderId: order?.id,
         status: order?.status,
         skippedCount: skippedResetsRef.current,
+      });
+      logPaymentDiagnostic('debug', 'health_reset_skipped', 'H5', order?.id, {
+        skippedCount: skippedResetsRef.current,
+        orderStatus: order?.status,
       });
       return;
     }
@@ -90,7 +96,14 @@ export function AppHealthMonitor() {
       logger.info(`[AppHealth] Memory before reset: ${memoryInfo.usedMB}MB (${memoryInfo.usagePercent}%)`);
     }
 
+    logPaymentDiagnostic('warn', 'health_reset_cleared_state', 'H5', order?.id, {
+      currentPath: location.pathname,
+      uptimeHours,
+      timeSinceResetHours,
+    });
+    logOrderCleared('app_health_soft_reset', order?.id);
     clearOrder();
+    resetPayment();
     setSelectedProgram(null);
     setBankCheck("");
     setInsertedAmount(0);

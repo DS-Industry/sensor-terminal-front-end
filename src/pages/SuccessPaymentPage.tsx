@@ -8,6 +8,7 @@ import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
 import { navigateToWashing } from "../utils/navigation";
 import { logger } from "../util/logger";
+import { logPaymentDiagnostic } from "../util/paymentDiagnostics";
 
 const SUCCESS_PAGE_URL = "SuccessPage.webp";
 
@@ -26,6 +27,9 @@ export default function SuccessPaymentPage() {
   useEffect(() => {
     if (order?.status === EOrderStatus.COMPLETED) {
       logger.info('[SuccessPaymentPage] Order status is COMPLETED, redirecting to main');
+      logPaymentDiagnostic('info', 'processing_navigate_success', 'H3', order?.id, {
+        source: 'SuccessPaymentPage_completed_redirect_main',
+      });
       navigate("/");
       return;
     }
@@ -34,6 +38,10 @@ export default function SuccessPaymentPage() {
     const redirectTimer = setTimeout(() => {
       if (order?.status !== EOrderStatus.COMPLETED) {
         logger.info('[SuccessPaymentPage] 10 seconds elapsed, redirecting to washing page');
+        logPaymentDiagnostic('info', 'processing_navigate_success', 'H3', order?.id, {
+          source: 'SuccessPaymentPage_redirect_washing',
+          delaySeconds: 10,
+        });
         navigateToWashing(navigate);
       }
     }, 10000);

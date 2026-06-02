@@ -9,6 +9,8 @@ import useStore from '../../components/state/store';
 import { globalWebSocketManager, type WebSocketMessage } from '../../util/websocketManager';
 import { IProgram } from '../../api/types/program';
 import { navigateToError, navigateToErrorPayment } from '../../utils/navigation';
+import { normalizeOrderId, orderIdsMatch } from '../../util/orderId';
+import { logPaymentDiagnostic } from '../../util/paymentDiagnostics';
 
 interface UsePaymentWebSocketOptions {
   orderId: string | undefined;
@@ -47,7 +49,16 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
 
     try {
       logger.info(`[${paymentMethod}] Fetching order details after PAYED status received`);
+      logPaymentDiagnostic('info', 'payed_fetch_start', 'H3', orderId, {
+        paymentMethod,
+      });
       const orderDetails = await getOrderById(orderId);
+      logPaymentDiagnostic('info', 'payed_fetch_response', 'H3', orderId, {
+        apiOrderStatus: orderDetails.status,
+        amountSumRaw: orderDetails.amount_sum,
+        queuePosition: orderDetails.queue_position,
+        queueNumber: orderDetails.queue_number,
+      });
 
       if (!isMountedRef.current) return;
 
@@ -150,15 +161,80 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
         setInsertedAmount(amountSum);
       }
 
-      if (amountSum >= expectedAmount || amountSum === 0) {
+      const normalizedOrderId = normalizeOrderId(orderId);
+      const currentOrder = useStore.getState().order;
+      setOrder({
+        id: normalizedOrderId,
+        status: EOrderStatus.PAYED,
+        transactionId: currentOrder?.transactionId,
+        programId: currentOrder?.programId ?? selectedProgram?.id,
+        paymentMethod: currentOrder?.paymentMethod ?? paymentMethod,
+        createdAt: currentOrder?.createdAt || new Date().toISOString(),
+      });
+
+      const isAmountConfirmed = amountSum >= expectedAmount || (expectedAmount === 0 && amountSum === 0);
+      const shouldFallbackToPayedSuccess = paymentMethod === EPaymentMethod.CARD && !isAmountConfirmed;
+
+      if (isAmountConfirmed || shouldFallbackToPayedSuccess) {
         logger.info(`[${paymentMethod}] Payment confirmed! Amount: ${amountSum} (expected: ${expectedAmount})`);
         setPaymentError(null);
         setPaymentState(PaymentState.PAYMENT_SUCCESS);
         setIsLoading(false);
+        logPaymentDiagnostic('info', 'payment_success_set', 'H2', orderId, {
+          amountSum,
+          expectedAmount,
+          messageOrderId: normalizedOrderId,
+          successSource: isAmountConfirmed ? 'amount_confirmed' : 'payed_fallback',
+        });
+        if (shouldFallbackToPayedSuccess) {
+          logger.warn(`[${paymentMethod}] Falling back to PAYED success despite amount mismatch`, {
+            orderId: normalizedOrderId,
+            amountSum,
+            expectedAmount,
+          });
+          logPaymentDiagnostic('warn', 'payment_success_payed_fallback', 'H3', orderId, {
+            amountSum,
+            expectedAmount,
+            skipReason: 'amount_not_confirmed',
+          });
+        }
+        logPaymentDiagnostic('info', 'payed_amount_gate_decision', 'H3', orderId, {
+          amountSum,
+          expectedAmount,
+          decision: 'set_payment_success',
+          successSource: isAmountConfirmed ? 'amount_confirmed' : 'payed_fallback',
+        });
+        if (!normalizeOrderId(useStore.getState().order?.id)) {
+          logPaymentDiagnostic('warn', 'payment_success_desync', 'H2', orderId, {
+            amountSum,
+            expectedAmount,
+          });
+        }
       } else if (amountSum > 0 && amountSum < expectedAmount) {
         logger.warn(`[${paymentMethod}] Partial payment detected: ${amountSum} < ${expectedAmount}`);
         setPaymentState(PaymentState.PROCESSING_PAYMENT);
         setIsLoading(true);
+        logPaymentDiagnostic('warn', 'payment_payed_fetch_skipped_amount', 'H3', orderId, {
+          amountSum,
+          expectedAmount,
+          skipReason: 'partial_payment',
+        });
+        logPaymentDiagnostic('warn', 'payed_amount_gate_decision', 'H3', orderId, {
+          amountSum,
+          expectedAmount,
+          decision: 'set_processing_payment',
+        });
+      } else {
+        logPaymentDiagnostic('warn', 'payment_payed_fetch_skipped_amount', 'H3', orderId, {
+          amountSum,
+          expectedAmount,
+          skipReason: 'amount_not_confirmed',
+        });
+        logPaymentDiagnostic('warn', 'payed_amount_gate_decision', 'H3', orderId, {
+          amountSum,
+          expectedAmount,
+          decision: 'skip_success',
+        });
       }
     } catch (err) {
       logger.error(`[${paymentMethod}] Error fetching order details on PAYED`, err);
@@ -179,10 +255,18 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
 
       // Get current order from store to handle cases where orderId prop might be stale
       const currentOrder = useStore.getState().order;
-      const effectiveOrderId = orderId || currentOrder?.id;
+      const effectiveOrderId = normalizeOrderId(orderId || currentOrder?.id);
+      const messageOrderId = normalizeOrderId(data.order_id);
       
       // Only process messages for the current order (either from prop or store)
-      if (data.order_id !== effectiveOrderId) {
+      if (effectiveOrderId && messageOrderId && !orderIdsMatch(effectiveOrderId, messageOrderId)) {
+        logPaymentDiagnostic('warn', 'ws_hook_message_ignored', 'H3', orderId, {
+          effectiveOrderId,
+          messageOrderId,
+          messageStatus: data.status,
+          storeOrderId: currentOrder?.id,
+          storeOrderIdType: typeof currentOrder?.id,
+        });
         return;
       }
 
@@ -192,25 +276,51 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
       logger.debug(`[${paymentMethod}] WebSocket status update: ${orderStatus} for order ${data.order_id}`);
 
       // Update order in store if it matches
-      if (currentOrder?.id === data.order_id) {
+      if (orderIdsMatch(currentOrder?.id, messageOrderId)) {
         setOrder({
           ...currentOrder,
+          id: messageOrderId,
           status: orderStatus,
           transactionId: data.transaction_id,
         });
-      } else if (!currentOrder?.id && data.order_id) {
+        logPaymentDiagnostic('info', 'ws_hook_order_set', 'H3', orderId, {
+          branch: 'update_existing',
+          messageOrderId,
+          orderStatus,
+        });
+      } else if (!currentOrder?.id && messageOrderId) {
         // If no order in store but we have an order_id in the message, set it
         setOrder({
-          id: data.order_id,
+          id: messageOrderId,
           status: orderStatus,
           transactionId: data.transaction_id,
           programId: selectedProgram?.id,
           paymentMethod: paymentMethod,
           createdAt: new Date().toISOString(),
         });
+        logPaymentDiagnostic('info', 'ws_hook_order_set', 'H3', orderId, {
+          branch: 'set_initial',
+          messageOrderId,
+          orderStatus,
+        });
       }
 
       if (orderStatus === EOrderStatus.PAYED) {
+        logPaymentDiagnostic('info', 'payed_received', 'H3', orderId, {
+          messageOrderId,
+          effectiveOrderId,
+        });
+        if (depositTimeoutRef.current) {
+          clearTimeout(depositTimeoutRef.current);
+          depositTimeoutRef.current = null;
+        }
+        if (checkAmountIntervalRef.current) {
+          clearInterval(checkAmountIntervalRef.current);
+          checkAmountIntervalRef.current = null;
+        }
+        logger.trackPaymentFlow('ws_payed', messageOrderId, paymentMethod, {
+          effectiveOrderId,
+        });
         await fetchOrderDetailsOnPayed(data.order_id);
       } else if (orderStatus === EOrderStatus.COMPLETED) {
         if (depositTimeoutRef.current) {
@@ -219,6 +329,17 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
         }
         setIsLoading(false);
       } else if (orderStatus === EOrderStatus.PROCESSING) {
+        const paymentStateBeforeProcessing = useStore.getState().paymentState;
+        logPaymentDiagnostic('info', 'processing_received', 'H3', orderId, {
+          messageOrderId,
+          paymentStateBeforeProcessing,
+        });
+        if (paymentStateBeforeProcessing !== PaymentState.PAYMENT_SUCCESS) {
+          logPaymentDiagnostic('warn', 'processing_received_before_payment_success', 'H3', orderId, {
+            messageOrderId,
+            paymentStateBeforeProcessing,
+          });
+        }
         if (depositTimeoutRef.current) {
           clearTimeout(depositTimeoutRef.current);
           depositTimeoutRef.current = null;
