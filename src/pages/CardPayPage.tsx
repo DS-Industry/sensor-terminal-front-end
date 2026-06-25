@@ -40,7 +40,7 @@ export default function CardPayPage() {
       {/* Content Section - 60% of screen height */}
       <div className="flex-1 flex flex-col">
         {/* Header with Logo and Controls */}
-        <HeaderWithLogo backButtonClick={handleBack} />
+        <HeaderWithLogo backButtonClick={handleBack} paymentSuccess={paymentSuccess} />
 
         {/* Main Content Area - Full Screen */}
         <div className="flex-1 flex flex-col">

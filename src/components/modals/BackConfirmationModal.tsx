@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Spin } from '@gravity-ui/uikit';
 import useStore from '../state/store';
 import { logger } from '../../util/logger';
+import { logPaymentDiagnostic } from '../../util/paymentDiagnostics';
 
 export function BackConfirmationModal() {
   const {
@@ -34,6 +35,7 @@ export function BackConfirmationModal() {
       return; // Prevent action while cancelling
     }
     logger.debug("[BackConfirmationModal] Confirm clicked, executing callback");
+    logPaymentDiagnostic('info', 'back_modal_confirmed', 'H5');
     const callback = callbackRef.current;
     if (callback) {
       callback();

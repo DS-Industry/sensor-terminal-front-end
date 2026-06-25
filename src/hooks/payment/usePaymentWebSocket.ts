@@ -41,6 +41,11 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
   const qrCodePollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const qrCodePollAttemptsRef = useRef<number>(0);
 
+  const applyPaymentSuccess = useCallback(() => {
+    setPaymentState(PaymentState.PAYMENT_SUCCESS);
+    useStore.getState().closeBackConfirmationModal();
+  }, [setPaymentState]);
+
   const fetchOrderDetailsOnPayed = useCallback(async (orderId: string) => {
     if (hasFetchedPayedDetailsRef.current) {
       logger.debug(`[${paymentMethod}] Already fetched order details for PAYED status`);
@@ -178,7 +183,7 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
       if (isAmountConfirmed || shouldFallbackToPayedSuccess) {
         logger.info(`[${paymentMethod}] Payment confirmed! Amount: ${amountSum} (expected: ${expectedAmount})`);
         setPaymentError(null);
-        setPaymentState(PaymentState.PAYMENT_SUCCESS);
+        applyPaymentSuccess();
         setIsLoading(false);
         logPaymentDiagnostic('info', 'payment_success_set', 'H2', orderId, {
           amountSum,
@@ -411,7 +416,7 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
               // Check if payment is complete
               if (amountSum >= expectedAmount && expectedAmount > 0) {
                 logger.info(`[${paymentMethod}] Cash payment complete! Amount: ${amountSum} >= ${expectedAmount}`);
-                setPaymentState(PaymentState.PAYMENT_SUCCESS);
+                applyPaymentSuccess();
                 setIsLoading(false);
                 
                 // Stop polling when payment is complete
@@ -586,7 +591,7 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
             // Check if payment is complete
             if (amountSum >= expectedAmount && expectedAmount > 0) {
               logger.info(`[${paymentMethod}] Cash payment complete! Amount: ${amountSum} >= ${expectedAmount}`);
-              setPaymentState(PaymentState.PAYMENT_SUCCESS);
+              applyPaymentSuccess();
               setIsLoading(false);
               
               // Stop polling when payment is complete
@@ -676,7 +681,7 @@ export function usePaymentWebSocket({ orderId, selectedProgram, paymentMethod, o
       }
       lastAmountSumRef.current = 0;
     };
-  }, [orderId, order?.status, paymentMethod, fetchOrderDetailsOnPayed, setOrder, setIsLoading, setPaymentState, navigate, onOrderCanceled]);
+  }, [orderId, order?.status, paymentMethod, fetchOrderDetailsOnPayed, applyPaymentSuccess, setOrder, setIsLoading, setPaymentState, navigate, onOrderCanceled]);
 
   return {};
 }

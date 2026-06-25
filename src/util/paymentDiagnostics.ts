@@ -41,6 +41,13 @@ export type PaymentDiagnosticReason =
   | 'ws_global_ignored'
   | 'health_reset_skipped'
   | 'health_reset_cleared_state'
+  | 'back_blocked_paid_order'
+  | 'back_cancel_failed'
+  | 'back_modal_confirmed'
+  | 'countdown_unmounted'
+  | 'mainpage_paid_recovery'
+  | 'watchdog_refresh_skipped'
+  | 'watchdog_refresh_triggered'
   | 'order_cleared'
   | 'auto_robot_countdown_fired'
   | 'order_create_post_ok';

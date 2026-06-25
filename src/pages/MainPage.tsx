@@ -6,10 +6,13 @@ import HeaderWithLogo from "../components/headerWithLogo/HeaderWithLogo";
 import { usePrograms } from "../hooks/usePrograms";
 import { useEffect } from "react";
 import useStore from "../components/state/store";
-import { EOrderStatus } from "../components/state/order/orderSlice";
+import { EOrderStatus, EPaymentMethod } from "../components/state/order/orderSlice";
+import { PaymentState } from "../state/paymentStateMachine";
 import { startRobot, getTerminalData } from "../api/services/payment";
 import { useNavigate } from "react-router-dom";
 import { logger } from "../util/logger";
+import { PAYS } from "../pays-data";
+import { logPaymentDiagnostic } from "../util/paymentDiagnostics";
 
 const MAIN_PAGE_URL = "MainPage.webp";
 
@@ -36,6 +39,58 @@ export default function MainPage() {
 
   useEffect(() => {
     const resetAllStates = async () => {
+      const { order: currentOrder, setPaymentState } = useStore.getState();
+      const activePaidStatuses = [EOrderStatus.PAYED, EOrderStatus.PROCESSING];
+
+      if (currentOrder && activePaidStatuses.includes(currentOrder.status)) {
+        logger.info('[MainPage] Skipping reset - active paid/processing order', {
+          orderId: currentOrder.id,
+          status: currentOrder.status,
+          paymentMethod: currentOrder.paymentMethod,
+        });
+
+        closeBackConfirmationModal();
+        closeLoyaltyCardModal();
+
+        if (currentOrder.paymentMethod === EPaymentMethod.MOBILE_PAYMENT) {
+          logPaymentDiagnostic('info', 'mainpage_paid_recovery', 'H5', currentOrder.id, {
+            recoveryAction: 'defer_to_mobile_effect',
+            orderStatus: currentOrder.status,
+            paymentMethod: currentOrder.paymentMethod,
+          });
+          return;
+        }
+
+        const programId = currentOrder.programId;
+        const payRoute = PAYS.find((pay) => pay.type === currentOrder.paymentMethod);
+
+        if (programId && payRoute) {
+          const restoredPaymentSuccess = currentOrder.status === EOrderStatus.PAYED;
+          if (restoredPaymentSuccess) {
+            setPaymentState(PaymentState.PAYMENT_SUCCESS);
+          }
+          const targetPath = `/programs/${programId}/${payRoute.endPoint}`;
+          logPaymentDiagnostic('info', 'mainpage_paid_recovery', 'H5', currentOrder.id, {
+            recoveryAction: 'redirect_to_payment',
+            targetPath,
+            restoredPaymentSuccess,
+            orderStatus: currentOrder.status,
+            paymentMethod: currentOrder.paymentMethod,
+          });
+          navigate(targetPath);
+        } else {
+          logPaymentDiagnostic('info', 'mainpage_paid_recovery', 'H5', currentOrder.id, {
+            recoveryAction: 'skipped_reset_no_route',
+            orderStatus: currentOrder.status,
+            paymentMethod: currentOrder.paymentMethod,
+            programId,
+            hasPayRoute: Boolean(payRoute),
+          });
+        }
+
+        return;
+      }
+
       logger.info('[MainPage] Resetting all states on mount');
 
       // Close all modals
