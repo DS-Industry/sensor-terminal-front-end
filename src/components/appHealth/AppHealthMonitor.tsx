@@ -15,7 +15,7 @@ export function AppHealthMonitor() {
   const appStartTimeRef = useRef<number>(Date.now());
   const lastResetTimeRef = useRef<number>(Date.now());
   const skippedResetsRef = useRef<number>(0);
-  const { order, clearOrder, resetPayment, setSelectedProgram, setBankCheck, setInsertedAmount, setQueuePosition, setQueueNumber } = useStore();
+  const { clearOrder, resetPayment, setSelectedProgram, setBankCheck, setInsertedAmount, setQueuePosition, setQueueNumber } = useStore();
   const store = useStore; // Keep reference to store for accessing current state in callbacks
 
   const refreshInterval = getRefreshInterval();
@@ -52,27 +52,30 @@ export function AppHealthMonitor() {
   };
 
   const shouldSkipHealthActions = (): boolean => {
+    const currentOrder = store.getState().order;
     const activePaymentStatuses = [
       EOrderStatus.CREATED,
       EOrderStatus.WAITING_PAYMENT,
       EOrderStatus.PAYED,
       EOrderStatus.PROCESSING,
     ];
-    
-    return order !== null && activePaymentStatuses.includes(order.status);
+
+    return currentOrder !== null && activePaymentStatuses.includes(currentOrder.status);
   };
 
   const performSoftReset = () => {
+    const currentOrder = store.getState().order;
+
     if (shouldSkipHealthActions()) {
       skippedResetsRef.current++;
       logger.debug(`[AppHealth] Skipping soft reset - active payment flow detected`, {
-        orderId: order?.id,
-        status: order?.status,
+        orderId: currentOrder?.id,
+        status: currentOrder?.status,
         skippedCount: skippedResetsRef.current,
       });
-      logPaymentDiagnostic('debug', 'health_reset_skipped', 'H5', order?.id, {
+      logPaymentDiagnostic('debug', 'health_reset_skipped', 'H5', currentOrder?.id, {
         skippedCount: skippedResetsRef.current,
-        orderStatus: order?.status,
+        orderStatus: currentOrder?.status,
       });
       return;
     }
@@ -96,12 +99,12 @@ export function AppHealthMonitor() {
       logger.info(`[AppHealth] Memory before reset: ${memoryInfo.usedMB}MB (${memoryInfo.usagePercent}%)`);
     }
 
-    logPaymentDiagnostic('warn', 'health_reset_cleared_state', 'H5', order?.id, {
+    logPaymentDiagnostic('warn', 'health_reset_cleared_state', 'H5', currentOrder?.id, {
       currentPath: location.pathname,
       uptimeHours,
       timeSinceResetHours,
     });
-    logOrderCleared('app_health_soft_reset', order?.id);
+    logOrderCleared('app_health_soft_reset', currentOrder?.id);
     clearOrder();
     resetPayment();
     setSelectedProgram(null);
@@ -166,6 +169,10 @@ export function AppHealthMonitor() {
               orderId: currentOrder?.id,
               status: currentOrder?.status,
             });
+            logPaymentDiagnostic('warn', 'watchdog_refresh_skipped', 'H5', currentOrder?.id, {
+              consecutiveDetections: frozenDetectionCountRef.current,
+              orderStatus: currentOrder?.status,
+            });
             frozenDetectionCountRef.current = 0; // Reset counter, will check again
           } else {
             logger.error(`[AppHealth] Watchdog: App appears frozen, refreshing page`, {
@@ -173,7 +180,12 @@ export function AppHealthMonitor() {
               lastHeartbeatDelay: actualDelay,
               uptimeHours: Math.round((now - appStartTimeRef.current) / 3600000 * 10) / 10,
             });
-            
+            logPaymentDiagnostic('error', 'watchdog_refresh_triggered', 'H5', undefined, {
+              consecutiveDetections: frozenDetectionCountRef.current,
+              lastHeartbeatDelay: actualDelay,
+              uptimeHours: Math.round((now - appStartTimeRef.current) / 3600000 * 10) / 10,
+            });
+
             // Small delay to ensure log is written, then refresh
             setTimeout(() => {
               window.location.reload();

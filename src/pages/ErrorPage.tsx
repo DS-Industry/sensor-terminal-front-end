@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import errorImage from "../assets/error.webp";
 import { cancelOrder } from "../api/services/payment";
 import { logger } from "../util/logger";
+import { logOrderCleared } from "../util/paymentDiagnostics";
 import { navigateToMain } from "../utils/navigation";
 import MediaCampaign from "../components/mediaCampaign/mediaCampaign";
 import { useMediaCampaign } from "../hooks/useMediaCampaign";
@@ -38,7 +39,8 @@ export default function ErrorPage() {
       }
 
       resetPayment();
-      
+
+      logOrderCleared('error_page_close', order?.id);
       clearOrder();
       
       setSelectedProgram(null);

@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cancelOrder } from '../../api/services/payment';
-import { EPaymentMethod } from '../../components/state/order/orderSlice';
+import { EPaymentMethod, EOrderStatus } from '../../components/state/order/orderSlice';
 import { PaymentState } from '../../state/paymentStateMachine';
 import { PAYMENT_CONSTANTS } from '../../constants/payment';
 import { logger } from '../../util/logger';
@@ -138,9 +138,10 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
     if (paymentState === PaymentState.PAYMENT_SUCCESS && !countdownTimeoutRef.current) {
       startCountdown();
     } else if (paymentState !== PaymentState.PAYMENT_SUCCESS && countdownTimeoutRef.current) {
-      logPaymentDiagnostic('debug', 'countdown_cancelled', 'H6', order?.id, {
+      logPaymentDiagnostic('info', 'countdown_cancelled', 'H6', order?.id, {
         paymentState,
         reason: 'payment_state_changed',
+        timeUntilRobotStart: useStore.getState().timeUntilRobotStart,
       });
     }
   }, [paymentState, startCountdown]);
@@ -164,6 +165,15 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
     
     return () => {
       isMountedRef.current = false;
+      const hadCountdown = Boolean(countdownTimeoutRef.current);
+      if (hadCountdown) {
+        const { paymentState: currentPaymentState, timeUntilRobotStart, order: currentOrder } = useStore.getState();
+        logPaymentDiagnostic('warn', 'countdown_unmounted', 'H6', currentOrder?.id, {
+          paymentMethod,
+          paymentState: currentPaymentState,
+          timeUntilRobotStart,
+        });
+      }
       if (countdownIntervalRef.current) {
         clearInterval(countdownIntervalRef.current);
         countdownIntervalRef.current = null;
@@ -176,13 +186,39 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
   }, [selectedProgram, paymentMethod, paymentState, createOrder]);
 
   const handleBack = useCallback(async () => {
+    const {
+      order: currentOrder,
+      paymentState: currentPaymentState,
+      setIsCancellingOrder,
+      closeBackConfirmationModal,
+    } = useStore.getState();
+
+    const isPaidOrStarting =
+      currentPaymentState === PaymentState.PAYMENT_SUCCESS ||
+      currentPaymentState === PaymentState.STARTING_ROBOT ||
+      currentPaymentState === PaymentState.ROBOT_STARTED ||
+      currentOrder?.status === EOrderStatus.PAYED ||
+      currentOrder?.status === EOrderStatus.PROCESSING;
+
+    if (isPaidOrStarting) {
+      closeBackConfirmationModal();
+      setIsCancellingOrder(false);
+      logPaymentDiagnostic('info', 'back_blocked_paid_order', 'H5', currentOrder?.id, {
+        paymentState: currentPaymentState,
+        orderStatus: currentOrder?.status,
+      });
+      logger.info(`[${paymentMethod}] Back navigation blocked - order is paid or wash is starting`, {
+        orderId: currentOrder?.id,
+        paymentState: currentPaymentState,
+        orderStatus: currentOrder?.status,
+      });
+      return;
+    }
+
     logger.info(`[${paymentMethod}] Handling back navigation - cleaning up everything`);
-    
-    const { setIsCancellingOrder, closeBackConfirmationModal } = useStore.getState();
-    
-    // Set loading state
+
     setIsCancellingOrder(true);
-    
+
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
       countdownIntervalRef.current = null;
@@ -191,27 +227,38 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
       clearTimeout(countdownTimeoutRef.current);
       countdownTimeoutRef.current = null;
     }
-    
+
     cancelOrderCreation();
-    
-    // Get the current order from store to ensure we have the latest order ID
-    const currentOrder = useStore.getState().order;
+
     const orderIdToCancel = currentOrder?.id;
-    
+    let cancelSucceeded = !orderIdToCancel;
+
     if (orderIdToCancel && isMountedRef.current) {
       try {
         await cancelOrder(orderIdToCancel);
+        cancelSucceeded = true;
         logger.info(`[${paymentMethod}] Order cancelled on back button`, { orderId: orderIdToCancel });
       } catch (error) {
         logger.error(`[${paymentMethod}] Error cancelling order on back`, error);
+        cancelSucceeded = false;
       }
+    }
+
+    if (!cancelSucceeded) {
+      logPaymentDiagnostic('warn', 'back_cancel_failed', 'H5', orderIdToCancel, {
+        paymentMethod,
+        hadOrderId: Boolean(orderIdToCancel),
+      });
+      setIsCancellingOrder(false);
+      closeBackConfirmationModal();
+      return;
     }
 
     setIsLoading(false);
     resetPayment();
     setGlobalQueuePosition(null);
     setGlobalQueueNumber(null);
-    
+
     if (isMountedRef.current) {
       logOrderCleared('payment_back_button', orderIdToCancel);
       clearOrder();
@@ -219,15 +266,13 @@ export function usePaymentFlow(paymentMethod: EPaymentMethod) {
       setBankCheck("");
       setInsertedAmount(0);
       setIsLoading(false);
-      
-      // Clear loading state and close modal before navigation
+
       setIsCancellingOrder(false);
       closeBackConfirmationModal();
-      
+
       navigateToMain(navigate);
     }
   }, [
-    order,
     paymentMethod,
     navigate,
     cancelOrderCreation,
